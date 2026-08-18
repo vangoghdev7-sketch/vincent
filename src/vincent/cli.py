@@ -265,7 +265,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
 def main():
     parser = argparse.ArgumentParser(description="Vincent OS CLI 4.0 — Cyberpunk Neural Orchestrator")
     parser.add_argument("prompt", nargs="*", help="Pergunta ou comando direto para o Vincent")
-    parser.add_argument("-m", "--model", default="qwen2.5:3b-instruct", help="Modelo inicial (ex: qwen2.5:3b-instruct, qwen2.5-coder:7b, auto/best-free)")
+    parser.add_argument("-m", "--model", default="qwen3:0.6b", help="Modelo inicial (ex: qwen3:0.6b, qwen2.5-coder:7b, auto/best-free)")
     parser.add_argument("-l", "--list-models", action="store_true", help="Listar todos os modelos do catálogo")
     parser.add_argument("-s", "--search", type=str, default="", help="Filtrar modelos por termo de busca")
     parser.add_argument("-c", "--caveman", type=str, default=None, help="Modo caveman (lite, full, ultra)")

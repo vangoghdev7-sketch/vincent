@@ -317,10 +317,15 @@ class DeviceRegistry:
     # ── Detecção ──────────────────────────────────────────────────────────────
 
     def scan(self, quick: bool = True) -> list[Device]:
-        """Varre portas USB, identifica dispositivos e conecta os novos."""
-        ports = sorted(
-            glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*")
-        )
+        """Varre portas USB, identifica dispositivos e conecta os novos. Multiplataforma (Linux/Windows/macOS/Termux)."""
+        if serial is None:
+            return []
+        try:
+            from serial.tools import list_ports
+            # hwid == "n/a" = porta serial fixa (ex: UART de placa-mãe), não USB-serial real
+            ports = sorted(p.device for p in list_ports.comports() if p.hwid != "n/a")
+        except ImportError:
+            ports = sorted(glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*"))
         connected = []
         for port in ports:
             dev = self._try_connect(port, quick=quick)

@@ -1,0 +1,2 @@
+[console_scripts]
+vincent = vincent.cli:main

@@ -4,23 +4,25 @@ Orquestrador neural de IA (OmniRoute + Ollama local) e laboratório de hardware 
 
 ## Instalação
 
-Este diretório é o pacote Python `vincent` — precisa estar acessível via `PYTHONPATH` a partir do diretório pai:
+Pacote Python real (`pyproject.toml`, layout `src/`). Funciona em Linux, macOS, Windows e Termux (Android).
+
+**Recomendado — [pipx](https://pipx.pypa.io/) (isola dependências, não precisa de venv manual):**
 
 ```bash
-git clone <este-repo> vincent
-export PYTHONPATH="$(dirname "$(pwd)/vincent")"
-python3 -m vincent.cli
+pipx install git+https://github.com/vangoghdev7-sketch/vincent
+# ou, a partir de um clone local:
+git clone https://github.com/vangoghdev7-sketch/vincent
+pipx install --editable ./vincent
 ```
 
-Ou use o launcher em `~/.local/bin/vincent`:
+**Alternativa — pip direto (venv recomendado; em Termux não há restrição PEP 668):**
 
 ```bash
-#!/usr/bin/env bash
-export PYTHONPATH="/caminho/para/IA_e_LLMs:${PYTHONPATH}"
-exec python3 -m vincent.cli "$@"
+python3 -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install .
 ```
 
-Dependências: apenas stdlib (`urllib`, `json`, `argparse`) — sem pip install necessário.
+Isso cria o comando `vincent` disponível globalmente. Dependências: `pyserial` (hardware USB-serial), `psutil` (telemetria de CPU/RAM) — resolvidas automaticamente.
 
 ## Uso
 
@@ -38,10 +40,17 @@ Comandos do REPL: `/models`, `/model <id>`, `/plugins`, `/plugin <nome>`, `/cave
 1. **Ollama local** (`OLLAMA_HOST`, padrão `127.0.0.1:11434`) — zero-key, offline.
 2. **OmniRoute** (`OMNIROUTE_URL`, padrão `localhost:20128/v1`) — proxy local pra 1200+ modelos/rotas, muitas gratuitas.
 
+## Hardware (opcional)
+
+Detecção de placas USB-serial (T-Embed CC1101, ESP32DIV) via `pyserial.tools.list_ports` — funciona nativamente em Linux (`/dev/ttyACM*`), Windows (`COM*`) e macOS (`/dev/cu.*`). Sem placa conectada, o Vincent funciona normalmente só como cliente de IA.
+
 ## Plugins
 
-Descobre skills em `~/.agents/skills/**/SKILL.md` e injeta as ativas no system prompt. Ver `/plugins` no REPL.
+Descobre skills em `~/.agents/skills/*/` (procura `SKILL.md` ou `README.md`) e injeta as ativas no system prompt. Ver `/plugins` no REPL.
 
-## Status
+## Estrutura
 
-Empacotamento pip real (Termux/Windows/instalação universal) ainda não feito — o layout atual depende de `PYTHONPATH` apontando pro diretório pai. Restruturar pra `pyproject.toml` + `pip install` funcional é trabalho futuro (precisa mover pra layout `src/`, auditar paths Linux-only em `devices.py`, e validar ANSI colors em terminal Windows).
+```
+src/vincent/     pacote instalável (agent, cli, devices, models, plugins, ...)
+pyproject.toml   empacotamento (setuptools, entry point `vincent`)
+```

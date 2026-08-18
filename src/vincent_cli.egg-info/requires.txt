@@ -1,0 +1,5 @@
+pyserial>=3.5
+psutil>=5.9
+
+[hardware]
+pyserial>=3.5

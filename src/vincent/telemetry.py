@@ -6,7 +6,10 @@ session token meters, memory and system load statistics.
 
 import time
 import os
-import psutil
+try:
+    import psutil
+except ImportError:
+    psutil = None
 from datetime import timedelta
 from .ui import (
     CYAN_NEON, MAGENTA_NEON, GREEN_MATRIX, AMBER_WARN, RED_ALERT,
@@ -42,6 +45,8 @@ class PonytailTelemetry:
 
     @staticmethod
     def get_system_stats() -> dict:
+        if psutil is None:
+            return {"cpu_pct": 0, "mem_mb": 0, "mem_pct": 0}
         try:
             cpu = psutil.cpu_percent(interval=None)
             mem = psutil.virtual_memory()

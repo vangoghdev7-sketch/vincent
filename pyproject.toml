@@ -1,0 +1,23 @@
+[project]
+name = "vincent-cli"
+version = "4.0.0"
+description = "Vincent — orquestrador neural de IA (OmniRoute/Ollama) e laboratório de hardware ESP32"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pyserial>=3.5",
+    "psutil>=5.9",
+]
+
+[project.optional-dependencies]
+hardware = ["pyserial>=3.5"]
+
+[project.scripts]
+vincent = "vincent.cli:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

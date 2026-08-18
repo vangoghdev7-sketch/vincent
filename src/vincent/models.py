@@ -15,7 +15,7 @@ OLLAMA_URL = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/")
 if not OLLAMA_URL.startswith("http"):
     OLLAMA_URL = "http://" + OLLAMA_URL
 
-DEFAULT_MODEL = os.environ.get("VINCENT_MODEL", "qwen2.5:3b-instruct")
+DEFAULT_MODEL = os.environ.get("VINCENT_MODEL", "qwen3:0.6b")
 
 CACHE_PATH = os.path.expanduser("~/.vincent/models_cache.json")
 
@@ -142,7 +142,7 @@ class ModelManager:
 
         last_error = ""
 
-        for model in models_ordered:
+        for idx, model in enumerate(models_ordered):
             # 1. Tentativa via Ollama Local
             if model in self.cached_ollama_models or model.startswith("ollama/"):
                 ollama_name = model.replace("ollama/", "")
@@ -159,7 +159,8 @@ class ModelManager:
                         headers={"Content-Type": "application/json"},
                         method="POST"
                     )
-                    with urllib.request.urlopen(req, timeout=8) as resp:
+                    timeout_val = 25 if idx == 0 else 12
+                    with urllib.request.urlopen(req, timeout=timeout_val) as resp:
                         res_data = json.loads(resp.read().decode("utf-8"))
                         text = res_data.get("message", {}).get("content", "").strip()
                         if text:
@@ -187,7 +188,8 @@ class ModelManager:
                     headers=headers,
                     method="POST"
                 )
-                with urllib.request.urlopen(req, timeout=6) as resp:
+                timeout_val = 20 if idx == 0 else 10
+                with urllib.request.urlopen(req, timeout=timeout_val) as resp:
                     res_data = json.loads(resp.read().decode("utf-8"))
                     text = res_data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
                     if text:
