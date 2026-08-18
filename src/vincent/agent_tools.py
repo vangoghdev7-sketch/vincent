@@ -6,6 +6,7 @@ Provides sandboxed execution tools for autonomous multi-turn reasoning and codin
 - GrepTool: global codebase search with regex and context lines
 - BashTool: subprocess execution for linters, tests, and environment checks
 - ApplyDiffTool: surgical search-and-replace block patching (and unified diff support)
+- GitOps tools: git_status, git_diff, git_commit (checkpoint), git_rollback (single-file undo)
 """
 
 import os
@@ -13,6 +14,10 @@ import re
 import glob
 import subprocess
 import fnmatch
+import urllib.request
+import urllib.parse
+import html as html_lib
+from html.parser import HTMLParser
 from typing import Dict, Any, List, Optional, Tuple
 
 IGNORE_PATTERNS = {
@@ -260,6 +265,149 @@ def tool_apply_diff(path: str, search_block: Optional[str] = None, replace_block
     return {"error": "Parâmetros insuficientes. Forneça (search_block e replace_block) ou diff_content."}
 
 
+# ─── 6. GitOps Tools (status, diff, commit, rollback) ─────────────────────────
+
+def _run_git(args: List[str], cwd: Optional[str] = None) -> Dict[str, Any]:
+    """Executa um subcomando git via lista de argumentos (sem shell, sem risco de injeção)."""
+    work_dir = os.path.abspath(os.path.expanduser(cwd)) if cwd else os.getcwd()
+    try:
+        proc = subprocess.run(
+            ["git"] + args, cwd=work_dir, capture_output=True, text=True, timeout=30
+        )
+        return {
+            "command": "git " + " ".join(args),
+            "exit_code": proc.returncode,
+            "stdout": proc.stdout[:8000],
+            "stderr": proc.stderr[:8000],
+            "success": proc.returncode == 0
+        }
+    except Exception as e:
+        return {"error": f"Falha ao executar git: {str(e)}"}
+
+
+def tool_git_status(cwd: Optional[str] = None) -> Dict[str, Any]:
+    """Mostra o estado atual do repositório git (branch, staged, modificados)."""
+    return _run_git(["status", "--porcelain=v1", "-b"], cwd=cwd)
+
+
+def tool_git_diff(path: Optional[str] = None, cwd: Optional[str] = None) -> Dict[str, Any]:
+    """Mostra o diff das mudanças não commitadas (staged + unstaged), do repo ou de um arquivo."""
+    args = ["diff", "HEAD"]
+    if path:
+        args += ["--", path]
+    return _run_git(args, cwd=cwd)
+
+
+def tool_git_commit(message: str, paths: Optional[List[str]] = None, cwd: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Cria um checkpoint git. Sem 'paths', faz stage só de arquivos JÁ rastreados
+    (git add -u) — nunca adiciona arquivo novo/não rastreado às cegas.
+    """
+    if not message or not message.strip():
+        return {"error": "Mensagem de commit vazia."}
+    stage_args = ["add", "-u"] if not paths else ["add", "--"] + paths
+    staged = _run_git(stage_args, cwd=cwd)
+    if not staged.get("success"):
+        return {"error": f"Falha ao dar stage: {staged.get('stderr') or staged.get('error')}", "success": False}
+    return _run_git(["commit", "-m", message], cwd=cwd)
+
+
+def tool_git_rollback(path: str, cwd: Optional[str] = None) -> Dict[str, Any]:
+    """Reverte UM arquivo para a última versão commitada. Exige path explícito — sem wipe do repositório inteiro."""
+    if not path or not path.strip():
+        return {"error": "Rollback exige um 'path' explícito — sem wipe do repositório inteiro."}
+    return _run_git(["checkout", "--", path], cwd=cwd)
+
+
+# ─── 7. Deep Research Tools (web_search, fetch_url) ────────────────────────────
+
+class _TextExtractor(HTMLParser):
+    """Extrai texto legível de HTML, descartando script/style."""
+    def __init__(self):
+        super().__init__()
+        self._skip = False
+        self.chunks: List[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ("script", "style"):
+            self._skip = True
+
+    def handle_endtag(self, tag):
+        if tag in ("script", "style"):
+            self._skip = False
+
+    def handle_data(self, data):
+        if not self._skip:
+            text = data.strip()
+            if text:
+                self.chunks.append(text)
+
+
+def _html_to_text(raw_html: str) -> str:
+    parser = _TextExtractor()
+    parser.feed(raw_html)
+    return "\n".join(parser.chunks)
+
+
+def _resolve_ddg_redirect(href: str) -> str:
+    """DDG Lite retorna links de redirecionamento (/l/?uddg=<url_encoded>) — extrai a URL real."""
+    parsed = urllib.parse.urlparse(href if href.startswith("http") else "https:" + href)
+    qs = urllib.parse.parse_qs(parsed.query)
+    return qs.get("uddg", [href])[0]
+
+
+def tool_web_search(query: str, max_results: int = 5) -> Dict[str, Any]:
+    """
+    Busca na web via DuckDuckGo Lite (sem chave de API paga).
+    # ponytail: parsing por regex é frágil a mudanças de markup do DDG;
+    # trocar por lib dedicada (ex: duckduckgo-search) se isso passar a quebrar com frequência.
+    """
+    if not query or not query.strip():
+        return {"error": "Query de busca vazia."}
+    url = "https://lite.duckduckgo.com/lite/?" + urllib.parse.urlencode({"q": query})
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            raw = resp.read().decode("utf-8", errors="ignore")
+    except Exception as e:
+        return {"error": f"Falha na busca web: {str(e)}"}
+
+    if "anomaly.js" in raw or "result-link" not in raw:
+        return {
+            "error": "DuckDuckGo bloqueou a requisição (challenge anti-bot) — sem resultados reais nesta rede/ambiente.",
+            "blocked": True
+        }
+
+    results = []
+    for m in re.finditer(
+        r"href=\"([^\"]+)\"\s+class='result-link'>(.*?)</a>.*?class='result-snippet'>(.*?)</td>",
+        raw, re.DOTALL
+    ):
+        href, title_html, snippet_html = m.groups()
+        title = html_lib.unescape(re.sub(r"<.*?>", "", title_html)).strip()
+        snippet = html_lib.unescape(re.sub(r"<.*?>", "", snippet_html)).strip()
+        results.append({"title": title, "url": _resolve_ddg_redirect(href), "snippet": snippet})
+        if len(results) >= max_results:
+            break
+
+    return {"query": query, "total_results": len(results), "results": results}
+
+
+def tool_fetch_url(url: str, max_chars: int = 4000) -> Dict[str, Any]:
+    """Baixa uma URL e retorna o texto legível (sem tags HTML) — para ler documentação/fóruns."""
+    if not url or not url.strip():
+        return {"error": "URL vazia."}
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (VincentCLI Agentic Fetch)"})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            raw = resp.read().decode("utf-8", errors="ignore")
+    except Exception as e:
+        return {"error": f"Falha ao buscar URL: {str(e)}"}
+
+    text = _html_to_text(raw)
+    return {"url": url, "content": text[:max_chars], "truncated": len(text) > max_chars}
+
+
 # ─── Esquemas de Ferramentas (JSON Schema / Tool Definitions) ─────────────────
 
 TOOL_DEFINITIONS = [
@@ -325,6 +473,69 @@ TOOL_DEFINITIONS = [
             },
             "required": ["path", "search_block", "replace_block"]
         }
+    },
+    {
+        "name": "git_status",
+        "description": "Mostra o estado do repositório git: branch atual, arquivos modificados e staged.",
+        "parameters": {"type": "object", "properties": {}, "required": []}
+    },
+    {
+        "name": "git_diff",
+        "description": "Mostra o diff das mudanças não commitadas, do repo inteiro ou de um arquivo.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Caminho do arquivo (opcional, padrão: repo inteiro)"}
+            },
+            "required": []
+        }
+    },
+    {
+        "name": "git_commit",
+        "description": "Cria um checkpoint git (Conventional Commits). Sem 'paths', só arquivos já rastreados (git add -u).",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "message": {"type": "string", "description": "Mensagem no formato Conventional Commits (ex: 'fix(core): ...')"},
+                "paths": {"type": "array", "items": {"type": "string"}, "description": "Arquivos específicos a incluir (opcional)"}
+            },
+            "required": ["message"]
+        }
+    },
+    {
+        "name": "git_rollback",
+        "description": "Reverte UM arquivo para a última versão commitada (desfaz uma mudança ruim). Exige path explícito.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Caminho do arquivo a reverter"}
+            },
+            "required": ["path"]
+        }
+    },
+    {
+        "name": "web_search",
+        "description": "Busca na web (DuckDuckGo, sem chave de API) por documentação/soluções antes de adivinhar sobre uma lib ou API desconhecida.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Termos de busca"},
+                "max_results": {"type": "integer", "description": "Máximo de resultados (padrão: 5)"}
+            },
+            "required": ["query"]
+        }
+    },
+    {
+        "name": "fetch_url",
+        "description": "Baixa uma URL e retorna o texto legível (sem HTML) — para ler uma página de documentação encontrada na busca.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string", "description": "URL completa a buscar"},
+                "max_chars": {"type": "integer", "description": "Limite de caracteres retornados (padrão: 4000)"}
+            },
+            "required": ["url"]
+        }
     }
 ]
 
@@ -360,6 +571,28 @@ def execute_agent_tool(tool_name: str, arguments: Dict[str, Any]) -> Dict[str, A
             search_block=arguments.get("search_block"),
             replace_block=arguments.get("replace_block"),
             diff_content=arguments.get("diff")
+        )
+    elif name in ("git_status", "gitstatus"):
+        return tool_git_status(cwd=arguments.get("cwd"))
+    elif name in ("git_diff", "gitdiff"):
+        return tool_git_diff(path=arguments.get("path"), cwd=arguments.get("cwd"))
+    elif name in ("git_commit", "gitcommit"):
+        return tool_git_commit(
+            message=arguments.get("message", ""),
+            paths=arguments.get("paths"),
+            cwd=arguments.get("cwd")
+        )
+    elif name in ("git_rollback", "gitrollback", "git_undo"):
+        return tool_git_rollback(path=arguments.get("path", ""), cwd=arguments.get("cwd"))
+    elif name in ("web_search", "websearch", "search"):
+        return tool_web_search(
+            query=arguments.get("query", ""),
+            max_results=arguments.get("max_results", 5)
+        )
+    elif name in ("fetch_url", "fetchurl", "webfetch", "scrape"):
+        return tool_fetch_url(
+            url=arguments.get("url", ""),
+            max_chars=arguments.get("max_chars", 4000)
         )
     else:
         return {"error": f"Ferramenta desconhecida: {tool_name}"}

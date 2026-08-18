@@ -37,15 +37,12 @@
 - Baseado em [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail).
 - Statusline viva no prompt com métricas de latência média, hardware USB conectado, consumo de CPU/RAM e gráfico visual de economia de tokens.
 
-### 5. 🤖 GSD Swarm & AG-Kit Multi-Agent Orchestration
-- Baseado em [open-gsd/gsd-core](https://github.com/open-gsd/gsd-core) e [vudovn/ag-kit](https://github.com/vudovn/ag-kit).
-- Execução autônoma de tarefas complexas em fases e ondas através do squad especializado:
-  - 📋 `Vincent-Product`: Curador de Obra & Especificação
-  - 🛡️ `Vincent-Auditor`: Crítico de Arte & Auditoria de Segurança
-  - 💻 `Vincent-Coder`: Mestre Pintor & Engenharia de Código
-  - 📡 `Vincent-Hardware`: Engenheiro de Chassis & Rádio ESP32
-  - 🧪 `Vincent-Tester`: Restaurador & Testes de Fumaça
-  - ⚙️ `Vincent-DevOps`: Guardião da Galeria & Daemons
+### 5. 🛠️ Agentic Loop com Tool Calling (`/act`)
+- Motor único e generalista — investiga e corrige código sozinho via `list_dir`, `read_file`, `grep_search`,
+  `run_bash`, `apply_diff`, GitOps (`git_status`/`git_diff`/`git_commit`/`git_rollback`) e pesquisa web
+  (`web_search`/`fetch_url`).
+- Auto-cura: todo `apply_diff` em `.py` é validado por sintaxe; se quebrar, o próprio Vincent restaura a
+  versão anterior e tenta de novo (até 3x) sem intervenção manual.
 
 ### 6. 🧠 Treinamento e Fine-Tuning Nativo (LlamaFactory)
 - Baseado em [hiyouga/LlamaFactory](https://github.com/hiyouga/LlamaFactory).
@@ -96,8 +93,8 @@ vincent "Como implementar um sniffer no CC1101?"
 # Prompt com compressão Caveman (-65% tokens)
 vincent -c full "Refatore o driver serial do ESP32DIV em C++"
 
-# Executar tarefa com Swarm de Agentes GSD
-vincent -g "Criar script de automação de backup no systemd"
+# Executar tarefa via Agentic Loop (investiga e corrige código sozinho)
+vincent -a "Criar script de automação de backup no systemd"
 ```
 
 ### Comandos Internos do REPL
@@ -108,9 +105,10 @@ vincent -g "Criar script de automação de backup no systemd"
 | `/search <termo>` | Filtra modelos por palavra-chave (ex: `/search free` ou `/search coding`) |
 | `/model <id>` | Sintoniza o modelo ativo em tempo real |
 | `/caveman <modo>` | Alterna modos de compressão de tokens (`off`, `lite`, `full`, `ultra`) |
-| `/gsd <tarefa>` | Inicia plano autônomo multi-agente em ondas |
-| `/squad` | Exibe o squad de agentes especializados da Galeria |
-| `/login` / `/key` | Autenticação Enterprise via OAuth2 ou injeção de Chave Neural |
+| `/act <tarefa>` | Agentic Loop: investiga e corrige código sozinho com tool calling |
+| `/commit <msg>` | Checkpoint git manual (Conventional Commits) |
+| `/vision <img>` | Lê uma imagem (print de erro, mockup) via modelo multimodal |
+| `/login` / `/key` | Cofre de chaves local (chmod 0600) — sem OAuth, chave real por provedor |
 | `/train` / `/lora` | Gera configuração de fine-tuning LoRA via LlamaFactory |
 | `/export` | Exporta histórico da sessão como dataset de treino |
 | `/devices` | Varre e inspeciona placas ESP32/USB conectadas |

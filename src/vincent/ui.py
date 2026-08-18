@@ -62,7 +62,7 @@ BANNER = f"""
 {PRUSSIAN_BLUE}    ╚═══╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝╚═╝  ╚═══╝   ╚═╝   {CLR_RST}
   {CHROME_YELLOW}◈ V I N C E N T   O S   •   S T A R R Y   N I G H T   E D I T I O N ◈{CLR_RST}
   {CANVAS_WHITE}Atelier Neural Autônomo • 1200+ Pinceladas de Modelos • Laboratório ESP32{CLR_RST}
-  {SHADOW_GRAY}Pós-Impressionismo Cibernético • Caveman • Ponytail • GSD Swarm • Termux Ready{CLR_RST}
+  {SHADOW_GRAY}Pós-Impressionismo Cibernético • Caveman • Ponytail • Agentic Loop • Termux Ready{CLR_RST}
 """
 
 def get_terminal_width(default: int = 80) -> int:
@@ -201,7 +201,7 @@ def render_response_box(reply: str, model: str, latency: float, mode: str = "Sta
             print(f"{CYPRESS_GREEN}│{CLR_RST} {COBALT_BLUE}{line}{CLR_RST}")
         elif line.startswith("#"):
             print(f"{CYPRESS_GREEN}│{CLR_RST} {LEMON_YELLOW}{CLR_BOLD}{line}{CLR_RST}")
-        elif line.startswith("CMD:") or line.startswith("[HARDWARE]") or line.startswith("[GSD]"):
+        elif line.startswith("CMD:") or line.startswith("[HARDWARE]"):
             print(f"{CYPRESS_GREEN}│{CLR_RST} {STARRY_GOLD}{CLR_BOLD}{line}{CLR_RST}")
         else:
             print(f"{CYPRESS_GREEN}│{CLR_RST} {CANVAS_WHITE}{line}{CLR_RST}")

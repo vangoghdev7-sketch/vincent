@@ -18,7 +18,9 @@ SUPPORTED_PROVIDERS = {
     "anthropic": "Anthropic API Key (sk-ant-...)",
     "gemini": "Google Gemini API Key (AIza...)",
     "deepseek": "DeepSeek API Key (sk-...)",
-    "ollama_host": "Host do Ollama Local (ex: http://127.0.0.1:11434)"
+    "ollama_host": "Host do Ollama Local (ex: http://127.0.0.1:11434)",
+    "tavily": "Tavily Search API Key (fallback se DuckDuckGo Lite for bloqueado)",
+    "serper": "Serper.dev Search API Key (fallback se DuckDuckGo Lite for bloqueado)"
 }
 
 class VincentAuth:
@@ -60,7 +62,9 @@ class VincentAuth:
             "anthropic": ["ANTHROPIC_API_KEY"],
             "gemini": ["GEMINI_API_KEY"],
             "deepseek": ["DEEPSEEK_API_KEY"],
-            "ollama_host": ["OLLAMA_HOST"]
+            "ollama_host": ["OLLAMA_HOST"],
+            "tavily": ["TAVILY_API_KEY"],
+            "serper": ["SERPER_API_KEY"]
         }
         for provider, env_vars in mapping.items():
             val = self.credentials.get(provider)

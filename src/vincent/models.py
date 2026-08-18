@@ -4,12 +4,62 @@ Integrates OmniRoute Gateway, Local Ollama Models, Zero-Key Free Gateways,
 and Smart Adaptive Cascade Failover.
 """
 
+import base64
 import json
+import mimetypes
 import os
 import time
 import urllib.request
 import urllib.error
 from typing import Optional, List, Dict, Tuple
+
+IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"}
+
+
+def build_image_content(prompt: str, image_path: str) -> List[Dict]:
+    """
+    Monta o 'content' multimodal (formato OpenAI-compatible: text + image_url em base64)
+    a partir de uma imagem local. OmniRoute/gateways cloud entendem esse formato nativamente;
+    execute_inference converte pro formato nativo do Ollama quando a rota é local.
+    """
+    abs_path = os.path.abspath(os.path.expanduser(image_path))
+    if not os.path.isfile(abs_path):
+        raise FileNotFoundError(f"Imagem não encontrada: {image_path}")
+    ext = os.path.splitext(abs_path)[1].lower()
+    if ext not in IMAGE_EXTENSIONS:
+        raise ValueError(f"Extensão não suportada: {ext} (aceitos: {', '.join(sorted(IMAGE_EXTENSIONS))})")
+
+    with open(abs_path, "rb") as f:
+        b64_data = base64.b64encode(f.read()).decode("ascii")
+    media_type = mimetypes.guess_type(abs_path)[0] or "image/jpeg"
+
+    return [
+        {"type": "text", "text": prompt},
+        {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{b64_data}"}}
+    ]
+
+
+def _messages_for_ollama(messages: List[Dict]) -> List[Dict]:
+    """Ollama não entende 'content' como lista OpenAI-style — usa content:str + images:[base64]."""
+    converted = []
+    for msg in messages:
+        content = msg.get("content")
+        if isinstance(content, list):
+            text_parts, images = [], []
+            for part in content:
+                if part.get("type") == "text":
+                    text_parts.append(part.get("text", ""))
+                elif part.get("type") == "image_url":
+                    url = part.get("image_url", {}).get("url", "")
+                    if url.startswith("data:") and "," in url:
+                        images.append(url.split(",", 1)[1])
+            new_msg = {"role": msg.get("role", "user"), "content": "\n".join(text_parts)}
+            if images:
+                new_msg["images"] = images
+            converted.append(new_msg)
+        else:
+            converted.append(msg)
+    return converted
 
 OMNIROUTE_URL = os.environ.get("OMNIROUTE_URL", "http://localhost:20128/v1").rstrip("/")
 OLLAMA_URL = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/")
@@ -169,7 +219,9 @@ class ModelManager:
                 try:
                     payload = {
                         "model": ollama_name,
-                        "messages": ([{"role": "system", "content": system_prompt}] if system_prompt else []) + messages,
+                        "messages": _messages_for_ollama(
+                            ([{"role": "system", "content": system_prompt}] if system_prompt else []) + messages
+                        ),
                         "stream": False,
                         "think": False,
                         "options": {"num_predict": 512, "temperature": 0.3, "num_thread": 4}

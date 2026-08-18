@@ -1,7 +1,8 @@
 """
 Vincent Agent — Núcleo de Inteligência Unificada ESP32 & Orquestrador de LLMs.
 Executa em nome do Vincent com suporte a mais de 1200 rotas neurais próprias,
-modelos locais de alta velocidade, Caveman Compression, GSD Swarm e Agentic Loop com Tool Calling.
+modelos locais de alta velocidade, Caveman Compression e Agentic Loop com Tool Calling.
+Motor único e generalista — sem divisão em personas/squad de especialistas.
 """
 
 import json
@@ -18,6 +19,7 @@ from .models import ModelManager, DEFAULT_MODEL
 from .caveman import CavemanEngine
 from .telemetry import PonytailTelemetry
 from .agent_tools import execute_agent_tool, TOOL_DEFINITIONS
+from .memory import recall_context, save_summary
 
 SYSTEM_BASE = """Você é o Vincent — Inteligência Central de Hardware, Software e Engenharia de Sistemas.
 Você possui capacidades autônomas de investigação de código, execução de ferramentas e controle de hardware ESP32.
@@ -38,6 +40,25 @@ Ferramentas suportadas:
 3. `grep_search`: {"pattern": "termo_de_busca", "path": ".", "is_regex": false}
 4. `run_bash`: {"command": "comando_de_terminal"}
 5. `apply_diff`: {"path": "arquivo", "search_block": "código_antigo", "replace_block": "código_novo"}
+6. `git_status`: {}
+7. `git_diff`: {"path": "opcional"}
+8. `git_commit`: {"message": "feat(core): descrição", "paths": ["opcional"]}
+9. `git_rollback`: {"path": "arquivo_a_reverter"}
+10. `web_search`: {"query": "termo de busca"}
+11. `fetch_url`: {"url": "https://..."}
+
+## Regras de GitOps:
+- Antes de aplicar um `apply_diff` arriscado, confira `git_status`/`git_diff` primeiro.
+- Depois de validar uma mudança (lint/teste passou), use `git_commit` como checkpoint.
+- `git_rollback` exige um `path` explícito — nunca reverte o repositório inteiro de uma vez.
+- Todo `apply_diff` em arquivo `.py` é auto-validado (checagem de sintaxe). Se quebrar, o próprio
+  sistema restaura a versão anterior automaticamente — você não precisa (e não deve) usar `git_rollback`
+  pra isso, ele é só pra correções manuais fora do loop.
+
+## Regra de Pesquisa:
+- Se a tarefa envolve lib, API ou hardware que você não tem certeza, use `web_search`/`fetch_url`
+  pra checar documentação oficial ANTES de propor código. Se `web_search` vier bloqueado, tente
+  `fetch_url` direto numa URL de documentação conhecida.
 
 ## Hardware sob seu controle direto:
 1. TEMBED — LilyGo T-Embed CC1101 (ESP32-S3, Sub-GHz RF 433/868/915 MHz, IR TX/RX, WiFi, BLE, Display ST7789, Bruce shell).
@@ -65,6 +86,7 @@ class VincentAgent:
         self.caveman = CavemanEngine(mode="off")
         self.telemetry = PonytailTelemetry()
         self.plugins = PluginManager()
+        self._memory_context = recall_context()
 
         # Sincronização inicial de catálogo
         self.model_manager.sync_catalogs()
@@ -98,7 +120,7 @@ class VincentAgent:
         reply, used_model, latency = self.model_manager.execute_inference(
             messages_to_send,
             target_model=target_m,
-            system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon()
+            system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context
         )
 
         in_toks = CavemanEngine.estimate_tokens(user_content)
@@ -121,6 +143,7 @@ class VincentAgent:
         target_m = self.model
         processed_task, _ = self.caveman.compress_prompt(task)
         state = self._device_state()
+        self._heal_attempts: Dict[str, int] = {}
 
         turn_messages: List[Dict[str, str]] = [
             {"role": "user", "content": f"[{state}]\nTarefa Agênica: {processed_task}"}
@@ -136,7 +159,7 @@ class VincentAgent:
             reply, used_model, lat = self.model_manager.execute_inference(
                 turn_messages,
                 target_model=target_m,
-                system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon()
+                system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context
             )
             total_latency += lat
 
@@ -156,8 +179,27 @@ class VincentAgent:
             if on_step_callback:
                 on_step_callback(f"Executando ferramenta: {tool_name}...")
 
+            # Snapshot em memória ANTES do patch, para auto-cura poder desfazer só
+            # a mudança deste loop (git_rollback voltaria pro último commit, o que
+            # apagaria também qualquer edição não commitada fora deste loop).
+            pre_patch_snapshot = None
+            patch_path = tool_args.get("path", "")
+            if tool_name.strip().lower() in ("apply_diff", "patch", "replace") and patch_path:
+                abs_patch_path = os.path.abspath(os.path.expanduser(patch_path))
+                if os.path.isfile(abs_patch_path):
+                    try:
+                        with open(abs_patch_path, "r", encoding="utf-8") as f:
+                            pre_patch_snapshot = f.read()
+                    except Exception:
+                        pre_patch_snapshot = None
+
             # Executa ferramenta real no workspace
             tool_result = execute_agent_tool(tool_name, tool_args)
+
+            if pre_patch_snapshot is not None and tool_result.get("success"):
+                tool_result["auto_heal"] = self._auto_heal_check(
+                    patch_path, pre_patch_snapshot, on_step_callback
+                )
 
             # Auto-cura: Detecta erros de execução e injeta alerta no contexto
             is_error = bool(tool_result.get("error")) or (tool_result.get("exit_code", 0) != 0)
@@ -178,9 +220,53 @@ class VincentAgent:
             self._history.append({"role": "user", "content": processed_task})
             self._history.append({"role": "assistant", "content": final_response})
             self._execute_commands(final_response)
+            save_summary(f"Tarefa: {processed_task}\nResultado: {final_response[:500]}")
             return final_response
 
         return reply or "[VINCENT AGENTIC] Limite de passos atingido sem conclusão."
+
+    def _auto_heal_check(
+        self, path: str, pre_patch_snapshot: str, on_step_callback: Optional[Callable[[str], None]] = None
+    ) -> Dict[str, Any]:
+        """
+        Roda checagem de sintaxe pós-patch (só .py por enquanto). Se quebrar,
+        restaura o snapshot de ANTES do patch (não usa git — preserva qualquer
+        mudança não commitada fora deste loop). Máx 3 tentativas por arquivo
+        por execução de agentic_run.
+        """
+        if not path.endswith(".py"):
+            return {"syntax_check": "skipped", "reason": "só .py é validado por enquanto"}
+
+        abs_path = os.path.abspath(os.path.expanduser(path))
+        check = execute_agent_tool("run_bash", {"command": f'python3 -m py_compile "{abs_path}"'})
+        if check.get("exit_code") == 0:
+            return {"syntax_check": "ok"}
+
+        attempts = self._heal_attempts.get(path, 0) + 1
+        self._heal_attempts[path] = attempts
+
+        try:
+            with open(abs_path, "w", encoding="utf-8") as f:
+                f.write(pre_patch_snapshot)
+            restored = True
+        except Exception:
+            restored = False
+
+        if on_step_callback:
+            on_step_callback(f"Auto-cura: patch quebrou a sintaxe de {path}, revertido ({attempts}/3)...")
+
+        return {
+            "syntax_check": "failed",
+            "stderr": (check.get("stderr") or check.get("error") or "")[:2000],
+            "restored_previous_version": restored,
+            "attempt": attempts,
+            "max_attempts": 3,
+            "note": (
+                "Limite de 3 tentativas atingido — pare de tentar corrigir sozinho e explique o problema."
+                if attempts >= 3 else
+                "Arquivo restaurado pro estado anterior ao patch. Analise o erro de sintaxe acima e tente de novo com apply_diff."
+            )
+        }
 
     def _extract_tool_call(self, text: str) -> Optional[Dict[str, Any]]:
         """Extrai bloco tool_call em JSON da resposta do modelo."""

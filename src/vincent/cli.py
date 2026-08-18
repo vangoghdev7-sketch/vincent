@@ -17,7 +17,7 @@ if _DIR not in sys.path:
 
 from vincent.devices import DeviceRegistry
 from vincent.agent import VincentAgent
-from vincent.gsd import GSDOrchestrator
+from vincent.models import build_image_content
 from vincent.auth import VincentAuth, SUPPORTED_PROVIDERS
 from vincent.llama_factory import LlamaFactoryOrchestrator
 from vincent.env_detect import PlatformEnvironment
@@ -83,7 +83,6 @@ def display_models_catalog(agent: VincentAgent, search_term: str = ""):
 def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     print(BANNER)
     
-    gsd = GSDOrchestrator(agent)
     auth = VincentAuth()
     trainer = LlamaFactoryOrchestrator()
     devs = registry.scan()
@@ -106,7 +105,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     
     print(f"\n{SHADOW_GRAY}Comandos essenciais da Galeria:{CLR_RST}")
     print(f"  {COBALT_BLUE}/act <tarefa>{CLR_RST} (agentic loop) • {COBALT_BLUE}/models{CLR_RST} (catálogo)    • {COBALT_BLUE}/search <termo>{CLR_RST} (buscar)")
-    print(f"  {COBALT_BLUE}/caveman on|off{CLR_RST} (tokens)      • {COBALT_BLUE}/gsd <tarefa>{CLR_RST} (swarm)     • {COBALT_BLUE}/squad{CLR_RST} (agentes)")
+    print(f"  {COBALT_BLUE}/caveman on|off{CLR_RST} (tokens)      • {COBALT_BLUE}/vision <img>{CLR_RST} (multimodal) • {COBALT_BLUE}/commit <msg>{CLR_RST} (git)")
     print(f"  {COBALT_BLUE}/vault /key{CLR_RST} (credenciais)     • {COBALT_BLUE}/train /lora{CLR_RST} (finetune)  • {COBALT_BLUE}/export{CLR_RST} (dataset)")
     print(f"  {COBALT_BLUE}/devices{CLR_RST} (hardware)          • {COBALT_BLUE}/cmd <dev> <cmd>{CLR_RST} (serial)  • {COBALT_BLUE}/stats{CLR_RST} (telemetria) • {COBALT_BLUE}/exit{CLR_RST}\n")
 
@@ -173,6 +172,48 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                     print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /act <descrição da tarefa de código/investigação>")
                 continue
 
+            elif prompt.startswith("/vision"):
+                parts = prompt.split(maxsplit=2)
+                if len(parts) > 1:
+                    img_path = parts[1].strip()
+                    question = parts[2].strip() if len(parts) > 2 else "Descreva em detalhes o que há nesta imagem."
+                    try:
+                        content = build_image_content(question, img_path)
+                    except (FileNotFoundError, ValueError) as e:
+                        print(f"{ALERT_SCARLET}✗ {e}{CLR_RST}\n")
+                        continue
+                    with NeuralSpinner(f"Vincent analisando imagem: '{img_path}'...", color=VIOLET_SWIRL):
+                        reply, used_model, lat = agent.model_manager.execute_inference(
+                            [{"role": "user", "content": content}],
+                            target_model=agent.model,
+                            system_prompt="Você é o Vincent. Analise a imagem enviada e responda de forma técnica e direta em Português."
+                        )
+                    render_response_box(
+                        reply or "[VINCENT VISION] Sem resposta do modelo.",
+                        agent.display_model, lat, mode="Visão Multimodal"
+                    )
+                else:
+                    print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /vision <caminho_da_imagem> [pergunta opcional]")
+                    print(f"{SHADOW_GRAY}Requer modelo multimodal ativo (ex: /model qwen2.5vl, /model auto/best-vision).{CLR_RST}")
+                continue
+
+            elif prompt.startswith("/commit"):
+                parts = prompt.split(maxsplit=1)
+                if len(parts) > 1:
+                    from vincent.agent_tools import tool_git_status, tool_git_commit
+                    status = tool_git_status()
+                    if not status.get("stdout", "").strip():
+                        print(f"{SHADOW_GRAY}Nada para commitar — working tree limpo.{CLR_RST}\n")
+                    else:
+                        res = tool_git_commit(message=parts[1].strip())
+                        if res.get("success"):
+                            print(f"{CYPRESS_GREEN}✓ Checkpoint criado: {parts[1].strip()}{CLR_RST}\n")
+                        else:
+                            print(f"{ALERT_SCARLET}✗ Commit falhou: {res.get('stderr') or res.get('error')}{CLR_RST}\n")
+                else:
+                    print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /commit <mensagem Conventional Commits, ex: 'fix(core): ...'>")
+                continue
+
             elif prompt.startswith("/caveman"):
                 parts = prompt.split(maxsplit=1)
                 if len(parts) > 1:
@@ -193,21 +234,6 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                     print(f"{SHADOW_GRAY}Uso: /caveman off | lite | full | ultra{CLR_RST}")
                 continue
 
-            elif prompt.startswith("/gsd") or prompt.startswith("/plan"):
-                parts = prompt.split(maxsplit=1)
-                if len(parts) > 1:
-                    task = parts[1].strip()
-                    with NeuralSpinner(f"GSD Swarm orquestrando onda para: '{task}'...", color=VIOLET_SWIRL):
-                        res = gsd.execute_plan(task)
-                    render_response_box(res, agent.display_model, agent.telemetry.last_latency, mode="GSD Swarm Plan")
-                else:
-                    print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /gsd <descrição da tarefa complexa>")
-                continue
-
-            elif prompt == "/squad":
-                gsd.list_squad()
-                continue
-
             # ── Key Vault & Autenticação Segura ─────────────────────────────
             elif prompt in ("/vault", "/auth", "/login"):
                 render_section_header("COFRE DE CHAVES LOCAL (CHMOD 0600)", "🔐", COBALT_BLUE)
@@ -217,12 +243,17 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 print(f"  4. Inserir chave Gemini")
                 print(f"  5. Inserir chave DeepSeek")
                 print(f"  6. Configurar Host Ollama Local")
-                print(f"  7. Ver status do cofre\n")
-                choice = input(f"{CHROME_YELLOW}Escolha uma opção (1-7 ou Enter para voltar):{CLR_RST} ").strip()
-                prov_map = {"1": "omniroute", "2": "openai", "3": "anthropic", "4": "gemini", "5": "deepseek", "6": "ollama_host"}
+                print(f"  7. Inserir chave Tavily (fallback de busca web)")
+                print(f"  8. Inserir chave Serper (fallback de busca web)")
+                print(f"  9. Ver status do cofre\n")
+                choice = input(f"{CHROME_YELLOW}Escolha uma opção (1-9 ou Enter para voltar):{CLR_RST} ").strip()
+                prov_map = {
+                    "1": "omniroute", "2": "openai", "3": "anthropic", "4": "gemini",
+                    "5": "deepseek", "6": "ollama_host", "7": "tavily", "8": "serper"
+                }
                 if choice in prov_map:
                     auth.interactive_login(prov_map[choice])
-                elif choice == "7":
+                elif choice == "9":
                     render_hud_card("STATUS DO COFRE DE CHAVES", auth.status_card_data(), COBALT_BLUE)
                 continue
 
@@ -291,11 +322,12 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
             elif prompt == "/help":
                 render_section_header("GUIA DE COMANDOS DA GALERIA VINCENT", "💡", COBALT_BLUE)
                 print(f"  {COBALT_BLUE}/act <tarefa>{CLR_RST}           Agentic Loop: investiga e altera código com ferramentas")
+                print(f"  {COBALT_BLUE}/vision <img> [pergunta]{CLR_RST} Analisa imagem via modelo multimodal")
+                print(f"  {COBALT_BLUE}/commit <msg>{CLR_RST}          Checkpoint git manual (Conventional Commits)")
                 print(f"  {COBALT_BLUE}/models{CLR_RST}               Exibe todas as rotas e modelos de IA indexados")
                 print(f"  {COBALT_BLUE}/search <termo>{CLR_RST}        Filtra modelos por palavra-chave (ex: /search free)")
                 print(f"  {COBALT_BLUE}/model <id>{CLR_RST}            Sintoniza o modelo ativo em tempo real")
                 print(f"  {COBALT_BLUE}/caveman <modo>{CLR_RST}        Ativa compressão extrema de tokens (off, lite, full, ultra)")
-                print(f"  {COBALT_BLUE}/gsd <tarefa>{CLR_RST}          Dispara plano autônomo com o Swarm de Agentes")
                 print(f"  {COBALT_BLUE}/vault | /key{CLR_RST}          Gerencia chaves de API com segurança (chmod 0600)")
                 print(f"  {COBALT_BLUE}/train | /lora{CLR_RST}        Gera pipeline de fine-tuning LlamaFactory")
                 print(f"  {COBALT_BLUE}/export{CLR_RST}                Exporta histórico para dataset de treino")
@@ -333,7 +365,6 @@ def main():
     parser.add_argument("-l", "--list-models", action="store_true", help="Listar todos os modelos do catálogo")
     parser.add_argument("-s", "--search", type=str, default="", help="Filtrar modelos por termo de busca")
     parser.add_argument("-c", "--caveman", type=str, default=None, help="Modo caveman (lite, full, ultra)")
-    parser.add_argument("-g", "--gsd", type=str, default=None, help="Executar plano autônomo via GSD Swarm")
     parser.add_argument("-d", "--devices", action="store_true", help="Listar dispositivos de hardware USB conectados")
     parser.add_argument("-t", "--train", action="store_true", help="Gerar configuração de treino LoRA via LlamaFactory")
     parser.add_argument("--vault", "--auth", action="store_true", help="Exibir status do cofre de chaves (chmod 0600)")
@@ -399,13 +430,6 @@ def main():
         with spinner:
             res = agent.agentic_run(args.agent, on_step_callback=lambda step: spinner.update_message(f"Vincent: {step}"))
         render_response_box(res, agent.display_model, agent.telemetry.last_latency, mode="Agentic Loop (Tools)")
-        sys.exit(0)
-
-    if args.gsd:
-        gsd = GSDOrchestrator(agent)
-        with NeuralSpinner(f"GSD Swarm orquestrando: '{args.gsd}'...", color=VIOLET_SWIRL):
-            res = gsd.execute_plan(args.gsd)
-        render_response_box(res, agent.display_model, agent.telemetry.last_latency, mode="GSD Swarm Plan")
         sys.exit(0)
 
     if args.prompt:
