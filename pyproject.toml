@@ -7,10 +7,12 @@ requires-python = ">=3.10"
 dependencies = [
     "pyserial>=3.5",
     "psutil>=5.9",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
 hardware = ["pyserial>=3.5"]
+api = ["flask>=3.0", "flask-socketio>=5.3"]
 
 [project.scripts]
 vincent = "vincent.cli:main"
