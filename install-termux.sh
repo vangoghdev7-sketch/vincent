@@ -18,11 +18,14 @@ echo -e "\033[38;5;220m  ◈ INSTALADOR TERMUX • V I N C E N T   C L I   v 4 .
 
 echo -e "\033[38;5;254m[1/4] Atualizando repositórios e instalando dependências base...\033[0m"
 pkg update -y
-pkg install -y python python-pip git clang libffi openssl
+# python-psutil via pkg (precompilado pro TUR/main do Termux) — psutil é
+# extensão C sem wheel pra Android no PyPI; "pip install psutil" tenta
+# compilar do zero e quebra com "platform android is not supported".
+pkg install -y python python-pip git clang libffi openssl python-psutil
 
 echo -e "\033[38;5;254m[2/4] Instalando pacotes Python necessários...\033[0m"
 pip install --upgrade pip
-pip install pyserial psutil pyyaml setuptools
+pip install pyserial pyyaml setuptools
 
 echo -e "\033[38;5;254m[3/4] Instalando pacote Vincent CLI em modo editável...\033[0m"
 VINCENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

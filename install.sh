@@ -53,14 +53,21 @@ else
     git clone --depth 1 "$REPO_URL" "$INSTALL_DIR"
 fi
 
-# ── 4. Instala o pacote (pipx se disponível, senão pip --user) ────────
+# ── 4. Instala o pacote ─────────────────────────────────────────────────
+# Termux primeiro e SEM pipx: pipx isola em venv próprio, que não enxerga
+# pacote nenhum instalado via `pkg` — psutil (extensão C) não tem wheel
+# pra Android no PyPI, pip/uv tentam compilar do zero e quebram com
+# "platform android is not supported". python-psutil do repositório do
+# Termux (TUR/main) já vem precompilado; plain pip (sem venv/isolamento,
+# igual o Termux já opera por padrão) enxerga esse pacote direto.
 cd "$INSTALL_DIR"
-if command -v pipx >/dev/null 2>&1; then
-    pipx install --force .
-elif [ "$PLATFORM" = "termux" ]; then
+if [ "$PLATFORM" = "termux" ]; then
+    pkg install -y python-psutil
     pip install --upgrade pip
-    pip install pyserial psutil pyyaml setuptools
+    pip install pyserial pyyaml setuptools
     pip install -e .
+elif command -v pipx >/dev/null 2>&1; then
+    pipx install --force .
 else
     python3 -m pip install --user -e .
     echo "  (sem pipx — instalado via pip --user; garanta que ~/.local/bin está no PATH)"
