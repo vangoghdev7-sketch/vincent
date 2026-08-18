@@ -80,6 +80,13 @@ def display_models_catalog(agent: VincentAgent, search_term: str = ""):
     print(f"\n{SHADOW_GRAY}Sintonia: /model <id> │ Busca rápida: /search <termo> │ Total: {len(all_models)} modelos{CLR_RST}\n")
 
 
+BARE_COMMAND_ALIASES = {
+    "models", "search", "model", "act", "agent", "vision", "commit", "caveman",
+    "vault", "auth", "login", "key", "train", "lora", "export", "devices",
+    "cmd", "stats", "help",
+}
+
+
 def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     print(BANNER)
     
@@ -127,6 +134,12 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
             prompt = input(f"{COBALT_BLUE}vincent{CLR_RST} {CHROME_YELLOW}[{agent.display_model}]{CLR_RST} {CLR_BOLD}❯{CLR_RST} ").strip()
             if not prompt:
                 continue
+
+            # Aceita o nome do comando sem a barra (ex: "models" == "/models"),
+            # igual já acontecia com exit/clear — agora vale pra todos.
+            first_word = prompt.split(None, 1)[0].lower() if prompt else ""
+            if not prompt.startswith("/") and first_word in BARE_COMMAND_ALIASES:
+                prompt = "/" + prompt
 
             # ── Comandos Especiais do REPL ──────────────────────────────────
             if prompt in ("/exit", "/quit", "exit", "quit", ":q"):
@@ -338,10 +351,22 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 print(f"  {COBALT_BLUE}/exit{CLR_RST}                 Encerra o CLI\n")
                 continue
 
-            # ── Execução de Prompt Padrão ────────────────────────────────────
+            elif prompt.startswith("/"):
+                # Comando com barra que não bateu em nenhum handler acima — não
+                # manda pro chat (o modelo alucina JSON de tool-call que nunca
+                # executa). Erro direto.
+                cmd = prompt.split(maxsplit=1)[0]
+                print(f"{ALERT_SCARLET}✗ Comando desconhecido: {cmd}{CLR_RST}")
+                print(f"{SHADOW_GRAY}Use /help para ver os comandos disponíveis.{CLR_RST}\n")
+                continue
+
+            # ── Execução de Prompt Padrão (chat = ação, mesmo loop do /act) ──
+            # Um único caminho: agentic_run já sai em 1 turno se o modelo não
+            # pedir ferramenta (ex: "oi"), e executa de verdade quando pede.
             mode_label = f"Caveman ({agent.caveman.mode})" if agent.caveman.mode != "off" else "Standard"
-            with NeuralSpinner(f"Pintando resposta com [{agent.display_model}]...", color=COBALT_BLUE):
-                reply = agent.ask(prompt)
+            spinner = NeuralSpinner(f"Pintando resposta com [{agent.display_model}]...", color=COBALT_BLUE)
+            with spinner:
+                reply = agent.agentic_run(prompt, on_step_callback=lambda step: spinner.update_message(f"Vincent: {step}"))
 
             render_response_box(
                 reply=reply,
@@ -434,8 +459,9 @@ def main():
 
     if args.prompt:
         question = " ".join(args.prompt)
-        with NeuralSpinner(f"Processando com [{agent.display_model}]...", color=COBALT_BLUE):
-            reply = agent.ask(question)
+        spinner = NeuralSpinner(f"Processando com [{agent.display_model}]...", color=COBALT_BLUE)
+        with spinner:
+            reply = agent.agentic_run(question, on_step_callback=lambda step: spinner.update_message(f"Vincent: {step}"))
         mode_label = f"Caveman ({agent.caveman.mode})" if agent.caveman.mode != "off" else "Standard"
         render_response_box(reply, agent.display_model, agent.telemetry.last_latency, mode=mode_label, tokens_saved=agent.caveman.total_tokens_saved)
         sys.exit(0)

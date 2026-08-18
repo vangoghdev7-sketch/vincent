@@ -161,7 +161,10 @@ def tool_bash(command: str, timeout_sec: int = 30, cwd: Optional[str] = None) ->
     """Executa comandos de terminal em subprocesso isolado com controle de timeout."""
     work_dir = os.path.abspath(os.path.expanduser(cwd)) if cwd else os.getcwd()
     
-    # Bloqueio simples de comandos perigosos
+    # Bloqueio simples de comandos perigosos.
+    # ponytail: denylist por substring, contornável (ex: python -c os.remove).
+    # Agora todo chat cai aqui (não só /act) — se precisar de garantia real,
+    # trocar por allowlist ou sandbox (bwrap/firejail) quando isso importar.
     dangerous = ["rm -rf /", "mkfs", "dd if=", ":(){ :|:& };:"]
     if any(d in command for d in dangerous):
         return {"error": "Comando bloqueado por motivos de segurança do sistema."}

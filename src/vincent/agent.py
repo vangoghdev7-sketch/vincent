@@ -131,6 +131,7 @@ class VincentAgent:
             self._history.append({"role": "user", "content": processed_prompt})
             self._history.append({"role": "assistant", "content": reply})
             self._execute_commands(reply)
+            save_summary(f"Pergunta: {processed_prompt[:300]}\nResposta: {reply[:500]}")
             return reply
         
         return "[VINCENT] Resposta vazia ou falha de comunicação com os nós neurais."
