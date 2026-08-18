@@ -112,7 +112,17 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
         ("AMBIENTE", f"{env_summary['os']} (Modo: {env_summary['layout_mode']})")
     ]
     render_hud_card("TELEMETRIA NOITE ESTRELADA — VINCENT HUD", hud_items, COBALT_BLUE)
-    
+
+    # Sem NENHUM motor de IA disponível (nem local, nem nuvem, nem chave):
+    # avisa AGORA, antes do usuário descobrir isso só depois de digitar uma
+    # pergunta e tomar um erro de conexão cru.
+    if ollama_count == 0 and omni_count == 0 and not auth.is_authenticated:
+        print(f"\n{ALERT_SCARLET}⚠ Nenhum motor de IA disponível ainda — o Vincent não vai conseguir responder nada.{CLR_RST}")
+        print(f"{SHADOW_GRAY}Escolha um caminho antes de começar:{CLR_RST}")
+        print(f"  {CHROME_YELLOW}1.{CLR_RST} /vault — cole uma chave de API (OpenAI/Anthropic/Gemini/DeepSeek)")
+        print(f"  {CHROME_YELLOW}2.{CLR_RST} instale o Ollama (https://ollama.com) e rode: ollama pull qwen3:0.6b")
+        print(f"  {CHROME_YELLOW}3.{CLR_RST} gateway OmniRoute em outra máquina? export VINCENT_GATEWAY_URL=http://<ip>:20128/v1\n")
+
     print(f"\n{SHADOW_GRAY}Comandos essenciais da Galeria:{CLR_RST}")
     print(f"  {COBALT_BLUE}/act <tarefa>{CLR_RST} (agentic loop) • {COBALT_BLUE}/bg <tarefa>{CLR_RST} (background)  • {COBALT_BLUE}/config{CLR_RST} (painel visual)")
     print(f"  {COBALT_BLUE}/models{CLR_RST} (catálogo)           • {COBALT_BLUE}/search <termo>{CLR_RST} (buscar)  • {COBALT_BLUE}/caveman on|off{CLR_RST} (tokens)")
