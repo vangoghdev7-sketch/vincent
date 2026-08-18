@@ -202,7 +202,7 @@ class ModelManager:
                 cascade.append(local_m)
 
         # Adiciona rotas do OmniRoute
-        for omni_m in ["auto/best-free", "auto/best-coding", "auto/smart", "auto"]:
+        for omni_m in ["auto/best-free", "auto/best-coding", "auto/best-reasoning", "auto/smart", "auto"]:
             if omni_m not in cascade:
                 cascade.append(omni_m)
 

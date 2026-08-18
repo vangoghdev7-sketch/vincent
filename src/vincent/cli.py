@@ -348,7 +348,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 model=agent.display_model,
                 latency=agent.telemetry.last_latency,
                 mode=mode_label,
-                tokens_saved=agent.caveman.total_saved
+                tokens_saved=agent.caveman.total_tokens_saved
             )
 
         except KeyboardInterrupt:
@@ -437,7 +437,7 @@ def main():
         with NeuralSpinner(f"Processando com [{agent.display_model}]...", color=COBALT_BLUE):
             reply = agent.ask(question)
         mode_label = f"Caveman ({agent.caveman.mode})" if agent.caveman.mode != "off" else "Standard"
-        render_response_box(reply, agent.display_model, agent.telemetry.last_latency, mode=mode_label, tokens_saved=agent.caveman.total_saved)
+        render_response_box(reply, agent.display_model, agent.telemetry.last_latency, mode=mode_label, tokens_saved=agent.caveman.total_tokens_saved)
         sys.exit(0)
 
     # Entra no REPL interativo futurista

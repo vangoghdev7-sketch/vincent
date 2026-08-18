@@ -9,9 +9,19 @@ from typing import Tuple
 
 class CavemanEngine:
     """Motor de compressão de tokens e otimização contextual."""
-    
+
     INTENSITY_LEVELS = ["off", "lite", "full", "ultra", "wenyan-lite", "wenyan-full", "wenyan-ultra"]
-    
+
+    MODE_DESCRIPTIONS = {
+        "off": "Compressão desativada — respostas em linguagem natural completa.",
+        "lite": "[MODO CAVEMAN LITE: Responda de forma concisa, direta e estritamente técnica, sem preâmbulos ou cortesias].",
+        "full": "[MODO CAVEMAN FULL (-65% tokens): Fale como homem das cavernas hiperinteligente. Corte artigos, floreios e saudações. Mantenha 100% da precisão técnica, comandos e códigos intactos].",
+        "ultra": "[MODO CAVEMAN ULTRA (-80% tokens): Resposta telegráfica máxima. Apenas fatos, código e comandos. Zero explicações desnecessárias].",
+        "wenyan-lite": "[MODO CAVEMAN WENYAN-LITE: Resposta ultra-densa clássica/técnica concisa].",
+        "wenyan-full": "[MODO CAVEMAN WENYAN-FULL: Resposta ultra-densa clássica/técnica concisa].",
+        "wenyan-ultra": "[MODO CAVEMAN WENYAN-ULTRA: Resposta ultra-densa clássica/técnica concisa]."
+    }
+
     def __init__(self, mode: str = "off"):
         self.mode = mode.lower() if mode.lower() in self.INTENSITY_LEVELS else "off"
         self.total_tokens_saved = 0
@@ -57,29 +67,14 @@ class CavemanEngine:
             compressed = re.sub(f, "", compressed, flags=re.IGNORECASE)
 
         # 2. Intensidades específicas
-        if self.mode == "lite":
-            # Remove apenas ruído e preenchimentos, mantendo frases completas
-            compressed = re.sub(r"\s+", " ", compressed).strip()
-            directive = "[MODO CAVEMAN LITE: Responda de forma concisa, direta e estritamente técnica, sem preâmbulos ou cortesias]."
-
-        elif self.mode == "full":
+        if self.mode == "full":
             # Modo padrão caveman: elimina artigos desnecessários e floreios
             articles = [r"\bum\b", r"\buma\b", r"\buns\b", r"\bumas\b", r"\bo\b", r"\ba\b", r"\bos\b", r"\bas\b"]
             for art in articles:
                 compressed = re.sub(art, "", compressed, flags=re.IGNORECASE)
-            compressed = re.sub(r"\s+", " ", compressed).strip()
-            directive = "[MODO CAVEMAN FULL (-65% tokens): Fale como homem das cavernas hiperinteligente. Corte artigos, floreios e saudações. Mantenha 100% da precisão técnica, comandos e códigos intactos]."
 
-        elif self.mode == "ultra":
-            # Compressão máxima telegráfica
-            compressed = re.sub(r"\s+", " ", compressed).strip()
-            directive = "[MODO CAVEMAN ULTRA (-80% tokens): Resposta telegráfica máxima. Apenas fatos, código e comandos. Zero explicações desnecessárias]."
-
-        elif self.mode.startswith("wenyan"):
-            compressed = re.sub(r"\s+", " ", compressed).strip()
-            directive = f"[MODO CAVEMAN {self.mode.upper()}: Resposta ultra-densa clássica/técnica concisa]."
-        else:
-            directive = ""
+        compressed = re.sub(r"\s+", " ", compressed).strip()
+        directive = self.MODE_DESCRIPTIONS.get(self.mode, "")
 
         final_prompt = f"{directive}\n{compressed}".strip()
         final_tokens = self.estimate_tokens(final_prompt)
@@ -96,6 +91,7 @@ class CavemanEngine:
     def get_stats(self) -> dict:
         return {
             "mode": self.mode,
+            "description": self.MODE_DESCRIPTIONS.get(self.mode, ""),
             "total_tokens_saved": self.total_tokens_saved,
             "compressions_count": self.compressions_count,
             "estimated_cost_saved_usd": round((self.total_tokens_saved / 1000) * 0.003, 4)

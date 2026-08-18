@@ -2,7 +2,7 @@
 Vincent Agent — Núcleo de Inteligência Unificada ESP32 & Orquestrador de LLMs.
 Executa em nome do Vincent com suporte a mais de 1200 rotas neurais próprias,
 modelos locais de alta velocidade, Caveman Compression e Agentic Loop com Tool Calling.
-Motor único e generalista — sem divisão em personas/squad de especialistas.
+Motor único e generalista.
 """
 
 import json

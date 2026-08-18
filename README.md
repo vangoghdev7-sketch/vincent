@@ -25,7 +25,7 @@
 
 ### 2. ⚡ Catálogo de 1200+ Modelos & Motor Local Zero-Key
 - **Rotas Zero-Key & Gratuitas**: Suporte a centenas de rotas públicas e combos de auto-roteamento (`auto/best-coding`, `auto/best-reasoning`, `auto/best-free`, `auto/smart`).
-- **Atelier Local Offline (Ollama)**: Modelos locais pré-carregados para operação com zero latência e 100% offline (`qwen3:0.6b`, `qwen2.5-coder:7b`, `granite4:tiny-h`, etc.).
+- **Atelier Local Offline (Ollama)**: opera com zero latência e 100% offline usando modelos locais que você já tenha puxado via `ollama pull` (ex: `qwen3:0.6b`, `qwen2.5-coder:7b`, `granite4:tiny-h`). O Vincent não baixa modelos sozinho.
 - **Cascata com Failover Inteligente**: Chaveamento transparente e instantâneo entre nós locais e remotos em caso de indisponibilidade ou rate-limit.
 
 ### 3. 📉 Compressão Caveman (-65% Tokens)
@@ -60,8 +60,8 @@
 ### Linux / macOS / Windows (WSL)
 
 ```bash
-git clone https://github.com/seu-usuario/vincent-cli.git
-cd vincent-cli
+git clone https://github.com/vangoghdev7-sketch/vincent.git
+cd vincent
 pip install -e .
 ```
 
@@ -97,6 +97,22 @@ vincent -c full "Refatore o driver serial do ESP32DIV em C++"
 vincent -a "Criar script de automação de backup no systemd"
 ```
 
+### Flags da CLI
+
+| Flag | Descrição |
+| :--- | :--- |
+| `-m, --model <id>` | Modelo inicial (padrão: `qwen3:0.6b`) |
+| `-a, --agent <tarefa>` | Executa via Agentic Loop autônomo com Tool Calling |
+| `-l, --list-models` | Lista o catálogo completo de modelos |
+| `-s, --search <termo>` | Filtra modelos por palavra-chave |
+| `-c, --caveman <modo>` | Modo caveman (`lite`, `full`, `ultra`) |
+| `-d, --devices` | Lista dispositivos de hardware USB conectados |
+| `-t, --train` | Gera configuração de treino LoRA via LlamaFactory |
+| `--vault, --auth` | Exibe status do cofre de chaves (chmod 0600) |
+| `--serve, --daemon` | Inicia servidor MCP em background (daemon) |
+| `--mcp` | Inicia servidor MCP no terminal via stdio |
+| `--socket <path>` | Caminho do socket Unix para o servidor MCP |
+
 ### Comandos Internos do REPL
 
 | Comando | Descrição |
@@ -115,6 +131,7 @@ vincent -a "Criar script de automação de backup no systemd"
 | `/cmd <dev> <cmd>` | Envia comando serial direto para o hardware |
 | `/stats` | Exibe telemetria detalhada, recursos e economia de tokens |
 | `/clear` | Limpa a tela e o histórico da sessão |
+| `/help` | Mostra este guia de comandos |
 | `/exit` | Encerra o Vincent CLI |
 
 ---
