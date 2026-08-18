@@ -18,7 +18,13 @@ DB_FILE = os.path.expanduser("~/.vincent/brain.db")
 
 def _connect() -> sqlite3.Connection:
     os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
-    conn = sqlite3.connect(DB_FILE)
+    # isolation_level=None (autocommit) + BEGIN IMMEDIATE explícito nos métodos
+    # de leitura-modificação-escrita: sem isso, dois threads podem ler o mesmo
+    # failure_count, incrementar em Python e escrever por cima um do outro —
+    # lost update de verdade, testado (100 threads: só 178 de 4000 incrementos
+    # sobreviveram sem essa trava). timeout maior pra esperar a trava em vez
+    # de estourar "database is locked" sob concorrência real (/bg + /spawn).
+    conn = sqlite3.connect(DB_FILE, timeout=10.0, isolation_level=None)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS circuit_breaker (
             provider TEXT PRIMARY KEY,
@@ -85,49 +91,61 @@ class CircuitBreaker:
     def can_execute(self, provider: str) -> bool:
         """Recuperação preguiçosa: OPEN vira HALF_OPEN sozinho quando o timeout expira."""
         conn = _connect()
-        failures, state, opened_at = self._row(conn, provider)
-        if state == CircuitState.OPEN.value:
-            if opened_at is not None and time.time() - opened_at >= self.reset_timeout:
-                conn.execute(
-                    "UPDATE circuit_breaker SET state = ? WHERE provider = ?",
-                    (CircuitState.HALF_OPEN.value, provider)
-                )
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            failures, state, opened_at = self._row(conn, provider)
+            if state == CircuitState.OPEN.value:
+                if opened_at is not None and time.time() - opened_at >= self.reset_timeout:
+                    conn.execute(
+                        "UPDATE circuit_breaker SET state = ? WHERE provider = ?",
+                        (CircuitState.HALF_OPEN.value, provider)
+                    )
+                    conn.commit()
+                    return True  # 1 sonda permitida
                 conn.commit()
-                conn.close()
-                return True  # 1 sonda permitida
+                return False
+            conn.commit()
+            return True
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
             conn.close()
-            return False
-        conn.close()
-        return True
 
     def record_result(self, provider: str, success: bool, status_code: Optional[int] = None):
         if not success and status_code is not None and status_code not in TRIP_CODES:
             return  # 401/403/429 não abrem o circuito
         conn = _connect()
-        failures, state, _opened_at = self._row(conn, provider)
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            failures, state, _opened_at = self._row(conn, provider)
 
-        if success:
-            conn.execute(
-                "INSERT INTO circuit_breaker (provider, failures, state, opened_at) "
-                "VALUES (?, 0, 'closed', NULL) "
-                "ON CONFLICT(provider) DO UPDATE SET failures = 0, state = 'closed', opened_at = NULL",
-                (provider,)
-            )
-        else:
-            failures += 1
-            new_state = state
-            opened = _opened_at
-            if failures >= self.open_at:
-                new_state, opened = CircuitState.OPEN.value, time.time()
-            elif failures >= self.degrade_at:
-                new_state = CircuitState.DEGRADED.value
-            conn.execute(
-                "INSERT INTO circuit_breaker (provider, failures, state, opened_at) VALUES (?, ?, ?, ?) "
-                "ON CONFLICT(provider) DO UPDATE SET failures = ?, state = ?, opened_at = ?",
-                (provider, failures, new_state, opened, failures, new_state, opened)
-            )
-        conn.commit()
-        conn.close()
+            if success:
+                conn.execute(
+                    "INSERT INTO circuit_breaker (provider, failures, state, opened_at) "
+                    "VALUES (?, 0, 'closed', NULL) "
+                    "ON CONFLICT(provider) DO UPDATE SET failures = 0, state = 'closed', opened_at = NULL",
+                    (provider,)
+                )
+            else:
+                failures += 1
+                new_state = state
+                opened = _opened_at
+                if failures >= self.open_at:
+                    new_state, opened = CircuitState.OPEN.value, time.time()
+                elif failures >= self.degrade_at:
+                    new_state = CircuitState.DEGRADED.value
+                conn.execute(
+                    "INSERT INTO circuit_breaker (provider, failures, state, opened_at) VALUES (?, ?, ?, ?) "
+                    "ON CONFLICT(provider) DO UPDATE SET failures = ?, state = ?, opened_at = ?",
+                    (provider, failures, new_state, opened, failures, new_state, opened)
+                )
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
     def get_state(self, provider: str) -> str:
         conn = _connect()
@@ -141,6 +159,11 @@ class CircuitBreaker:
 # Retry-After do 429 tem prioridade sobre o cooldown padrão calculado.
 
 BASE_COOLDOWN_SEC = {"oauth": 5, "api_key": 3}
+# ponytail: sem teto, 2**backoff_level estoura OverflowError depois de muitas
+# falhas seguidas (achado via stress test com 4000 falhas na mesma chave —
+# cenário real pra `vincent --serve` rodando dias contra gateway fora do ar).
+# Com 20, 3s * 2^19 ~= 18 dias de cooldown máximo, teto mais que suficiente.
+MAX_BACKOFF_LEVEL = 20
 
 
 class Cooldown:
@@ -164,21 +187,27 @@ class Cooldown:
     def record_failure(self, connection_id: str, retry_after_sec: Optional[float] = None,
                         terminal: Optional[str] = None):
         conn = _connect()
-        row = conn.execute(
-            "SELECT backoff_level FROM cooldown WHERE connection_id = ?", (connection_id,)
-        ).fetchone()
-        backoff_level = (row[0] if row else 0) + 1
-        cooldown_sec = retry_after_sec if retry_after_sec is not None else self.base_sec * (2 ** (backoff_level - 1))
-        until = time.time() + cooldown_sec
-        conn.execute(
-            "INSERT INTO cooldown (connection_id, rate_limited_until, backoff_level, terminal_state) "
-            "VALUES (?, ?, ?, ?) ON CONFLICT(connection_id) DO UPDATE SET "
-            "rate_limited_until = excluded.rate_limited_until, backoff_level = excluded.backoff_level, "
-            "terminal_state = COALESCE(excluded.terminal_state, cooldown.terminal_state)",
-            (connection_id, until, backoff_level, terminal)
-        )
-        conn.commit()
-        conn.close()
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            row = conn.execute(
+                "SELECT backoff_level FROM cooldown WHERE connection_id = ?", (connection_id,)
+            ).fetchone()
+            backoff_level = min((row[0] if row else 0) + 1, MAX_BACKOFF_LEVEL)
+            cooldown_sec = retry_after_sec if retry_after_sec is not None else self.base_sec * (2 ** (backoff_level - 1))
+            until = time.time() + cooldown_sec
+            conn.execute(
+                "INSERT INTO cooldown (connection_id, rate_limited_until, backoff_level, terminal_state) "
+                "VALUES (?, ?, ?, ?) ON CONFLICT(connection_id) DO UPDATE SET "
+                "rate_limited_until = excluded.rate_limited_until, backoff_level = excluded.backoff_level, "
+                "terminal_state = COALESCE(excluded.terminal_state, cooldown.terminal_state)",
+                (connection_id, until, backoff_level, terminal)
+            )
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
     def record_success(self, connection_id: str):
         conn = _connect()
@@ -188,7 +217,6 @@ class Cooldown:
             "rate_limited_until = 0, backoff_level = 0",
             (connection_id,)
         )
-        conn.commit()
         conn.close()
 
 
@@ -220,36 +248,48 @@ class ModelLockout:
         if not self.enabled or status_code not in LOCKOUT_ERROR_CODES:
             return
         conn = _connect()
-        row = conn.execute(
-            "SELECT failure_count FROM model_lockout WHERE model_key = ?", (model_key,)
-        ).fetchone()
-        failure_count = (row[0] if row else 0) + 1
-        step = min(failure_count, LOCKOUT_MAX_STEPS)
-        cooldown_ms = min(LOCKOUT_BASE_MS * (2 ** (step - 1)), LOCKOUT_MAX_MS)
-        locked_until = time.time() + cooldown_ms / 1000
-        conn.execute(
-            "INSERT INTO model_lockout (model_key, failure_count, locked_until) VALUES (?, ?, ?) "
-            "ON CONFLICT(model_key) DO UPDATE SET failure_count = ?, locked_until = ?",
-            (model_key, failure_count, locked_until, failure_count, locked_until)
-        )
-        conn.commit()
-        conn.close()
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            row = conn.execute(
+                "SELECT failure_count FROM model_lockout WHERE model_key = ?", (model_key,)
+            ).fetchone()
+            failure_count = (row[0] if row else 0) + 1
+            step = min(failure_count, LOCKOUT_MAX_STEPS)
+            cooldown_ms = min(LOCKOUT_BASE_MS * (2 ** (step - 1)), LOCKOUT_MAX_MS)
+            locked_until = time.time() + cooldown_ms / 1000
+            conn.execute(
+                "INSERT INTO model_lockout (model_key, failure_count, locked_until) VALUES (?, ?, ?) "
+                "ON CONFLICT(model_key) DO UPDATE SET failure_count = ?, locked_until = ?",
+                (model_key, failure_count, locked_until, failure_count, locked_until)
+            )
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
     def record_success(self, model_key: str):
         """Decaimento por sucesso: reduz a falha pela metade em vez de resetar na hora."""
         if not self.enabled:
             return
         conn = _connect()
-        row = conn.execute(
-            "SELECT failure_count FROM model_lockout WHERE model_key = ?", (model_key,)
-        ).fetchone()
-        if not row:
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            row = conn.execute(
+                "SELECT failure_count FROM model_lockout WHERE model_key = ?", (model_key,)
+            ).fetchone()
+            if not row:
+                conn.commit()
+                return
+            new_count = row[0] // 2
+            if new_count <= 0:
+                conn.execute("DELETE FROM model_lockout WHERE model_key = ?", (model_key,))
+            else:
+                conn.execute("UPDATE model_lockout SET failure_count = ? WHERE model_key = ?", (new_count, model_key))
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
             conn.close()
-            return
-        new_count = row[0] // 2
-        if new_count <= 0:
-            conn.execute("DELETE FROM model_lockout WHERE model_key = ?", (model_key,))
-        else:
-            conn.execute("UPDATE model_lockout SET failure_count = ? WHERE model_key = ?", (new_count, model_key))
-        conn.commit()
-        conn.close()
