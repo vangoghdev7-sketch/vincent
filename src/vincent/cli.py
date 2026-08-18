@@ -131,6 +131,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     # trocar por fila serial ou lock por-campo.
     bg_results: "queue.Queue" = queue.Queue()
     bg_counter = [0]
+    bg_threads: list = []  # rastreados só pra avisar em /exit se algo ainda roda
 
     def _spawn_background(task: str):
         bg_counter[0] += 1
@@ -143,7 +144,9 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 res = f"[VINCENT BG] Falhou: {e}"
             bg_results.put((task_id, task, res))
 
-        threading.Thread(target=_worker, daemon=True).start()
+        t = threading.Thread(target=_worker, daemon=True)
+        bg_threads.append(t)
+        t.start()
         return task_id
 
     while True:
@@ -176,6 +179,12 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
 
             # ── Comandos Especiais do REPL ──────────────────────────────────
             if prompt in ("/exit", "/quit", "exit", "quit", ":q"):
+                still_running = sum(1 for t in bg_threads if t.is_alive())
+                if still_running:
+                    print(f"\n{ALERT_SCARLET}⚠ {still_running} tarefa(s) em segundo plano ainda rodando — serão perdidas ao sair.{CLR_RST}")
+                    confirm = input(f"{CHROME_YELLOW}Sair mesmo assim? (s/N):{CLR_RST} ").strip().lower()
+                    if confirm != "s":
+                        continue
                 print(f"\n{COBALT_BLUE}◈ Sessão encerrada. As estrelas continuam brilhando na galeria. Até logo!{CLR_RST}\n")
                 break
 
