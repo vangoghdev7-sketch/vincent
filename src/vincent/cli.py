@@ -86,7 +86,7 @@ def display_models_catalog(agent: VincentAgent, search_term: str = ""):
 BARE_COMMAND_ALIASES = {
     "models", "search", "model", "act", "agent", "bg", "vision", "commit", "caveman",
     "vault", "auth", "login", "key", "train", "lora", "export", "devices",
-    "cmd", "stats", "help", "config", "skills", "skill",
+    "cmd", "stats", "help", "config", "skills", "skill", "spawn", "gateway",
 }
 
 
@@ -148,6 +148,28 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
         bg_threads.append(t)
         t.start()
         return task_id
+
+    def _spawn_parallel(subtasks: list):
+        """/spawn — N workers de verdade (ThreadPoolExecutor em agent.spawn_workers),
+        disparado numa thread própria pra não travar o REPL enquanto rodam."""
+        bg_counter[0] += 1
+        batch_id = bg_counter[0]
+
+        def _on_worker_event(i: int, status: str):
+            print(f"\n{SHADOW_GRAY}  worker {i+1}/{len(subtasks)}: {status} — '{subtasks[i][:60]}'{CLR_RST}")
+
+        def _runner():
+            try:
+                results = agent.spawn_workers(subtasks, on_worker_event=_on_worker_event)
+            except Exception as e:
+                results = [f"[VINCENT SPAWN] Falhou: {e}"]
+            summary = "\n\n".join(f"── Worker {i+1} ──\n{r}" for i, r in enumerate(results))
+            bg_results.put((batch_id, f"/spawn {len(subtasks)} workers", summary))
+
+        t = threading.Thread(target=_runner, daemon=True)
+        bg_threads.append(t)
+        t.start()
+        return batch_id
 
     while True:
         try:
@@ -238,6 +260,23 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                     print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /bg <tarefa> — roda em segundo plano, não trava o REPL")
                 continue
 
+            elif prompt.startswith("/spawn"):
+                parts = prompt.split(maxsplit=2)
+                if len(parts) > 2 and parts[1].isdigit():
+                    n = int(parts[1])
+                    task_str = parts[2].strip()
+                    # "a; b; c" = uma subtarefa distinta por worker. Sem ";" = as
+                    # N cópias da mesma tarefa rodam em paralelo (N tentativas).
+                    subtasks = [t.strip() for t in task_str.split(";") if t.strip()] or [task_str]
+                    if len(subtasks) == 1 and n > 1:
+                        subtasks = [task_str] * n
+                    batch_id = _spawn_parallel(subtasks)
+                    print(f"{VIOLET_SWIRL}◈ Lote #{batch_id} disparado: {len(subtasks)} workers em paralelo.{CLR_RST}")
+                    print(f"{SHADOW_GRAY}Continue trabalhando — status de cada worker aparece aqui conforme termina.{CLR_RST}\n")
+                else:
+                    print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /spawn <n> <tarefa1>; <tarefa2>; ... (ou uma tarefa só = N tentativas em paralelo)")
+                continue
+
             elif prompt.startswith("/skill add"):
                 url = prompt.split(maxsplit=2)[2].strip() if len(prompt.split(maxsplit=2)) > 2 else ""
                 if not url:
@@ -290,6 +329,17 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 else:
                     print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /vision <caminho_da_imagem> [pergunta opcional]")
                     print(f"{SHADOW_GRAY}Requer modelo multimodal ativo (ex: /model qwen2.5vl, /model auto/best-vision).{CLR_RST}")
+                continue
+
+            elif prompt in ("/gateway", "/gateway status"):
+                status = agent.model_manager.gateway_status()
+                items = [
+                    ("URL", status["url"]),
+                    ("ALCANÇÁVEL", f"{CYPRESS_GREEN}SIM{CLR_RST} ({status['model_count']} modelos)" if status["reachable"] else f"{ALERT_SCARLET}NÃO{CLR_RST}"),
+                    ("CIRCUITO", status["circuit_state"].upper()),
+                    ("COOLDOWN ATIVO", "SIM" if status["cooldown_active"] else "NÃO"),
+                ]
+                render_hud_card("STATUS DO GATEWAY OMNIROUTE", items, COBALT_BLUE)
                 continue
 
             elif prompt == "/config":
@@ -437,6 +487,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 print(f"  {COBALT_BLUE}/export{CLR_RST}                Exporta histórico para dataset de treino")
                 print(f"  {COBALT_BLUE}/skills{CLR_RST}               Lista skills instaladas (SKILL.md carregado sob demanda)")
                 print(f"  {COBALT_BLUE}/skill add <git-url>{CLR_RST}   Clona um repo de skills (ex: obsidian-skills) pra ~/.vincent/skills")
+                print(f"  {COBALT_BLUE}/spawn <n> <tarefas>{CLR_RST}   N workers paralelos (separe por ';' ou repete a mesma tarefa)")
                 print(f"  {COBALT_BLUE}/devices{CLR_RST}              Varre e inspeciona placas ESP32 conectadas")
                 print(f"  {COBALT_BLUE}/cmd <dev> <cmd>{CLR_RST}       Envia comando serial direto para a placa")
                 print(f"  {COBALT_BLUE}/stats{CLR_RST}                Relatório de telemetria, hardware e economia de tokens")

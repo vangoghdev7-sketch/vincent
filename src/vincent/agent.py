@@ -271,6 +271,80 @@ class VincentAgent:
 
         return reply or "[VINCENT AGENTIC] Limite de passos atingido sem conclusão."
 
+    def spawn_workers(self, subtasks: List[str], on_worker_event: Optional[Callable[[int, str], None]] = None) -> List[str]:
+        """
+        N workers genéricos rodando em paralelo (ThreadPoolExecutor — as
+        chamadas são I/O-bound, então threads bastam, sem asyncio). Motor
+        único: cada worker é o MESMO loop de tool-calling, só que com
+        estado 100% local (sem tocar self._history/self._heal_attempts),
+        pra não correr com o agente principal nem entre si.
+        ponytail: sem auto-heal por worker (isso é só pra apply_diff
+        arriscado no loop principal) — adicionar se workers começarem a
+        aplicar patch e quebrar sem chance de restaurar.
+        """
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        def _worker(i: int, task: str) -> str:
+            if on_worker_event:
+                on_worker_event(i, "ocupado")
+            try:
+                result = self._run_worker_task(task)
+            except Exception as e:
+                result = f"[VINCENT WORKER {i}] Falhou: {e}"
+            if on_worker_event:
+                on_worker_event(i, "terminado")
+            return result
+
+        results = [""] * len(subtasks)
+        with ThreadPoolExecutor(max_workers=len(subtasks)) as pool:
+            futures = {pool.submit(_worker, i, t): i for i, t in enumerate(subtasks)}
+            for fut in as_completed(futures):
+                results[futures[fut]] = fut.result()
+        return results
+
+    def _run_worker_task(self, task: str, max_turns: int = 4) -> str:
+        """Mesmo loop de tool-calling do agentic_run, mas com estado 100%
+        local — seguro pra chamar de várias threads ao mesmo tempo."""
+        target_m = self._escalate_for_tools(self.model)
+        processed_task, _ = self.caveman.compress_prompt(task)
+        state = self._device_state()
+        heal_attempts: Dict[str, int] = {}
+        skills_ctx = skills_context(task)
+
+        turn_messages: List[Dict[str, str]] = [
+            {"role": "user", "content": f"[{state}]\nTarefa (worker): {processed_task}"}
+        ]
+        final_response = ""
+        reply = ""
+
+        for _ in range(max_turns):
+            reply, _used_model, _lat = self.model_manager.execute_inference(
+                turn_messages,
+                target_model=target_m,
+                system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context + skills_ctx
+            )
+            if not reply:
+                break
+            tool_call = self._extract_tool_call(reply)
+            if not tool_call:
+                final_response = reply
+                break
+
+            tool_name = tool_call.get("tool", "")
+            tool_args = tool_call.get("args", {})
+            tool_result = execute_agent_tool(tool_name, tool_args)
+            is_error = bool(tool_result.get("error")) or (tool_result.get("exit_code", 0) != 0)
+            prefix = "[AUTO-CURA: ERRO NA FERRAMENTA]" if is_error else "[RESULTADO DA FERRAMENTA]"
+            turn_messages.append({"role": "assistant", "content": reply})
+            turn_messages.append({
+                "role": "user",
+                "content": f"{prefix} {tool_name}:\n{json.dumps(tool_result, ensure_ascii=False, indent=2)}\n\nContinue ou finalize."
+            })
+
+        final_response = final_response or reply or "[VINCENT WORKER] Limite de passos atingido sem conclusão."
+        save_summary(f"Tarefa (worker): {processed_task}\nResultado: {final_response[:500]}")
+        return final_response
+
     def _auto_heal_check(
         self, path: str, pre_patch_snapshot: str, on_step_callback: Optional[Callable[[str], None]] = None
     ) -> Dict[str, Any]:

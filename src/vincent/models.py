@@ -11,7 +11,9 @@ import os
 import time
 import urllib.request
 import urllib.error
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict, Tuple, Any
+
+from .routing.resilience import CircuitBreaker, Cooldown
 
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"}
 
@@ -61,7 +63,7 @@ def _messages_for_ollama(messages: List[Dict]) -> List[Dict]:
             converted.append(msg)
     return converted
 
-OMNIROUTE_URL = os.environ.get("OMNIROUTE_URL", "http://localhost:20128/v1").rstrip("/")
+OMNIROUTE_URL = os.environ.get("VINCENT_GATEWAY_URL", os.environ.get("OMNIROUTE_URL", "http://localhost:20128/v1")).rstrip("/")
 OLLAMA_URL = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/")
 if not OLLAMA_URL.startswith("http"):
     OLLAMA_URL = "http://" + OLLAMA_URL
@@ -78,6 +80,9 @@ class ModelManager:
         self.cached_ollama_models: List[str] = []
         self.last_sync = 0.0
         self.display_to_real: Dict[str, str] = {}
+        self._omniroute_circuit = CircuitBreaker("api_key")
+        self._ollama_circuit = CircuitBreaker("local")
+        self._omniroute_cooldown = Cooldown("api_key")
         self._load_cache()
 
     @staticmethod
@@ -180,6 +185,21 @@ class ModelManager:
 
         return models
 
+    def gateway_status(self) -> Dict[str, Any]:
+        """
+        Status do gateway OmniRoute detectado em OMNIROUTE_URL.
+        Nota: a doc real (docs/routing/AUTO-COMBO.md) não documenta nenhum
+        header de resposta identificando a rota/provider escolhido — não
+        expomos nada tipo "decisão de rota" que não exista de verdade.
+        """
+        return {
+            "url": OMNIROUTE_URL,
+            "reachable": len(self.cached_omniroute_models) > 0,
+            "model_count": len(self.cached_omniroute_models),
+            "circuit_state": self._omniroute_circuit.get_state("omniroute"),
+            "cooldown_active": not self._omniroute_cooldown.is_available("omniroute"),
+        }
+
     def is_free_tier(self, model_name: str) -> bool:
         if model_name in self.cached_ollama_models:
             return True
@@ -201,8 +221,10 @@ class ModelManager:
             if local_m in self.cached_ollama_models and local_m not in cascade:
                 cascade.append(local_m)
 
-        # Adiciona rotas do OmniRoute
-        for omni_m in ["auto/best-free", "auto/best-coding", "auto/best-reasoning", "auto/smart", "auto"]:
+        # Adiciona rotas do OmniRoute. IDs reais confirmados em
+        # docs/routing/AUTO-COMBO.md do diegosouzapw/OmniRoute (MIT) —
+        # os antigos "auto/best-*" eram aproximação, não existem no gateway real.
+        for omni_m in ["auto/cheap", "auto/coding", "auto/smart", "auto/fast", "auto"]:
             if omni_m not in cascade:
                 cascade.append(omni_m)
 
@@ -216,6 +238,9 @@ class ModelManager:
             # 1. Tentativa via Ollama Local
             if model in self.cached_ollama_models or model.startswith("ollama/"):
                 ollama_name = model.replace("ollama/", "")
+                if not self._ollama_circuit.can_execute("ollama"):
+                    last_error = f"Vincent Local ({model}): circuito aberto (falhas recentes)"
+                    continue
                 try:
                     payload = {
                         "model": ollama_name,
@@ -237,13 +262,23 @@ class ModelManager:
                         res_data = json.loads(resp.read().decode("utf-8"))
                         text = res_data.get("message", {}).get("content", "").strip()
                         if text:
+                            self._ollama_circuit.record_result("ollama", success=True)
                             dt = time.time() - t0
                             return text, model, dt
+                    self._ollama_circuit.record_result("ollama", success=False, status_code=503)
                 except Exception as e:
+                    code = e.code if isinstance(e, urllib.error.HTTPError) else 503
+                    self._ollama_circuit.record_result("ollama", success=False, status_code=code)
                     last_error = f"Vincent Local ({model}): {e}"
                     continue
 
             # 2. Tentativa via OmniRoute Gateway
+            if not self._omniroute_circuit.can_execute("omniroute"):
+                last_error = f"Vincent Cloud ({self.mask(model)}): circuito aberto (falhas recentes)"
+                continue
+            if not self._omniroute_cooldown.is_available("omniroute"):
+                last_error = f"Vincent Cloud ({self.mask(model)}): em cooldown (rate limit recente)"
+                continue
             try:
                 headers = {"Content-Type": "application/json"}
                 if "OMNIROUTE_API_KEY" in os.environ:
@@ -266,9 +301,24 @@ class ModelManager:
                     res_data = json.loads(resp.read().decode("utf-8"))
                     text = res_data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
                     if text:
+                        self._omniroute_circuit.record_result("omniroute", success=True)
+                        self._omniroute_cooldown.record_success("omniroute")
                         dt = time.time() - t0
                         return text, model, dt
+                self._omniroute_circuit.record_result("omniroute", success=False, status_code=503)
             except Exception as e:
+                code = e.code if isinstance(e, urllib.error.HTTPError) else 503
+                if code == 429:
+                    retry_after_sec = None
+                    if isinstance(e, urllib.error.HTTPError) and e.headers:
+                        raw = e.headers.get("Retry-After")
+                        try:
+                            retry_after_sec = float(raw) if raw else None
+                        except ValueError:
+                            retry_after_sec = None  # Retry-After em formato de data HTTP, não segundos — usa fallback
+                    self._omniroute_cooldown.record_failure("omniroute", retry_after_sec=retry_after_sec)
+                else:
+                    self._omniroute_circuit.record_result("omniroute", success=False, status_code=code)
                 last_error = f"Vincent Cloud ({self.mask(model)}): {e}"
                 continue
 
