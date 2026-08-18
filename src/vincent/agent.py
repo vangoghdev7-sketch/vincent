@@ -21,6 +21,20 @@ from .telemetry import PonytailTelemetry
 from .agent_tools import execute_agent_tool, TOOL_DEFINITIONS
 from .memory import recall_context, save_summary
 
+OBSIDIAN_VAULT_CANDIDATES = [
+    os.environ.get("VINCENT_OBSIDIAN_VAULT", ""),
+    os.path.expanduser("~/Documents/Obsidian Vault"),
+]
+
+
+def _detect_obsidian_vault() -> str:
+    """Detecta um vault Obsidian local (override via VINCENT_OBSIDIAN_VAULT, senão path padrão)."""
+    for path in OBSIDIAN_VAULT_CANDIDATES:
+        if path and os.path.isdir(path):
+            return path
+    return ""
+
+
 SYSTEM_BASE = """Você é o Vincent — Inteligência Central de Hardware, Software e Engenharia de Sistemas.
 Você possui capacidades autônomas de investigação de código, execução de ferramentas e controle de hardware ESP32.
 
@@ -86,7 +100,12 @@ class VincentAgent:
         self.caveman = CavemanEngine(mode="off")
         self.telemetry = PonytailTelemetry()
         self.plugins = PluginManager()
-        self._memory_context = recall_context()
+        self._obsidian_vault = _detect_obsidian_vault()
+        vault_note = (
+            f"\n\n## Segundo Cérebro (Obsidian):\nVault Markdown disponível em: {self._obsidian_vault}\n"
+            f"Use list_dir/grep_search/read_file nesse caminho pra consultar as notas técnicas quando relevante."
+        ) if self._obsidian_vault else ""
+        self._memory_context = recall_context() + vault_note
 
         # Sincronização inicial de catálogo
         self.model_manager.sync_catalogs()

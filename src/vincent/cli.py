@@ -8,7 +8,9 @@ LlamaFactory Fine-Tuning, Caveman Compression (-65%), and Termux/ADB Universal A
 
 import argparse
 import os
+import queue
 import sys
+import threading
 import time
 
 _DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -18,6 +20,7 @@ if _DIR not in sys.path:
 from vincent.devices import DeviceRegistry
 from vincent.agent import VincentAgent
 from vincent.models import build_image_content
+from vincent.tui_config import run_config_tui
 from vincent.auth import VincentAuth, SUPPORTED_PROVIDERS
 from vincent.llama_factory import LlamaFactoryOrchestrator
 from vincent.env_detect import PlatformEnvironment
@@ -81,9 +84,9 @@ def display_models_catalog(agent: VincentAgent, search_term: str = ""):
 
 
 BARE_COMMAND_ALIASES = {
-    "models", "search", "model", "act", "agent", "vision", "commit", "caveman",
+    "models", "search", "model", "act", "agent", "bg", "vision", "commit", "caveman",
     "vault", "auth", "login", "key", "train", "lora", "export", "devices",
-    "cmd", "stats", "help",
+    "cmd", "stats", "help", "config",
 }
 
 
@@ -111,15 +114,45 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     render_hud_card("TELEMETRIA NOITE ESTRELADA — VINCENT HUD", hud_items, COBALT_BLUE)
     
     print(f"\n{SHADOW_GRAY}Comandos essenciais da Galeria:{CLR_RST}")
-    print(f"  {COBALT_BLUE}/act <tarefa>{CLR_RST} (agentic loop) • {COBALT_BLUE}/models{CLR_RST} (catálogo)    • {COBALT_BLUE}/search <termo>{CLR_RST} (buscar)")
-    print(f"  {COBALT_BLUE}/caveman on|off{CLR_RST} (tokens)      • {COBALT_BLUE}/vision <img>{CLR_RST} (multimodal) • {COBALT_BLUE}/commit <msg>{CLR_RST} (git)")
-    print(f"  {COBALT_BLUE}/vault /key{CLR_RST} (credenciais)     • {COBALT_BLUE}/train /lora{CLR_RST} (finetune)  • {COBALT_BLUE}/export{CLR_RST} (dataset)")
+    print(f"  {COBALT_BLUE}/act <tarefa>{CLR_RST} (agentic loop) • {COBALT_BLUE}/bg <tarefa>{CLR_RST} (background)  • {COBALT_BLUE}/config{CLR_RST} (painel visual)")
+    print(f"  {COBALT_BLUE}/models{CLR_RST} (catálogo)           • {COBALT_BLUE}/search <termo>{CLR_RST} (buscar)  • {COBALT_BLUE}/caveman on|off{CLR_RST} (tokens)")
+    print(f"  {COBALT_BLUE}/vision <img>{CLR_RST} (multimodal)   • {COBALT_BLUE}/commit <msg>{CLR_RST} (git)       • {COBALT_BLUE}/export{CLR_RST} (dataset)")
+    print(f"  {COBALT_BLUE}/vault /key{CLR_RST} (credenciais)     • {COBALT_BLUE}/train /lora{CLR_RST} (finetune)  • {COBALT_BLUE}/help{CLR_RST} (mais)")
     print(f"  {COBALT_BLUE}/devices{CLR_RST} (hardware)          • {COBALT_BLUE}/cmd <dev> <cmd>{CLR_RST} (serial)  • {COBALT_BLUE}/stats{CLR_RST} (telemetria) • {COBALT_BLUE}/exit{CLR_RST}\n")
 
     term_w = get_terminal_width()
 
+    # Spawn de tarefas em background (thread + queue, stdlib puro). São
+    # I/O-bound (chamadas de rede pro Ollama/OmniRoute), então threading já
+    # sobrepõe de verdade enquanto o usuário segue digitando.
+    # ponytail: agentic_run compartilha estado do agent (_history, telemetry,
+    # _heal_attempts) — rodar 2 tarefas ao mesmo tempo pode causar corrida
+    # nesses campos. Ok pro uso ocasional de 1 usuário; se virar rotina,
+    # trocar por fila serial ou lock por-campo.
+    bg_results: "queue.Queue" = queue.Queue()
+    bg_counter = [0]
+
+    def _spawn_background(task: str):
+        bg_counter[0] += 1
+        task_id = bg_counter[0]
+
+        def _worker():
+            try:
+                res = agent.agentic_run(task, max_turns=6)
+            except Exception as e:
+                res = f"[VINCENT BG] Falhou: {e}"
+            bg_results.put((task_id, task, res))
+
+        threading.Thread(target=_worker, daemon=True).start()
+        return task_id
+
     while True:
         try:
+            while not bg_results.empty():
+                bg_id, bg_task, bg_res = bg_results.get_nowait()
+                print(f"\n{CYPRESS_GREEN}◈ Tarefa em segundo plano #{bg_id} concluída:{CLR_RST} '{bg_task}'")
+                render_response_box(bg_res, agent.display_model, agent.telemetry.last_latency, mode=f"Background #{bg_id}")
+
             statusline = agent.telemetry.render_statusline(
                 current_model=agent.display_model,
                 is_free=agent.model_manager.is_free_tier(agent.model),
@@ -185,6 +218,17 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                     print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /act <descrição da tarefa de código/investigação>")
                 continue
 
+            elif prompt.startswith("/bg"):
+                parts = prompt.split(maxsplit=1)
+                if len(parts) > 1:
+                    task = parts[1].strip()
+                    bg_id = _spawn_background(task)
+                    print(f"{VIOLET_SWIRL}◈ Tarefa em segundo plano #{bg_id} disparada:{CLR_RST} '{task}'")
+                    print(f"{SHADOW_GRAY}Continue trabalhando — aviso quando terminar.{CLR_RST}\n")
+                else:
+                    print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /bg <tarefa> — roda em segundo plano, não trava o REPL")
+                continue
+
             elif prompt.startswith("/vision"):
                 parts = prompt.split(maxsplit=2)
                 if len(parts) > 1:
@@ -208,6 +252,13 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 else:
                     print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /vision <caminho_da_imagem> [pergunta opcional]")
                     print(f"{SHADOW_GRAY}Requer modelo multimodal ativo (ex: /model qwen2.5vl, /model auto/best-vision).{CLR_RST}")
+                continue
+
+            elif prompt == "/config":
+                chosen = run_config_tui(agent.display_model)
+                if chosen:
+                    agent.set_model(chosen)
+                    print(f"{CYPRESS_GREEN}✓ Modelo ativo: {agent.display_model}{CLR_RST}\n")
                 continue
 
             elif prompt.startswith("/commit"):
@@ -335,6 +386,8 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
             elif prompt == "/help":
                 render_section_header("GUIA DE COMANDOS DA GALERIA VINCENT", "💡", COBALT_BLUE)
                 print(f"  {COBALT_BLUE}/act <tarefa>{CLR_RST}           Agentic Loop: investiga e altera código com ferramentas")
+                print(f"  {COBALT_BLUE}/bg <tarefa>{CLR_RST}           Roda tarefa em segundo plano, sem travar o REPL")
+                print(f"  {COBALT_BLUE}/config{CLR_RST}                Painel visual (setas) de chaves e modelo ativo")
                 print(f"  {COBALT_BLUE}/vision <img> [pergunta]{CLR_RST} Analisa imagem via modelo multimodal")
                 print(f"  {COBALT_BLUE}/commit <msg>{CLR_RST}          Checkpoint git manual (Conventional Commits)")
                 print(f"  {COBALT_BLUE}/models{CLR_RST}               Exibe todas as rotas e modelos de IA indexados")
@@ -393,6 +446,7 @@ def main():
     parser.add_argument("-d", "--devices", action="store_true", help="Listar dispositivos de hardware USB conectados")
     parser.add_argument("-t", "--train", action="store_true", help="Gerar configuração de treino LoRA via LlamaFactory")
     parser.add_argument("--vault", "--auth", action="store_true", help="Exibir status do cofre de chaves (chmod 0600)")
+    parser.add_argument("--config", action="store_true", help="Abrir painel visual interativo (setas) de configuração")
     parser.add_argument("--serve", "--daemon", action="store_true", help="Iniciar servidor MCP em segundo plano (daemon rastreável)")
     parser.add_argument("--mcp", action="store_true", help="Iniciar servidor MCP no terminal via stdio")
     parser.add_argument("--socket", type=str, default=None, help="Caminho do socket Unix para o servidor MCP")
@@ -448,6 +502,12 @@ def main():
     if args.vault:
         auth = VincentAuth()
         render_hud_card("COFRE DE CHAVES LOCAL (CHMOD 0600)", auth.status_card_data(), COBALT_BLUE)
+        sys.exit(0)
+
+    if args.config:
+        chosen = run_config_tui(agent.display_model)
+        if chosen:
+            print(f"{CYPRESS_GREEN}✓ Modelo ativo: {chosen} — rode 'vincent -m {chosen}' pra usar direto.{CLR_RST}")
         sys.exit(0)
 
     if args.agent:
