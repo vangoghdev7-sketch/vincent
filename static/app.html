@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VincentOS</title>
+<style>
+:root{
+  --bg:#060610;--s:#0e0e1a;--s2:#16162a;--s3:#1c1c30;
+  --ac:#7c3aed;--ac2:#06b6d4;--ac3:#8b5cf6;
+  --gr:#10b981;--re:#ef4444;--ye:#f59e0b;--or:#f97316;
+  --tx:#e2e8f0;--tx2:#94a3b8;--tx3:#64748b;
+  --br:#1e1e38;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--bg);color:var(--tx);
+  font-family:'SF Mono','Fira Code',ui-monospace,monospace;
+  display:flex;flex-direction:column;
+}
+/* ── Header ── */
+.hdr{
+  padding:env(safe-area-inset-top) 0 0;
+  background:var(--s);
+  border-bottom:1px solid var(--br);
+  flex-shrink:0;
+}
+.hdr-inner{
+  padding:12px 16px 8px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{
+  font-size:22px;font-weight:900;letter-spacing:5px;
+  background:linear-gradient(135deg,var(--ac),var(--ac2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hdr-right{display:flex;gap:10px;align-items:center}
+.dev-chip{
+  display:flex;align-items:center;gap:5px;
+  padding:4px 8px;border-radius:20px;
+  background:var(--s2);border:1px solid var(--br);
+  font-size:10px;color:var(--tx2);
+}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--re);flex-shrink:0}
+.dot.on{background:var(--gr);box-shadow:0 0 0 0 rgba(16,185,129,.5);animation:pulse 2.5s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.4)}70%{box-shadow:0 0 0 5px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+/* ── Tabs ── */
+.tabs{
+  display:flex;gap:2px;padding:0 8px 8px;background:var(--s);
+}
+.tb{
+  flex:1;padding:7px 2px;text-align:center;
+  font-size:10px;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--tx3);border-radius:7px;cursor:pointer;
+  transition:all .15s;user-select:none;
+}
+.tb.ac{background:var(--ac);color:#fff;box-shadow:0 2px 8px rgba(124,58,237,.4)}
+/* ── Content ── */
+.cnt{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 12px calc(12px + env(safe-area-inset-bottom));scroll-behavior:smooth}
+.pn{display:none}
+.pn.ac{display:flex;flex-direction:column;gap:10px}
+/* ── Cards ── */
+.card{
+  background:var(--s);border:1px solid var(--br);border-radius:14px;
+  padding:14px;overflow:hidden;
+}
+.card-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--tx3);margin-bottom:10px}
+/* ── Device card ── */
+.dh{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.dico{
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,var(--ac),var(--ac2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.dinfo h3{font-size:13px;font-weight:700}
+.dinfo small{font-size:10px;color:var(--tx3)}
+.dbadge{
+  margin-left:auto;padding:3px 9px;border-radius:20px;
+  font-size:9px;font-weight:700;letter-spacing:.5px;flex-shrink:0;
+}
+.dbadge.on{background:rgba(16,185,129,.15);color:var(--gr);border:1px solid rgba(16,185,129,.2)}
+.dbadge.off{background:rgba(239,68,68,.15);color:var(--re);border:1px solid rgba(239,68,68,.2)}
+.hwtags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.hw{padding:2px 7px;border-radius:20px;font-size:9px;background:var(--s2);color:var(--tx3);border:1px solid var(--br)}
+/* ── Quick buttons ── */
+.qgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:10px}
+.qb{
+  padding:8px 4px;font-size:10px;text-align:center;
+  background:var(--s2);border:1px solid var(--br);border-radius:8px;
+  cursor:pointer;color:var(--tx2);transition:all .1s;user-select:none;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.qb:active{background:var(--ac);border-color:var(--ac);color:#fff;transform:scale(.97)}
+/* ── Terminal ── */
+.term{
+  background:#000;border-radius:8px;padding:8px;
+  font-size:11px;height:100px;overflow-y:auto;
+  color:#4ade80;line-height:1.5;white-space:pre-wrap;word-break:break-all;
+  scroll-behavior:smooth;
+}
+.term .pr{color:var(--ac2)}
+.term .er{color:var(--re)}
+/* ── Input row ── */
+.irow{display:flex;gap:6px;margin-top:8px}
+.inp{
+  flex:1;background:var(--s2);border:1px solid var(--br);border-radius:8px;
+  padding:9px 10px;color:var(--tx);font-family:inherit;font-size:12px;
+  outline:none;transition:border-color .15s;
+}
+.inp:focus{border-color:var(--ac)}
+.btn{
+  padding:9px 14px;background:var(--ac);border:none;border-radius:8px;
+  color:#fff;font-size:14px;cursor:pointer;flex-shrink:0;
+  transition:opacity .15s;
+}
+.btn:active{opacity:.7}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+/* ── Chat ── */
+.msgs{display:flex;flex-direction:column;gap:8px;min-height:160px}
+.msg{max-width:88%;padding:9px 12px;border-radius:12px;font-size:12px;line-height:1.55;word-break:break-word}
+.msg.u{align-self:flex-end;background:var(--ac);color:#fff;border-bottom-right-radius:3px}
+.msg.a{align-self:flex-start;background:var(--s2);border:1px solid var(--br);border-bottom-left-radius:3px}
+.msg.sy{
+  align-self:center;background:rgba(6,182,212,.08);
+  border:1px solid rgba(6,182,212,.2);color:var(--ac2);
+  font-size:10px;max-width:96%;text-align:center;padding:8px 12px;
+}
+.chat-foot{
+  display:flex;gap:6px;padding-top:8px;
+  background:var(--bg);border-top:1px solid var(--br);margin-top:8px;
+  position:sticky;bottom:0;
+}
+/* ── Spinner ── */
+.sp{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ── Flash ── */
+.flash-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 0;border-bottom:1px solid var(--br);gap:8px;
+}
+.flash-item:last-child{border:none}
+.finfo h4{font-size:12px;font-weight:600}
+.finfo p{font-size:10px;color:var(--tx3);margin-top:2px}
+.avail{padding:3px 8px;border-radius:20px;font-size:9px;font-weight:700;flex-shrink:0}
+.avail.y{background:rgba(16,185,129,.15);color:var(--gr);border:1px solid rgba(16,185,129,.2)}
+.avail.n{background:rgba(239,68,68,.15);color:var(--re);border:1px solid rgba(239,68,68,.2)}
+/* ── Empty ── */
+.empty{text-align:center;padding:40px 20px;color:var(--tx3);font-size:12px}
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--br);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <span class="logo">VINCENT</span>
+    <div class="hdr-right" id="devChips">
+      <span style="font-size:10px;color:var(--tx3)">conectando…</span>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tb ac" onclick="sw('devices')">📟 Devices</div>
+    <div class="tb" onclick="sw('claude')">🤖 Claude</div>
+    <div class="tb" onclick="sw('flash')">⚡ Flash</div>
+  </div>
+</div>
+
+<div class="cnt" id="cnt">
+
+  <!-- DEVICES -->
+  <div class="pn ac" id="pn-devices">
+    <div class="empty" id="devEmpty">buscando dispositivos…</div>
+  </div>
+
+  <!-- CLAUDE -->
+  <div class="pn" id="pn-claude">
+    <div class="card">
+      <div class="msgs" id="chatMsgs">
+        <div class="msg sy">Claude está monitorando T-Embed + ESP32DIV autonomamente.<br>Pergunte qualquer coisa sobre o sistema.</div>
+      </div>
+      <div class="chat-foot">
+        <input class="inp" id="qi" placeholder="Pergunte ao Claude…" autocomplete="off" />
+        <button class="btn" id="qbtn" onclick="askClaude()">→</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLASH -->
+  <div class="pn" id="pn-flash">
+    <div class="empty" id="flashEmpty">carregando…</div>
+  </div>
+
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+const devs = {};
+const termLogs = {};
+
+// Quick commands per device
+const QUICK = {
+  TEMBED: [
+    {l:'WiFi On',  c:'wifi on'},
+    {l:'WiFi Off', c:'wifi off'},
+    {l:'Settings', c:'settings'},
+    {l:'Files',    c:'ls'},
+    {l:'WebUI',    c:'webui'},
+    {l:'IR Rx',    c:'ir rx 5'},
+  ],
+  ESP32DIV: [
+    {l:'WiFi On',  c:'wifi on'},
+    {l:'Settings', c:'settings'},
+    {l:'Files',    c:'ls'},
+    {l:'Status',   c:'dual status'},
+    {l:'Marauder', c:'dual marauder', warn:true},
+    {l:'Bruce',    c:'dual bruce'},
+  ],
+};
+const ICONS = {TEMBED:'📡', ESP32DIV:'🔬'};
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function sw(tab) {
+  const tabs = ['devices','claude','flash'];
+  document.querySelectorAll('.tb').forEach((t,i) => t.classList.toggle('ac', tabs[i]===tab));
+  document.querySelectorAll('.pn').forEach(p => p.classList.remove('ac'));
+  document.getElementById('pn-'+tab).classList.add('ac');
+  if (tab === 'flash') loadFlash();
+}
+
+// ── Device cards ──────────────────────────────────────────────────────────────
+function renderDevs() {
+  const list = Object.values(devs);
+  const chips = list.map(d => `
+    <div class="dev-chip">
+      <div class="dot ${d.online?'on':''}"></div>
+      <span>${d.id}</span>
+    </div>`).join('');
+  document.getElementById('devChips').innerHTML = chips || '<span style="font-size:10px;color:var(--tx3)">sem devices</span>';
+
+  const pn = document.getElementById('pn-devices');
+  const empty = document.getElementById('devEmpty');
+  if (!list.length) { empty.style.display='block'; return; }
+  empty.style.display = 'none';
+
+  // Remove old cards
+  pn.querySelectorAll('.dcard').forEach(c => c.remove());
+
+  list.forEach(d => {
+    let el = document.getElementById('dc-'+d.id);
+    if (el) el.remove();
+
+    const cmds = QUICK[d.id] || [];
+    const card = document.createElement('div');
+    card.className = 'card dcard';
+    card.id = 'dc-'+d.id;
+    card.innerHTML = `
+      <div class="dh">
+        <div class="dico">${ICONS[d.id]||'⚡'}</div>
+        <div class="dinfo">
+          <h3>${esc(d.label||d.id)}</h3>
+          <small>${esc(d.port||'')} · ${esc(d.firmware||'?')}</small>
+        </div>
+        <span class="dbadge ${d.online?'on':'off'}">${d.online?'ONLINE':'OFFLINE'}</span>
+      </div>
+      <div class="hwtags">${(d.hardware||[]).map(h=>`<span class="hw">${h}</span>`).join('')}</div>
+      <div class="qgrid">${cmds.map(c=>`<div class="qb" onclick="qcmd('${d.id}','${c.c}',${c.warn||false})">${c.l}</div>`).join('')}</div>
+      <div class="term" id="term-${d.id}"><span style="color:var(--tx3)">aguardando…</span></div>
+      <div class="irow">
+        <input class="inp" id="inp-${d.id}" placeholder="${d.id} › " autocomplete="off"
+               onkeydown="if(event.key==='Enter')fromInput('${d.id}')" />
+        <button class="btn" onclick="fromInput('${d.id}')">▶</button>
+      </div>`;
+    pn.appendChild(card);
+  });
+}
+
+function termWrite(id, html) {
+  if (!termLogs[id]) termLogs[id] = [];
+  termLogs[id].push(html);
+  const el = document.getElementById('term-'+id);
+  if (!el) return;
+  // Clear placeholder
+  if (el.querySelector('span')) el.innerHTML = '';
+  const d = document.createElement('div');
+  d.innerHTML = html;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+  while (el.childElementCount > 40) el.removeChild(el.firstChild);
+}
+
+async function qcmd(id, cmd, warn=false) {
+  if (warn && !confirm(`Enviar: ${cmd}?`)) return;
+  sendCmd(id, cmd);
+}
+
+function fromInput(id) {
+  const inp = document.getElementById('inp-'+id);
+  const cmd = inp.value.trim(); if (!cmd) return;
+  inp.value = '';
+  sendCmd(id, cmd);
+}
+
+async function sendCmd(id, cmd) {
+  termWrite(id, `<span class="pr">›</span> ${esc(cmd)}`);
+  try {
+    const r = await fetch(`/api/devices/${id}/command`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({cmd, wait:7.0})
+    });
+    const d = await r.json();
+    if (d.blocked) {
+      termWrite(id, `<span class="er">BLOQUEADO: ${esc(d.response)}</span>`);
+    } else {
+      const lines = (d.response||'').split('\n').filter(l=>l.trim());
+      if (!lines.length) termWrite(id, `<span style="color:var(--tx3)">(sem resposta)</span>`);
+      else lines.forEach(l => termWrite(id, `<span style="color:#86efac">${esc(l)}</span>`));
+    }
+  } catch(e) {
+    termWrite(id, `<span class="er">erro: ${esc(e.message)}</span>`);
+  }
+}
+
+// ── Claude chat ───────────────────────────────────────────────────────────────
+function addMsg(role, txt) {
+  const c = document.getElementById('chatMsgs');
+  const d = document.createElement('div');
+  d.className = 'msg '+role;
+  d.innerHTML = esc(txt).replace(/\n/g,'<br>');
+  c.appendChild(d);
+  c.parentElement.scrollTop = c.parentElement.scrollHeight;
+  return d;
+}
+
+async function askClaude() {
+  const inp = document.getElementById('qi');
+  const btn = document.getElementById('qbtn');
+  const q = inp.value.trim(); if (!q) return;
+  inp.value = '';
+  addMsg('u', q);
+  btn.innerHTML = '<span class="sp"></span>'; btn.disabled = true;
+  const th = addMsg('a', '…');
+  try {
+    const r = await fetch('/api/agent/ask', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({question:q})
+    });
+    const d = await r.json();
+    th.innerHTML = esc(d.answer||d.error||'?').replace(/\n/g,'<br>');
+  } catch(e) {
+    th.innerHTML = `<span class="er">${esc(e.message)}</span>`;
+  }
+  btn.innerHTML = '→'; btn.disabled = false;
+}
+
+document.getElementById('qi').addEventListener('keydown', e => {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); askClaude(); }
+});
+
+// ── Flash ─────────────────────────────────────────────────────────────────────
+async function loadFlash() {
+  const pn = document.getElementById('pn-flash');
+  const empty = document.getElementById('flashEmpty');
+  try {
+    const r = await fetch('/api/flash/status');
+    const data = await r.json();
+    empty.remove();
+    pn.querySelectorAll('.card').forEach(c=>c.remove());
+
+    for (const [devId, imgs] of Object.entries(data)) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      let inner = `<div class="card-title">${esc(devId)}</div>`;
+      for (const [name, info] of Object.entries(imgs)) {
+        const slots = Object.entries(info.slots||{}).map(([k,v])=>`${k}:${v}`).join(' · ');
+        inner += `
+        <div class="flash-item">
+          <div class="finfo">
+            <h4>${esc(name)}</h4>
+            <p>${esc(info.note || slots)}</p>
+          </div>
+          <span class="avail ${info.available?'y':'n'}">${info.available?'PRONTO':'FALTA'}</span>
+        </div>`;
+      }
+      card.innerHTML = inner;
+      pn.appendChild(card);
+    }
+
+    const infoCard = document.createElement('div');
+    infoCard.className = 'card';
+    infoCard.innerHTML = `
+      <div class="card-title">Como flashar</div>
+      <div style="font-size:11px;color:var(--tx3);line-height:1.7">
+        No terminal do computador:<br>
+        <span style="color:var(--ac2)">bash ~/vincent_flash.sh esp32div</span><br>
+        <span style="color:var(--ac2)">bash ~/vincent_flash.sh tembed</span><br>
+        <span style="color:var(--ac2)">bash ~/vincent_flash.sh both</span>
+      </div>`;
+    pn.appendChild(infoCard);
+  } catch(e) {
+    if (empty) empty.textContent = 'erro: '+e.message;
+  }
+}
+
+// ── WebSocket ─────────────────────────────────────────────────────────────────
+const socket = io({transports:['websocket','polling']});
+
+socket.on('connect', () => {
+  console.log('WS conectado');
+  loadDevs();
+});
+socket.on('disconnect', () => {
+  document.getElementById('devChips').innerHTML = '<span style="font-size:10px;color:var(--re)">desconectado</span>';
+});
+
+socket.on('device_update', ev => {
+  if (ev.kind === 'all_devices') {
+    (ev.payload||[]).forEach(d => { devs[d.id] = d; });
+    renderDevs();
+  } else if (ev.kind === 'connected') {
+    devs[ev.device_id] = ev.payload;
+    renderDevs();
+  } else if (ev.kind === 'disconnected') {
+    if (devs[ev.device_id]) { devs[ev.device_id].online = false; renderDevs(); }
+  } else if (ev.kind === 'command_result') {
+    // Ignore — handled by sendCmd
+  } else if (ev.kind === 'data') {
+    // Serial data — show in terminal lightly
+  }
+});
+
+socket.on('agent_analysis', ev => {
+  if (!ev.text) return;
+  const c = document.getElementById('chatMsgs');
+  const d = document.createElement('div');
+  d.className = 'msg sy';
+  d.innerHTML = '<b>AUTO CYCLE</b><br>' + esc(ev.text.slice(0,400)).replace(/\n/g,'<br>');
+  c.appendChild(d);
+  c.parentElement.scrollTop = c.parentElement.scrollHeight;
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function loadDevs() {
+  try {
+    const r = await fetch('/api/devices');
+    const list = await r.json();
+    list.forEach(d => { devs[d.id] = d; });
+    renderDevs();
+  } catch(e) {
+    document.getElementById('devEmpty').textContent = 'erro ao conectar: '+e.message;
+  }
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+loadDevs();
+</script>
+</body>
+</html>
