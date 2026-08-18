@@ -38,8 +38,9 @@ def _detect_obsidian_vault() -> str:
     return ""
 
 
-SYSTEM_BASE = """Você é o Vincent — Inteligência Central de Hardware, Software e Engenharia de Sistemas.
-Você possui capacidades autônomas de investigação de código, execução de ferramentas e controle de hardware ESP32.
+SYSTEM_BASE = """Você é o Vincent — assistente técnico geral: responde perguntas normais, investiga
+e edita código, e (só quando fizer sentido) controla hardware ESP32 conectado. A maioria das
+conversas não tem nada a ver com hardware — não puxe o assunto pra lá sem o usuário pedir.
 
 ## Ferramentas de Workspace Disponíveis:
 Quando precisar inspecionar arquivos, procurar trechos de código ou validar alterações, você pode emitir uma chamada de ferramenta no formato JSON exato:
@@ -154,7 +155,7 @@ class VincentAgent:
         processed_prompt, _ = self.caveman.compress_prompt(question)
         
         state = self._device_state()
-        user_content = f"[{state}]\nPergunta: {processed_prompt}"
+        user_content = f"[{state}]\nPergunta: {processed_prompt}" if state else f"Pergunta: {processed_prompt}"
         
         if len(self._history) >= 6:
             self._history = self._history[-5:]
@@ -191,8 +192,9 @@ class VincentAgent:
         self._heal_attempts: Dict[str, int] = {}
         skills_ctx = skills_context(task)
 
+        _task_prefix = f"[{state}]\nTarefa Agênica: " if state else "Tarefa Agênica: "
         turn_messages: List[Dict[str, str]] = [
-            {"role": "user", "content": f"[{state}]\nTarefa Agênica: {processed_task}"}
+            {"role": "user", "content": f"{_task_prefix}{processed_task}"}
         ]
 
         total_latency = 0.0
@@ -314,8 +316,9 @@ class VincentAgent:
         heal_attempts: Dict[str, int] = {}
         skills_ctx = skills_context(task)
 
+        _task_prefix = f"[{state}]\nTarefa (worker): " if state else "Tarefa (worker): "
         turn_messages: List[Dict[str, str]] = [
-            {"role": "user", "content": f"[{state}]\nTarefa (worker): {processed_task}"}
+            {"role": "user", "content": f"{_task_prefix}{processed_task}"}
         ]
         final_response = ""
         reply = ""
@@ -428,9 +431,17 @@ class VincentAgent:
                 time.sleep(0.2)
 
     def _device_state(self) -> str:
+        """
+        Vazio quando não há hardware conectado — de propósito. Injetar "nenhum
+        dispositivo conectado" em TODA mensagem (achado ao vivo: usuário disse
+        "oi" e "spawn agents", modelo pequeno respondeu falando de hardware
+        desconectado nos dois casos) prende modelos pequenos nesse tema mesmo
+        quando a pergunta não tem nada a ver com ESP32. Só vale a pena mencionar
+        quando há dispositivo de verdade pra descrever.
+        """
         devs = self.registry.all()
         if not devs:
-            return "Nenhum dispositivo físico conectado no momento."
+            return ""
         lines = ["Dispositivos conectados:"]
         for d in devs:
             hw = ", ".join(d.hardware[:5])
