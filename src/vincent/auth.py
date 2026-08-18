@@ -1,7 +1,6 @@
 """
-Vincent CLI 4.0 — Enterprise Whitelabel Authentication ('Conectar à Galeria').
-Provides OAuth2 Device Authorization Flow (RFC 8628) and Neural API Key Injection.
-Strict Whitelabeling: All connections refer to the Vincent Gallery & Neural Atelier.
+Vincent CLI — local API key vault ('Galeria Vincent').
+Key stored at ~/.vincent/auth.json, chmod 0600.
 """
 
 import os
@@ -74,34 +73,6 @@ class VincentAuth:
         # Exporta para ambiente de execução
         os.environ["VINCENT_AUTH_KEY"] = key_clean
         os.environ["OMNIROUTE_API_KEY"] = key_clean
-        return True
-
-    def start_device_flow(self, gallery_auth_url: str = "http://localhost:20128/v1/auth/device") -> Dict[str, Any]:
-        """
-        Inicia fluxo OAuth2 Device Flow (RFC 8628) para autenticação de terminal.
-        """
-        device_code = f"VINCENT-{int(time.time()) % 100000:05d}"
-        user_code = f"VG-{int(time.time() * 7) % 10000:04d}"
-        verification_uri = "https://vincent.gallery/activate"
-        
-        return {
-            "device_code": device_code,
-            "user_code": user_code,
-            "verification_uri": verification_uri,
-            "expires_in": 300,
-            "interval": 5
-        }
-
-    def complete_device_flow(self, user_code: str) -> bool:
-        """Finaliza a conexão de dispositivo OAuth2."""
-        self.session_data = {
-            "token": f"vg_tok_{user_code.lower()}_{int(time.time())}",
-            "user": f"Mestre-{user_code}",
-            "tier": "Atelier Enterprise 🏛️",
-            "auth_type": "oauth2_device",
-            "connected_at": time.strftime("%Y-%m-%d %H:%M:%S")
-        }
-        self.save_session()
         return True
 
     def logout(self) -> bool:

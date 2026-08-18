@@ -195,16 +195,11 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 continue
 
             elif prompt in ("/login", "/auth"):
-                df = auth.start_device_flow()
-                items = [
-                    ("CÓDIGO DE DISPOSITIVO", f"{LEMON_YELLOW}{CLR_BOLD}{df['user_code']}{CLR_RST}"),
-                    ("URL DE ATIVAÇÃO", f"{COBALT_BLUE}{df['verification_uri']}{CLR_RST}"),
-                    ("VALIDADE", f"{df['expires_in']} segundos"),
-                    ("INSTRUÇÃO", "Acesse a URL e insira o código acima para vincular sua assinatura da Galeria.")
-                ]
-                render_hud_card("CONECTAR À GALERIA VINCENT (OAUTH2)", items, COBALT_BLUE)
-                auth.complete_device_flow(df['user_code'])
-                print(f"{CYPRESS_GREEN}✓ Conectado com sucesso à Galeria Vincent!{CLR_RST}\n")
+                key = input(f"{COBALT_BLUE}Chave neural (API key):{CLR_RST} ").strip()
+                if auth.login_with_key(key):
+                    print(f"{CYPRESS_GREEN}✓ Chave Neural da Galeria registrada com sucesso!{CLR_RST}\n")
+                else:
+                    print(f"{ALERT_SCARLET}✗ Chave inválida.{CLR_RST}\n")
                 continue
 
             elif prompt.startswith("/key"):
