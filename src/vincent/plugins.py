@@ -48,7 +48,11 @@ class PluginManager:
             elif os.path.isfile(readme_md):
                 try:
                     with open(readme_md, "r", encoding="utf-8", errors="ignore") as f:
-                        lines = [l.strip() for l in f.readlines() if l.strip() and not l.startswith("#")]
+                        lines = [
+                            l.strip() for l in f.readlines()
+                            if l.strip() and not l.lstrip().startswith(("#", "<", "[![", "!["))
+                            and '="' not in l and len(l.split()) >= 3
+                        ]
                         if lines:
                             desc = lines[0][:100]
                 except Exception:
