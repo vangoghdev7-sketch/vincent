@@ -8,3 +8,5 @@ venv/
 *.egg-info/
 build/
 dist/
+.claude-flow/
+.vincent/

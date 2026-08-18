@@ -1,7 +1,7 @@
 """
-Vincent CLI 4.0 — UI/UX Pro Max Design System
-Van Gogh Starry Night Neural HUD — cobalt blue and chrome yellow TrueColor ANSI,
-glowing borders, dynamic neural spinners, syntax highlighting and responsive layouts.
+Vincent CLI 4.0 — Van Gogh 'Starry Night' Cyber-Impressionist UI/UX System.
+TrueColor ANSI palette (Cobalt Blue, Chrome Yellow, Starry Gold, Cypress Green),
+Swirling 'Redemoinho' Neural Spinners, Termux/ADB Adaptive Layouts and Whitelabeled HUD.
 """
 
 import os
@@ -11,74 +11,98 @@ import threading
 import itertools
 import shutil
 import re
+from .env_detect import PlatformEnvironment
 
-# ─── TrueColor & 256 ANSI Palette ─────────────────────────────────────────────
+# ─── TrueColor & 256 ANSI 'Starry Night' Palette ──────────────────────────────
 CLR_RST = "\033[0m"
 CLR_BOLD = "\033[1m"
 CLR_DIM = "\033[2m"
 CLR_ITALIC = "\033[3m"
 CLR_UNDERLINE = "\033[4m"
 
-# Van Gogh Starry Night Palette (UI/UX Pro Max)
-CYAN_NEON    = "\033[38;5;33m"   # #0087ff - Starry Night Cobalt Blue - Primary HUD & Accent
-CYAN_DARK    = "\033[38;5;25m"   # #005fd7 - Deep Prussian Blue - Secondary
-MAGENTA_NEON = "\033[38;5;220m"  # #ffd700 - Chrome Yellow - Highlights & Prompts
-MAGENTA_DEEP = "\033[38;5;178m"  # #d7af00 - Ochre Gold - Secondary Highlight
-PURPLE_GLOW  = "\033[38;5;141m"  # #af87ff - Swirling Violet - Neural / Pro Tiers
-GREEN_MATRIX = "\033[38;5;48m"   # #00ff87 - Success / Online / Free
-GREEN_DARK   = "\033[38;5;28m"   # #008700 - Cypress Green - Subdued
-AMBER_WARN   = "\033[38;5;214m"  # #ffaf00 - Warnings / Hardware
-RED_ALERT    = "\033[38;5;196m"  # #ff0000 - Errors / Critical
-ORANGE_FIRE  = "\033[38;5;208m"  # #ff8700 - Active Processes
-BLUE_ELECTRIC= "\033[38;5;75m"   # #5fafff - Info / Núcleo Vincent
-GRAY_LIGHT   = "\033[38;5;250m"  # #bcbcbc - Normal Text
-GRAY_MUTED   = "\033[38;5;242m"  # #6c6c6c - Dim / Secondary
-GRAY_DARK    = "\033[38;5;236m"  # #303030 - Dark Borders
-BG_DARK_HUD  = "\033[48;5;234m"  # Background Tint
+# Paleta Noite Estrelada (Van Gogh Post-Impressionism + Cyber-HUD)
+COBALT_BLUE   = "\033[38;5;33m"   # #0087ff - Azul Cobalto da Noite Estrelada
+PRUSSIAN_BLUE = "\033[38;5;25m"   # #005fd7 - Azul Noturno Profundo
+LEMON_YELLOW  = "\033[38;5;226m"  # #ffff00 - Amarelo Limão das Estrelas
+CHROME_YELLOW = "\033[38;5;220m"  # #ffd700 - Amarelo Cromo dos Astros
+STARRY_GOLD   = "\033[38;5;214m"  # #ffaf00 - Dourado das Pinceladas
+OCHRE_ORANGE  = "\033[38;5;208m"  # #ff8700 - Laranja Ocre
+CYPRESS_GREEN = "\033[38;5;48m"   # #00ff87 - Verde Cipreste Luminoso
+CYPRESS_DARK  = "\033[38;5;29m"   # #00875f - Verde Floresta Profundo
+VIOLET_SWIRL  = "\033[38;5;141m"  # #af87ff - Violeta dos Redemoinhos Celestes
+ALERT_SCARLET = "\033[38;5;196m"  # #ff0000 - Escarlate de Alerta
+CANVAS_WHITE  = "\033[38;5;254m"  # #e4e4e4 - Branco Tela / Pérola
+SHADOW_GRAY   = "\033[38;5;242m"  # #6c6c6c - Sombra Cinza / Detalhes
+NIGHT_BG      = "\033[48;5;234m"  # #1c1c1c - Fundo Noite
 
-# ─── Futuristic ASCII Banner ──────────────────────────────────────────────────
+# Aliases de compatibilidade visual
+CYAN_NEON    = COBALT_BLUE
+CYAN_DARK    = PRUSSIAN_BLUE
+MAGENTA_NEON = CHROME_YELLOW
+MAGENTA_DEEP = STARRY_GOLD
+PURPLE_GLOW  = VIOLET_SWIRL
+GREEN_MATRIX = CYPRESS_GREEN
+GREEN_DARK   = CYPRESS_DARK
+AMBER_WARN   = STARRY_GOLD
+RED_ALERT    = ALERT_SCARLET
+ORANGE_FIRE  = OCHRE_ORANGE
+BLUE_ELECTRIC= COBALT_BLUE
+GRAY_LIGHT   = CANVAS_WHITE
+GRAY_MUTED   = SHADOW_GRAY
+GRAY_DARK    = "\033[38;5;236m"
+
+# ─── Van Gogh Starry Night ASCII Masterpiece Banner ───────────────────────────
 BANNER = f"""
-{CYAN_NEON}  ██╗   ██╗██╗███╗   ██╗ ██████╗███████╗███╗   ██╗████████╗
-  ██║   ██║██║████╗  ██║██╔════╝██╔════╝████╗  ██║╚══██╔══╝
-  ██║   ██║██║██╔██╗ ██║██║     █████╗  ██╔██╗ ██║   ██║   
-  ╚██╗ ██╔╝██║██║╚██╗██║██║     ██╔══╝  ██║╚██╗██║   ██║   
-   ╚████╔╝ ██║██║ ╚████║╚██████╗███████╗██║ ╚████║   ██║   
-    ╚═══╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝╚═╝  ╚═══╝   ╚═╝   {CLR_RST}
-  {MAGENTA_NEON}◈ V I N C E N T   O S   N E U R A L   C L I   v 4 . 0 ◈{CLR_RST}
-  {GRAY_LIGHT}Motor OmniRoute • Zero-Key Free • Caveman • GSD Swarm • ESP32 Lab{CLR_RST}
-  {GRAY_MUTED}Catálogo ao vivo: rode /models pra ver a contagem real conectada agora{CLR_RST}
-  {GRAY_MUTED}van Gogh Edition — Starry Night HUD{CLR_RST}
+{COBALT_BLUE}   ★    .   ☆  *   .   ★    .   *   ☆  .   ★    .   *   ☆  .   ★{CLR_RST}
+{COBALT_BLUE}  ██╗   ██╗██╗███╗   ██╗ ██████╗███████╗███╗   ██╗████████╗{CLR_RST}
+{PRUSSIAN_BLUE}  ██║   ██║██║████╗  ██║██╔════╝██╔════╝████╗  ██║╚══██╔══╝{CLR_RST}
+{COBALT_BLUE}  ██║   ██║██║██╔██╗ ██║██║     █████╗  ██╔██╗ ██║   ██║   {CLR_RST}
+{PRUSSIAN_BLUE}  ╚██╗ ██╔╝██║██║╚██╗██║██║     ██╔══╝  ██║╚██╗██║   ██║   {CLR_RST}
+{COBALT_BLUE}   ╚████╔╝ ██║██║ ╚████║╚██████╗███████╗██║ ╚████║   ██║   {CLR_RST}
+{PRUSSIAN_BLUE}    ╚═══╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝╚═╝  ╚═══╝   ╚═╝   {CLR_RST}
+  {CHROME_YELLOW}◈ V I N C E N T   O S   •   S T A R R Y   N I G H T   E D I T I O N ◈{CLR_RST}
+  {CANVAS_WHITE}Atelier Neural Autônomo • 1200+ Pinceladas de Modelos • Laboratório ESP32{CLR_RST}
+  {SHADOW_GRAY}Pós-Impressionismo Cibernético • Caveman • Ponytail • GSD Swarm • Termux Ready{CLR_RST}
 """
 
 def get_terminal_width(default: int = 80) -> int:
-    try:
-        return shutil.get_terminal_size((default, 24)).columns
-    except Exception:
-        return default
+    cols, _ = PlatformEnvironment.get_terminal_dimensions()
+    return cols
 
 
 class NeuralSpinner:
-    """Cyberpunk Animated Multi-Frame Neural Spinner."""
-    def __init__(self, message="Processando inferência neural...", color=CYAN_NEON):
+    """
+    Animated Swirling Brushstroke Neural Spinner ('Redemoinho de Van Gogh').
+    Simula redemoinhos celestes e estrelas pulsantes com alta fluidez.
+    """
+    def __init__(self, message="Pintando inferência neural...", color=COBALT_BLUE):
         self.message = message
         self.color = color
         self.stop_event = threading.Event()
         self.thread = None
-        self.frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
-        self.pulse = ["◐", "◓", "◑", "◒"]
+        # Redemoinhos e pinceladas em espiral
+        self.swirl_frames = ["໑", "๑", "༄", "≋", "✵", "✧", "✦", "✺", "🌀", "✶"]
+        self.star_pulse   = ["★", "✦", "✧", "☆", "✹", "✺"]
         self.is_tty = sys.stdout.isatty()
+        self.is_mobile = PlatformEnvironment.is_mobile()
 
     def _spin(self):
         idx = 0
         while not self.stop_event.is_set():
             if self.is_tty:
-                frame = self.frames[idx % len(self.frames)]
-                pulse = self.pulse[(idx // 2) % len(self.pulse)]
-                msg = f"\r{self.color}{frame}{CLR_RST} {MAGENTA_NEON}{pulse}{CLR_RST} {GRAY_LIGHT}{self.message}{CLR_RST}"
-                sys.stdout.write(msg)
+                swirl = self.swirl_frames[idx % len(self.swirl_frames)]
+                star  = self.star_pulse[(idx // 2) % len(self.star_pulse)]
+                
+                # Adaptação para telas estreitas de celular (Termux)
+                msg_display = self.message
+                if self.is_mobile and len(msg_display) > 28:
+                    msg_display = msg_display[:25] + "..."
+
+                line = f"\r{self.color}{swirl}{CLR_RST} {LEMON_YELLOW}{star}{CLR_RST} {CANVAS_WHITE}{msg_display}{CLR_RST}"
+                sys.stdout.write(line)
                 sys.stdout.flush()
             idx += 1
-            time.sleep(0.07)
+            time.sleep(0.06)
         if self.is_tty:
             sys.stdout.write("\r\033[K")
             sys.stdout.flush()
@@ -94,42 +118,43 @@ class NeuralSpinner:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop_event.set()
         if self.thread:
-            self.thread.join(timeout=0.5)
+            self.thread.join(timeout=0.4)
 
 
-def render_hud_card(title: str, items: list[tuple[str, str]], color=CYAN_NEON, border_style="rounded"):
+def strip_ansi(text: str) -> str:
+    """Remove códigos de escape ANSI para cálculo exato de largura de colunas."""
+    return re.sub(r'\x1b\[[0-9;]*m', '', str(text))
+
+
+def render_hud_card(title: str, items: list[tuple[str, str]], color=COBALT_BLUE, border_style="rounded"):
     """
-    Renderiza cartões HUD com bordas futuristas e alinhamento responsivo.
+    Renderiza cartões HUD com bordas arredondadas e adaptação dinâmica para Termux/Desktop.
     """
-    term_width = min(get_terminal_width(), 96)
+    term_width = get_terminal_width()
+    is_mobile = PlatformEnvironment.is_mobile() or term_width < 60
     
-    # Extrai o tamanho visível sem ANSI
-    def strip_ansi(text: str) -> str:
-        return re.sub(r'\x1b\[[0-9;]*m', '', str(text))
-    
+    # Calcula largura ideal
     max_len = 0
     for k, v in items:
         vis_len = len(strip_ansi(k)) + len(strip_ansi(v)) + 4
         if vis_len > max_len:
             max_len = vis_len
             
-    width = max(max_len + 4, len(title) + 8, 48)
-    width = min(width, term_width - 4)
+    min_width = 36 if is_mobile else 50
+    max_width = min(term_width - 2, 94)
+    width = max(max_len + 4, len(title) + 8, min_width)
+    width = min(width, max_width)
 
-    if border_style == "double":
-        tl, tr, bl, br, h, v = "╔", "╗", "╚", "╝", "═", "║"
-        t_open, t_close = "╡ ", " ╞"
-    else:
-        tl, tr, bl, br, h, v = "╭", "╮", "╰", "╯", "─", "│"
-        t_open, t_close = "─[ ", " ]─"
+    tl, tr, bl, br, h, v = ("╭", "╮", "╰", "╯", "─", "│") if border_style == "rounded" else ("╔", "╗", "╚", "╝", "═", "║")
+    t_open, t_close = "─[ ", " ]─"
 
-    title_block = f"{t_open}{CLR_BOLD}{title}{CLR_RST}{color}{t_close}"
+    title_block = f"{t_open}{LEMON_YELLOW}{CLR_BOLD}{title}{CLR_RST}{color}{t_close}"
     title_vis_len = len(strip_ansi(title)) + 6
     remaining_h = max(0, width - title_vis_len - 1)
 
     print(f"{color}{tl}{title_block}{h * remaining_h}{tr}{CLR_RST}")
     for k, val in items:
-        k_str = f"{CLR_BOLD}{k}:{CLR_RST}"
+        k_str = f"{CHROME_YELLOW}{CLR_BOLD}{k}:{CLR_RST}"
         k_vis = len(strip_ansi(k)) + 1
         val_str = str(val)
         val_vis = len(strip_ansi(val_str))
@@ -137,51 +162,55 @@ def render_hud_card(title: str, items: list[tuple[str, str]], color=CYAN_NEON, b
         spacing = width - (k_vis + val_vis + 4)
         if spacing < 1:
             spacing = 1
+            # Se for tela estreita e ultrapassar, quebra suavemente
+            if is_mobile and (k_vis + val_vis + 4) > width:
+                val_str = val_str[:max(10, width - k_vis - 7)] + ".."
+                val_vis = len(strip_ansi(val_str))
+                spacing = max(1, width - (k_vis + val_vis + 4))
+
         print(f"{color}{v}{CLR_RST}  {k_str} {val_str}{' ' * spacing} {color}{v}{CLR_RST}")
     print(f"{color}{bl}{h * width}{br}{CLR_RST}")
 
 
-def render_section_header(title: str, icon="◈", color=CYAN_NEON):
-    """Renderiza um divisor de seção com estilo Neo-Tokyo."""
+def render_section_header(title: str, icon="◈", color=COBALT_BLUE):
+    """Renderiza um divisor de seção pós-impressionista."""
     term_width = min(get_terminal_width(), 90)
-    line_len = max(4, term_width - len(title) - 8)
-    print(f"\n{color}{icon} {CLR_BOLD}{title.upper()}{CLR_RST} {color}{'─' * line_len}{CLR_RST}")
+    line_len = max(3, term_width - len(title) - 8)
+    print(f"\n{color}{icon} {CHROME_YELLOW}{CLR_BOLD}{title.upper()}{CLR_RST} {color}{'─' * line_len}{CLR_RST}")
 
 
 def render_response_box(reply: str, model: str, latency: float, mode: str = "Standard", tokens_saved: int = 0):
-    """Renderiza o output de IA dentro de um frame elegante com telemetria."""
-    term_width = min(get_terminal_width(), 96)
+    """Renderiza o output de IA dentro de um frame 'Noite Estrelada' com telemetria."""
+    term_width = min(get_terminal_width(), 94)
+    is_mobile = PlatformEnvironment.is_mobile() or term_width < 60
     
-    # Top frame
-    header_title = "◈ VINCENT NEURAL OUTPUT ◈"
-    top_bar = f"{GREEN_MATRIX}╭─[ {CLR_BOLD}{header_title}{CLR_RST}{GREEN_MATRIX} ]" + "─" * max(2, term_width - len(header_title) - 7) + f"╮{CLR_RST}"
+    header_title = "◈ OBRA NEURAL VINCENT ◈"
+    top_bar = f"{CYPRESS_GREEN}╭─[ {LEMON_YELLOW}{CLR_BOLD}{header_title}{CLR_RST}{CYPRESS_GREEN} ]" + "─" * max(2, term_width - len(header_title) - 7) + f"╮{CLR_RST}"
     print(top_bar)
     
-    # Formatação de texto com destaque de código
     lines = reply.strip().splitlines()
     in_code_block = False
     
     for line in lines:
         if line.strip().startswith("```"):
             in_code_block = not in_code_block
-            print(f"{GREEN_MATRIX}│{CLR_RST} {MAGENTA_NEON}{line}{CLR_RST}")
+            print(f"{CYPRESS_GREEN}│{CLR_RST} {CHROME_YELLOW}{line}{CLR_RST}")
             continue
         
         if in_code_block:
-            print(f"{GREEN_MATRIX}│{CLR_RST} {CYAN_NEON}{line}{CLR_RST}")
+            print(f"{CYPRESS_GREEN}│{CLR_RST} {COBALT_BLUE}{line}{CLR_RST}")
         elif line.startswith("#"):
-            print(f"{GREEN_MATRIX}│{CLR_RST} {MAGENTA_NEON}{CLR_BOLD}{line}{CLR_RST}")
+            print(f"{CYPRESS_GREEN}│{CLR_RST} {LEMON_YELLOW}{CLR_BOLD}{line}{CLR_RST}")
         elif line.startswith("CMD:") or line.startswith("[HARDWARE]") or line.startswith("[GSD]"):
-            print(f"{GREEN_MATRIX}│{CLR_RST} {AMBER_WARN}{CLR_BOLD}{line}{CLR_RST}")
+            print(f"{CYPRESS_GREEN}│{CLR_RST} {STARRY_GOLD}{CLR_BOLD}{line}{CLR_RST}")
         else:
-            print(f"{GREEN_MATRIX}│{CLR_RST} {GRAY_LIGHT}{line}{CLR_RST}")
+            print(f"{CYPRESS_GREEN}│{CLR_RST} {CANVAS_WHITE}{line}{CLR_RST}")
             
-    # Bottom Telemetry Bar
-    saved_str = f" | Economia: {GREEN_MATRIX}-{tokens_saved} tok{GRAY_MUTED}" if tokens_saved > 0 else ""
-    meta_info = f" {GRAY_MUTED}Latência: {CYAN_NEON}{latency:.2f}s{GRAY_MUTED} | Modelo: {PURPLE_GLOW}{model}{GRAY_MUTED} | Modo: {mode}{saved_str} "
+    # Rodapé com telemetria Ponytail
+    saved_str = f" | {CYPRESS_GREEN}-{tokens_saved} tok{SHADOW_GRAY}" if tokens_saved > 0 else ""
+    meta_info = f" {SHADOW_GRAY}⏱ {COBALT_BLUE}{latency:.2f}s{SHADOW_GRAY} │ 🎨 {VIOLET_SWIRL}{model}{SHADOW_GRAY} │ ⚡ {mode}{saved_str} "
     
-    # Strip ansi for bottom length calculation
-    clean_meta = re.sub(r'\x1b\[[0-9;]*m', '', meta_info)
+    clean_meta = strip_ansi(meta_info)
     footer_len = max(2, term_width - len(clean_meta) - 5)
-    bottom_bar = f"{GREEN_MATRIX}╰─[{meta_info}{GREEN_MATRIX}]" + "─" * footer_len + f"╯{CLR_RST}\n"
+    bottom_bar = f"{CYPRESS_GREEN}╰─[{meta_info}{CYPRESS_GREEN}]" + "─" * footer_len + f"╯{CLR_RST}\n"
     print(bottom_bar)

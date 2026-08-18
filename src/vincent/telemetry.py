@@ -12,12 +12,14 @@ except ImportError:
     psutil = None
 from datetime import timedelta
 from .ui import (
-    CYAN_NEON, MAGENTA_NEON, GREEN_MATRIX, AMBER_WARN, RED_ALERT,
-    PURPLE_GLOW, GRAY_MUTED, GRAY_LIGHT, CLR_BOLD, CLR_RST
+    COBALT_BLUE, PRUSSIAN_BLUE, LEMON_YELLOW, CHROME_YELLOW, STARRY_GOLD,
+    CYPRESS_GREEN, CYPRESS_DARK, VIOLET_SWIRL, ALERT_SCARLET, CANVAS_WHITE,
+    SHADOW_GRAY, CLR_BOLD, CLR_RST
 )
+from .env_detect import PlatformEnvironment
 
 class PonytailTelemetry:
-    """Monitor de telemetria em tempo real para o Vincent CLI."""
+    """Monitor de telemetria em tempo real para o Vincent CLI (Estilo Starry Night)."""
     
     def __init__(self):
         self.start_time = time.time()
@@ -58,35 +60,50 @@ class PonytailTelemetry:
 
     def render_statusline(self, current_model: str, is_free: bool, hw_count: int, omniroute_ok: bool, ollama_ok: bool, caveman_mode: str) -> str:
         """
-        Gera uma statusline futurista compacta estilo Ponytail.
+        Gera uma statusline futurista compacta estilo Ponytail com paleta Starry Night.
         """
+        is_mobile = PlatformEnvironment.is_mobile()
+
         # Badge de Modelo
-        tier_tag = f"{GREEN_MATRIX}[ZERO-KEY] 🆓{CLR_RST}" if is_free else f"{PURPLE_GLOW}[PRO] ⚡{CLR_RST}"
-        model_badge = f"{CYAN_NEON}◈ {current_model}{CLR_RST} {tier_tag}"
+        tier_tag = f"{CYPRESS_GREEN}[ZERO-KEY] 🆓{CLR_RST}" if is_free else f"{VIOLET_SWIRL}[PRO] ⚡{CLR_RST}"
+        model_badge = f"{COBALT_BLUE}◈ {current_model}{CLR_RST} {tier_tag}"
 
         # Status de Hardware
-        hw_color = GREEN_MATRIX if hw_count > 0 else GRAY_MUTED
-        hw_badge = f"{hw_color}⬢ HW: {hw_count}{CLR_RST}"
+        hw_color = CYPRESS_GREEN if hw_count > 0 else SHADOW_GRAY
+        hw_badge = f"{hw_color}⬢ HW:{hw_count}{CLR_RST}"
 
-        # Gateways
-        omni_badge = f"{GREEN_MATRIX}● Vincent Cloud{CLR_RST}" if omniroute_ok else f"{RED_ALERT}○ Vincent Cloud{CLR_RST}"
-        ollama_badge = f"{GREEN_MATRIX}● Vincent Local{CLR_RST}" if ollama_ok else f"{RED_ALERT}○ Vincent Local{CLR_RST}"
+        # Gateways Whitelabeled
+        omni_badge = f"{CYPRESS_GREEN}● Galeria Cloud{CLR_RST}" if omniroute_ok else f"{ALERT_SCARLET}○ Galeria Cloud{CLR_RST}"
+        ollama_badge = f"{CYPRESS_GREEN}● Atelier Local{CLR_RST}" if ollama_ok else f"{ALERT_SCARLET}○ Atelier Local{CLR_RST}"
 
         # Caveman
-        caveman_badge = f"{AMBER_WARN}⚡ Caveman:{caveman_mode}{CLR_RST}" if caveman_mode != "off" else f"{GRAY_MUTED}Caveman:off{CLR_RST}"
+        caveman_badge = f"{STARRY_GOLD}⚡ Caveman:{caveman_mode}{CLR_RST}" if caveman_mode != "off" else f"{SHADOW_GRAY}Caveman:off{CLR_RST}"
 
         # Latência
-        lat_badge = f"{CYAN_NEON}⏱ {self.last_latency:.2f}s{CLR_RST}" if self.last_latency > 0 else f"{GRAY_MUTED}⏱ --{CLR_RST}"
+        lat_badge = f"{COBALT_BLUE}⏱ {self.last_latency:.2f}s{CLR_RST}" if self.last_latency > 0 else f"{SHADOW_GRAY}⏱ --{CLR_RST}"
 
-        line = f" {model_badge} {GRAY_MUTED}│{CLR_RST} {hw_badge} {GRAY_MUTED}│{CLR_RST} {omni_badge} {ollama_badge} {GRAY_MUTED}│{CLR_RST} {caveman_badge} {GRAY_MUTED}│{CLR_RST} {lat_badge}"
-        return line
+        if is_mobile:
+            # Layout enxuto para Termux
+            return f" {model_badge} {SHADOW_GRAY}│{CLR_RST} {hw_badge} {SHADOW_GRAY}│{CLR_RST} {caveman_badge} {SHADOW_GRAY}│{CLR_RST} {lat_badge}"
+        else:
+            return f" {model_badge} {SHADOW_GRAY}│{CLR_RST} {hw_badge} {SHADOW_GRAY}│{CLR_RST} {omni_badge} {ollama_badge} {SHADOW_GRAY}│{CLR_RST} {caveman_badge} {SHADOW_GRAY}│{CLR_RST} {lat_badge}"
 
     def get_summary_cards(self, current_model: str, caveman_stats: dict) -> list[tuple[str, str]]:
         sys_info = self.get_system_stats()
+        saved_tok = caveman_stats.get('total_tokens_saved', 0)
+        mode = caveman_stats.get('mode', 'off')
+        
+        # Barra gráfica de economia de tokens
+        bar_fill = min(10, max(1, int(saved_tok / 50))) if saved_tok > 0 else 0
+        eco_bar = f"{CYPRESS_GREEN}{'█' * bar_fill}{'░' * (10 - bar_fill)}{CLR_RST}" if saved_tok > 0 else f"{SHADOW_GRAY}░░░░░░░░░░{CLR_RST}"
+
+        env_name = "📱 Termux (Android Mobile)" if PlatformEnvironment.is_mobile() else f"🖥️ Desktop / Server ({PlatformEnvironment.get_os_type()})"
+
         return [
-            ("MODELO ATUAL", f"{CYAN_NEON}{current_model}{CLR_RST}"),
-            ("CONSULTAS", f"{self.total_queries} (Média: {self.avg_latency:.2f}s | Última: {self.last_latency:.2f}s)"),
-            ("TOKENS ECONOMIZADOS", f"{GREEN_MATRIX}+{caveman_stats.get('total_tokens_saved', 0)} tok{CLR_RST} (Modo: {caveman_stats.get('mode', 'off')})"),
-            ("SISTEMA / RECURSOS", f"CPU: {sys_info['cpu_pct']}% | RAM: {sys_info['mem_mb']}MB ({sys_info['mem_pct']}%)"),
+            ("AMBIENTE DE EXECUÇÃO", env_name),
+            ("MODELO ATIVO", f"{COBALT_BLUE}{current_model}{CLR_RST}"),
+            ("CONSULTAS NEURAIS", f"{self.total_queries} (Média: {self.avg_latency:.2f}s | Última: {self.last_latency:.2f}s)"),
+            ("ECONOMIA CAVEMAN", f"{eco_bar} {CYPRESS_GREEN}+{saved_tok} tokens{CLR_RST} (Modo: {mode})"),
+            ("RECURSOS DO SISTEMA", f"CPU: {sys_info['cpu_pct']}% | RAM: {sys_info['mem_mb']}MB ({sys_info['mem_pct']}%)"),
             ("UPTIME DA SESSÃO", f"{self.session_uptime}")
         ]

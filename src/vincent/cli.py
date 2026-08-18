@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Vincent CLI 4.0 — Cyberpunk Neural HUD & Autonomous Orchestrator.
-Integrates 1200+ Vincent Neural Routes, Zero-Key Free Gateways, Local Offline Engine,
-UI/UX Pro Max Interface, Caveman Ultra-Compression, and GSD Multi-Agent Swarm.
+Vincent CLI 4.0 — Van Gogh 'Starry Night' Cyber-Impressionist Orchestrator.
+Integrates 1200+ Whitelabeled Neural Routes, Zero-Key Free Engine, Local Offline Models,
+Enterprise Authentication (OAuth2/Key), LlamaFactory Fine-Tuning, Caveman Compression (-65%),
+Ponytail Real-time Telemetry, GSD Multi-Agent Swarm, and Termux/ADB Universal Adaptation.
 """
 
 import argparse
@@ -17,28 +18,32 @@ if _DIR not in sys.path:
 from vincent.devices import DeviceRegistry
 from vincent.agent import VincentAgent
 from vincent.gsd import GSDOrchestrator
+from vincent.auth import VincentAuth
+from vincent.llama_factory import LlamaFactoryOrchestrator
+from vincent.env_detect import PlatformEnvironment
 from vincent.ui import (
-    BANNER, CLR_RST, CLR_BOLD, CLR_DIM, CYAN_NEON, MAGENTA_NEON,
-    PURPLE_GLOW, GREEN_MATRIX, AMBER_WARN, RED_ALERT, GRAY_LIGHT,
-    GRAY_MUTED, GRAY_DARK, NeuralSpinner, render_hud_card, render_section_header,
-    render_response_box
+    BANNER, CLR_RST, CLR_BOLD, CLR_DIM, COBALT_BLUE, PRUSSIAN_BLUE,
+    LEMON_YELLOW, CHROME_YELLOW, STARRY_GOLD, CYPRESS_GREEN, CYPRESS_DARK,
+    VIOLET_SWIRL, ALERT_SCARLET, CANVAS_WHITE, SHADOW_GRAY,
+    NeuralSpinner, render_hud_card, render_section_header, render_response_box,
+    get_terminal_width
 )
 
 
 def display_models_catalog(agent: VincentAgent, search_term: str = ""):
-    """Exibe o catálogo estruturado de 1200+ modelos e rotas ativas."""
+    """Exibe o catálogo estruturado e whitelabeled de 1200+ modelos e rotas neurais."""
     all_models = agent.model_manager.get_all_models()
     if not all_models:
-        print(f"\n{RED_ALERT}⚠ Nenhum modelo indexado nos gateways.{CLR_RST}")
-        print(f"{GRAY_MUTED}Certifique-se de que o Núcleo Vincent (:20128) ou o Motor Local (:11434) estejam ativos.{CLR_RST}\n")
+        print(f"\n{ALERT_SCARLET}⚠ Nenhum modelo indexado nos ateliers.{CLR_RST}")
+        print(f"{SHADOW_GRAY}Certifique-se de que a Galeria Vincent (:20128) ou o Atelier Local (:11434) estejam ativos.{CLR_RST}\n")
         return
 
     if search_term:
         term = search_term.lower()
         all_models = [m for m in all_models if term in m["display_id"].lower() or term in m.get("name", "").lower() or term in m.get("provider", "").lower()]
-        render_section_header(f"BUSCA POR '{search_term}': {len(all_models)} MODELOS ENCONTRADOS", "🔍", CYAN_NEON)
+        render_section_header(f"BUSCA POR '{search_term}': {len(all_models)} MODELOS ENCONTRADOS", "🔍", COBALT_BLUE)
     else:
-        render_section_header(f"CATÁLOGO DE MODELOS NEURAIS ({len(all_models)}+ MODELOS)", "⚡", CYAN_NEON)
+        render_section_header(f"CATÁLOGO DE OBRAS NEURAIS ({len(all_models)}+ ROTAS)", "🎨", COBALT_BLUE)
 
     local_models = [m for m in all_models if m.get("is_local")]
     combos = [m for m in all_models if m["id"].startswith("auto")]
@@ -46,60 +51,65 @@ def display_models_catalog(agent: VincentAgent, search_term: str = ""):
     pro_models = [m for m in all_models if not m.get("is_free") and not m.get("is_local") and not m["id"].startswith("auto")]
 
     if local_models:
-        print(f"\n{GREEN_MATRIX}◈ MODELOS LOCAIS OFFLINE ZERO-KEY ({len(local_models)}):{CLR_RST} {GRAY_MUTED}(Zero Latência / Sem Internet / Sem Chave){CLR_RST}")
+        print(f"\n{CYPRESS_GREEN}◈ PALETA LOCAL OFFLINE ZERO-KEY ({len(local_models)}):{CLR_RST} {SHADOW_GRAY}(Zero Latência / Sem Internet / Sem Chave){CLR_RST}")
         for m in local_models:
-            print(f"  {GREEN_MATRIX}⚡{CLR_RST} {CLR_BOLD}{m['display_id']:<28}{CLR_RST} {GRAY_MUTED}→ {m['name']}{CLR_RST}")
+            print(f"  {CYPRESS_GREEN}⚡{CLR_RST} {CLR_BOLD}{m['display_id']:<28}{CLR_RST} {SHADOW_GRAY}→ {m['name']}{CLR_RST}")
 
     if combos:
-        print(f"\n{CYAN_NEON}◈ COMBOS DE ROTEAMENTO DINÂMICO ({len(combos)}):{CLR_RST}")
+        print(f"\n{COBALT_BLUE}◈ COMBOS DE HARMONIA DINÂMICA ({len(combos)}):{CLR_RST}")
         for m in combos[:12]:
-            print(f"  {CYAN_NEON}◆{CLR_RST} {m['display_id']:<28} {GRAY_MUTED}[Auto-Routing Failover]{CLR_RST}")
+            print(f"  {COBALT_BLUE}◆{CLR_RST} {m['display_id']:<28} {SHADOW_GRAY}[Failover Automático / Whitelabel]{CLR_RST}")
         if len(combos) > 12:
-            print(f"  {GRAY_MUTED}... +{len(combos)-12} combos adicionais (use /search combo){CLR_RST}")
+            print(f"  {SHADOW_GRAY}... +{len(combos)-12} combos adicionais (use /search combo){CLR_RST}")
 
     if free_models:
-        print(f"\n{AMBER_WARN}◈ ROTAS ZERO-KEY / FREE GATEWAYS ({len(free_models)}):{CLR_RST}")
+        print(f"\n{STARRY_GOLD}◈ ROTAS PÚBLICAS ZERO-KEY ({len(free_models)}):{CLR_RST}")
         for m in free_models[:14]:
-            print(f"  {AMBER_WARN}🆓{CLR_RST} {m['display_id']:<32} {GRAY_MUTED}({m.get('provider', 'vincent-cloud')}){CLR_RST}")
+            print(f"  {LEMON_YELLOW}🆓{CLR_RST} {m['display_id']:<32} {SHADOW_GRAY}(Atelier Aberto){CLR_RST}")
         if len(free_models) > 14:
-            print(f"  {GRAY_MUTED}... +{len(free_models)-14} rotas gratuitas (use /search free){CLR_RST}")
+            print(f"  {SHADOW_GRAY}... +{len(free_models)-14} rotas gratuitas (use /search free){CLR_RST}")
 
     if pro_models:
-        print(f"\n{PURPLE_GLOW}◈ MODELOS PRO / CODING / CLOUD ({len(pro_models)}):{CLR_RST}")
+        print(f"\n{VIOLET_SWIRL}◈ ATELIER AVANÇADO / PRO ({len(pro_models)}):{CLR_RST}")
         for m in pro_models[:12]:
-            print(f"  {MAGENTA_NEON}▲{CLR_RST} {m['display_id']:<32} {GRAY_MUTED}({m.get('provider', 'vincent-cloud')}){CLR_RST}")
+            print(f"  {VIOLET_SWIRL}▲{CLR_RST} {m['display_id']:<32} {SHADOW_GRAY}(Galeria Pro){CLR_RST}")
         if len(pro_models) > 12:
-            print(f"  {GRAY_MUTED}... +{len(pro_models)-12} modelos avançados (use /search pro){CLR_RST}")
+            print(f"  {SHADOW_GRAY}... +{len(pro_models)-12} modelos avançados (use /search pro){CLR_RST}")
 
-    print(f"\n{GRAY_MUTED}Sintonia: /model <id> | Busca rápida: /search <termo> | Total: {len(all_models)} modelos{CLR_RST}\n")
+    print(f"\n{SHADOW_GRAY}Sintonia: /model <id> │ Busca rápida: /search <termo> │ Total: {len(all_models)} modelos{CLR_RST}\n")
 
 
 def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     print(BANNER)
     
     gsd = GSDOrchestrator(agent)
+    auth = VincentAuth()
+    trainer = LlamaFactoryOrchestrator()
     devs = registry.scan()
     
-    # HUD Telemetria Inicial (UI/UX Pro Max)
+    # HUD Telemetria Inicial Starry Night
     omni_count, ollama_count = agent.model_manager.sync_catalogs()
     is_free = agent.model_manager.is_free_tier(agent.model)
+    env_summary = PlatformEnvironment.get_device_summary()
     
     hud_items = [
-        ("NÚCLEO NEURAL", f"{GREEN_MATRIX}ATIVO{CLR_RST} ({agent.display_model})"),
-        ("TIPO DO MODELO", f"{GREEN_MATRIX}ZERO-KEY / OFFLINE 🆓{CLR_RST}" if is_free else f"{PURPLE_GLOW}PRO GATEWAY ⚡{CLR_RST}"),
-        ("NÚCLEO VINCENT CLOUD", f"{GREEN_MATRIX}ONLINE{CLR_RST} (:20128) — {omni_count} rotas"),
-        ("MOTOR LOCAL VINCENT", f"{GREEN_MATRIX}ONLINE{CLR_RST} (:11434) — {ollama_count} modelos quentes"),
-        ("DISPOSITIVOS HW", f"{len(devs)} Placas Conectadas (TEMBED / ESP32DIV)"),
-        ("MODO CAVEMAN", f"{GRAY_MUTED}DESATIVADO (/caveman lite|full|ultra){CLR_RST}"),
-        ("PLUGINS", f"{len(agent.plugins.active_plugins)} ativos / {len(agent.plugins.skills)} instalados (/plugins)")
+        ("NÚCLEO NEURAL", f"{CYPRESS_GREEN}ATIVO{CLR_RST} ({agent.display_model})"),
+        ("TIPO DE ROTA", f"{CYPRESS_GREEN}ZERO-KEY / OFFLINE 🆓{CLR_RST}" if is_free else f"{VIOLET_SWIRL}GALERIA PRO ⚡{CLR_RST}"),
+        ("GALERIA CLOUD", f"{CYPRESS_GREEN}ONLINE{CLR_RST} (:20128) — {omni_count} obras conectadas"),
+        ("ATELIER LOCAL", f"{CYPRESS_GREEN}ONLINE{CLR_RST} (:11434) — {ollama_count} modelos quentes"),
+        ("HARDWARE LAB", f"{len(devs)} Placas Conectadas (TEMBED / ESP32DIV)"),
+        ("AUTENTICAÇÃO", f"{CYPRESS_GREEN}CONECTADO{CLR_RST} ({auth.identity})" if auth.is_authenticated else f"{STARRY_GOLD}MODO ZERO-KEY (/login ou /key){CLR_RST}"),
+        ("AMBIENTE", f"{env_summary['os']} (Modo: {env_summary['layout_mode']})")
     ]
-    render_hud_card("TELEMETRIA VINCENT NEURAL HUD", hud_items, CYAN_NEON)
+    render_hud_card("TELEMETRIA NOITE ESTRELADA — VINCENT HUD", hud_items, COBALT_BLUE)
     
-    print(f"\n{GRAY_MUTED}Comandos essenciais:{CLR_RST}")
-    print(f"  {CYAN_NEON}/models{CLR_RST} (catálogo)    • {CYAN_NEON}/search <termo>{CLR_RST} (buscar)     • {CYAN_NEON}/model <id>{CLR_RST} (trocar)")
-    print(f"  {CYAN_NEON}/caveman on|off{CLR_RST} (tokens) • {CYAN_NEON}/gsd <tarefa>{CLR_RST} (swarm)     • {CYAN_NEON}/squad{CLR_RST} (agentes)")
-    print(f"  {CYAN_NEON}/plugins{CLR_RST} (listar)     • {CYAN_NEON}/plugin <nome>{CLR_RST} (ligar/desligar)")
-    print(f"  {CYAN_NEON}/devices{CLR_RST} (hardware)   • {CYAN_NEON}/cmd <dev> <cmd>{CLR_RST} (serial)  • {CYAN_NEON}/stats{CLR_RST} (telemetria) • {CYAN_NEON}/exit{CLR_RST}\n")
+    print(f"\n{SHADOW_GRAY}Comandos essenciais da Galeria:{CLR_RST}")
+    print(f"  {COBALT_BLUE}/models{CLR_RST} (catálogo)    • {COBALT_BLUE}/search <termo>{CLR_RST} (buscar)     • {COBALT_BLUE}/model <id>{CLR_RST} (trocar)")
+    print(f"  {COBALT_BLUE}/caveman on|off{CLR_RST} (tokens) • {COBALT_BLUE}/gsd <tarefa>{CLR_RST} (swarm)     • {COBALT_BLUE}/squad{CLR_RST} (agentes)")
+    print(f"  {COBALT_BLUE}/login /key <tok>{CLR_RST} (auth) • {COBALT_BLUE}/train /lora{CLR_RST} (finetune)  • {COBALT_BLUE}/export{CLR_RST} (dataset)")
+    print(f"  {COBALT_BLUE}/devices{CLR_RST} (hardware)   • {COBALT_BLUE}/cmd <dev> <cmd>{CLR_RST} (serial)  • {COBALT_BLUE}/stats{CLR_RST} (telemetria) • {COBALT_BLUE}/exit{CLR_RST}\n")
+
+    term_w = get_terminal_width()
 
     while True:
         try:
@@ -112,204 +122,265 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 ollama_ok=(ollama_count > 0),
                 caveman_mode=agent.caveman.mode
             )
-            print(f"{GRAY_DARK}─" * 80 + f"{CLR_RST}")
+            print(f"{SHADOW_GRAY}─" * min(term_w, 80) + f"{CLR_RST}")
             print(statusline)
 
-            prompt = input(f"{CYAN_NEON}vincent{CLR_RST} {MAGENTA_NEON}[{agent.display_model}]{CLR_RST} {CLR_BOLD}❯{CLR_RST} ").strip()
+            prompt = input(f"{COBALT_BLUE}vincent{CLR_RST} {CHROME_YELLOW}[{agent.display_model}]{CLR_RST} {CLR_BOLD}❯{CLR_RST} ").strip()
             if not prompt:
                 continue
 
-            # ─── Comandos do Sistema ──────────────────────────────────────────
-            if prompt in ["/exit", "exit", "quit", ":q"]:
-                print(f"\n{CYAN_NEON}[VINCENT]{CLR_RST} Desconectando núcleo neural. Sessão salva.\n")
+            # ── Comandos Especiais do REPL ──────────────────────────────────
+            if prompt in ("/exit", "/quit", "exit", "quit", ":q"):
+                print(f"\n{COBALT_BLUE}◈ Sessão encerrada. As estrelas continuam brilhando na galeria. Até logo!{CLR_RST}\n")
                 break
 
-            if prompt in ["/models", "/list"]:
+            elif prompt in ("/clear", "clear", "cls"):
+                os.system("clear" if os.name == "posix" else "cls")
+                print(BANNER)
+                continue
+
+            elif prompt == "/models":
                 display_models_catalog(agent)
                 continue
 
-            if prompt.startswith("/search") or prompt.startswith("/find"):
+            elif prompt.startswith("/search"):
                 parts = prompt.split(maxsplit=1)
-                term = parts[1] if len(parts) > 1 else ""
-                display_models_catalog(agent, term)
+                term = parts[1].strip() if len(parts) > 1 else ""
+                display_models_catalog(agent, search_term=term)
                 continue
 
-            if prompt.startswith("/model"):
-                parts = prompt.split()
+            elif prompt.startswith("/model"):
+                parts = prompt.split(maxsplit=1)
                 if len(parts) > 1:
-                    target = parts[1]
-                    agent.set_model(target)
-                    print(f"{GREEN_MATRIX}✔ Sintonizado para o modelo: {agent.display_model}{CLR_RST}\n")
+                    new_m = parts[1].strip()
+                    agent.set_model(new_m)
                 else:
-                    print(f"{AMBER_WARN}Uso: /model <id_do_modelo> (ex: /model qwen2.5-coder:7b ou /model auto/best-free){CLR_RST}\n")
+                    print(f"{CHROME_YELLOW}Modelo atual:{CLR_RST} {agent.display_model}")
+                    print(f"{SHADOW_GRAY}Uso: /model <id_do_modelo> (ex: /model auto/best-coding ou /model qwen3:0.6b){CLR_RST}")
                 continue
 
-            if prompt.startswith("/caveman"):
-                parts = prompt.split()
-                mode = parts[1].lower() if len(parts) > 1 else "full"
-                if mode in ["1", "true", "on"]:
-                    mode = "full"
-                elif mode in ["0", "false"]:
-                    mode = "off"
-
-                if agent.set_caveman_mode(mode):
-                    if mode != "off":
-                        print(f"{GREEN_MATRIX}✔ Caveman Compression ativado ({mode.upper()}) — economia de tokens ativa.{CLR_RST}\n")
+            elif prompt.startswith("/caveman"):
+                parts = prompt.split(maxsplit=1)
+                if len(parts) > 1:
+                    mode = parts[1].strip().lower()
+                    if agent.set_caveman_mode(mode):
+                        stats = agent.caveman.get_stats()
+                        items = [
+                            ("MODO CAVEMAN", f"{STARRY_GOLD}{stats['mode'].upper()}{CLR_RST}"),
+                            ("DIRETIVA", stats['description']),
+                            ("TOTAL ECONOMIZADO", f"{CYPRESS_GREEN}+{stats['total_tokens_saved']} tokens{CLR_RST}")
+                        ]
+                        render_hud_card("MOTOR DE COMPRESSÃO CAVEMAN (-65%)", items, STARRY_GOLD)
                     else:
-                        print(f"{AMBER_WARN}✔ Modo Caveman desativado.{CLR_RST}\n")
+                        print(f"{ALERT_SCARLET}Modo inválido. Opções: off, lite, full, ultra, wenyan-lite, wenyan-full{CLR_RST}")
                 else:
-                    print(f"{AMBER_WARN}Modos válidos: lite, full, ultra, wenyan-lite, wenyan-full, off{CLR_RST}\n")
+                    curr = agent.caveman.mode
+                    print(f"{STARRY_GOLD}Modo Caveman ativo:{CLR_RST} {curr}")
+                    print(f"{SHADOW_GRAY}Uso: /caveman off | lite | full | ultra{CLR_RST}")
                 continue
 
-            if prompt.startswith("/gsd") or prompt.startswith("/plan"):
+            elif prompt.startswith("/gsd") or prompt.startswith("/plan"):
                 parts = prompt.split(maxsplit=1)
                 if len(parts) > 1:
-                    task = parts[1]
-                    with NeuralSpinner(f"Orquestrando GSD Multi-Agent Swarm para: '{task}'..."):
+                    task = parts[1].strip()
+                    with NeuralSpinner(f"GSD Swarm orquestrando onda para: '{task}'...", color=VIOLET_SWIRL):
                         res = gsd.execute_plan(task)
-                    render_response_box(res, agent.model, agent.telemetry.last_latency, agent.caveman.mode)
+                    render_response_box(res, agent.display_model, agent.telemetry.last_latency, mode="GSD Swarm Plan")
                 else:
-                    print(f"{AMBER_WARN}Uso: /gsd <descrição da tarefa>{CLR_RST}\n")
+                    print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /gsd <descrição da tarefa complexa>")
                 continue
 
-            if prompt in ["/plugins", "/skills"]:
-                if not agent.plugins.skills:
-                    print(f"{AMBER_WARN}Nenhum plugin encontrado em ~/.agents/skills/{CLR_RST}\n")
-                else:
-                    agent.plugins.list_plugins()
-                    print(f"{GRAY_MUTED}Uso: /plugin <nome> para ligar/desligar{CLR_RST}\n")
-                continue
-
-            if prompt.startswith("/plugin"):
-                parts = prompt.split(maxsplit=1)
-                if len(parts) < 2:
-                    print(f"{AMBER_WARN}Uso: /plugin <nome> (ex: /plugin gsd-quick){CLR_RST}\n")
-                else:
-                    name = parts[1].strip()
-                    result = agent.plugins.toggle(name)
-                    if result is None:
-                        print(f"{RED_ALERT}Plugin '{name}' não encontrado. Use /plugins para listar.{CLR_RST}\n")
-                    else:
-                        state = "ATIVADO" if result else "DESATIVADO"
-                        print(f"{GREEN_MATRIX}✔ Plugin '{name}' {state}.{CLR_RST}\n")
-                continue
-
-            if prompt in ["/squad", "/agents"]:
+            elif prompt == "/squad":
                 gsd.list_squad()
-                print()
                 continue
 
-            if prompt in ["/stats", "/telemetry"]:
-                cards = agent.telemetry.get_summary_cards(agent.display_model, agent.caveman.get_stats())
-                render_hud_card("TELEMETRIA PONYTAIL & CAVEMAN", cards, PURPLE_GLOW)
-                print()
+            elif prompt in ("/login", "/auth"):
+                df = auth.start_device_flow()
+                items = [
+                    ("CÓDIGO DE DISPOSITIVO", f"{LEMON_YELLOW}{CLR_BOLD}{df['user_code']}{CLR_RST}"),
+                    ("URL DE ATIVAÇÃO", f"{COBALT_BLUE}{df['verification_uri']}{CLR_RST}"),
+                    ("VALIDADE", f"{df['expires_in']} segundos"),
+                    ("INSTRUÇÃO", "Acesse a URL e insira o código acima para vincular sua assinatura da Galeria.")
+                ]
+                render_hud_card("CONECTAR À GALERIA VINCENT (OAUTH2)", items, COBALT_BLUE)
+                auth.complete_device_flow(df['user_code'])
+                print(f"{CYPRESS_GREEN}✓ Conectado com sucesso à Galeria Vincent!{CLR_RST}\n")
                 continue
 
-            if prompt in ["/devices", "/scan", "/hw"]:
-                devs = registry.scan()
-                items = [(d.id, f"{d.label} | Porta: {d.port} | Firmware: {d.firmware_id} | Protocolo: {d.protocol or 'Nenhum'}") for d in devs]
-                render_hud_card("LABORATÓRIO DE HARDWARE ESP32", items if items else [("STATUS", "Nenhuma placa USB detectada")], MAGENTA_NEON)
-                print()
+            elif prompt.startswith("/key"):
+                parts = prompt.split(maxsplit=1)
+                if len(parts) > 1:
+                    key = parts[1].strip()
+                    if auth.login_with_key(key):
+                        print(f"{CYPRESS_GREEN}✓ Chave Neural da Galeria registrada com sucesso!{CLR_RST}\n")
+                    else:
+                        print(f"{ALERT_SCARLET}✗ Chave inválida.{CLR_RST}\n")
+                else:
+                    print(f"{CHROME_YELLOW}Uso:{CLR_RST} /key <sua_chave_neural>")
                 continue
 
-            if prompt.startswith("/cmd"):
+            elif prompt == "/logout":
+                auth.logout()
+                print(f"{STARRY_GOLD}✓ Sessão desconectada. Operando em modo público / Zero-Key.{CLR_RST}\n")
+                continue
+
+            elif prompt.startswith("/train") or prompt.startswith("/lora"):
+                cfg = trainer.generate_lora_config(base_model=agent.model)
+                cmd = trainer.build_training_command(cfg)
+                items = [
+                    ("FRAMEWORK", "LlamaFactory Native Fine-Tuning Hook"),
+                    ("CONFIGURAÇÃO YAML", cfg),
+                    ("MODELO BASE", agent.model),
+                    ("COMANDO DE EXECUÇÃO", f"{LEMON_YELLOW}{cmd}{CLR_RST}")
+                ]
+                render_hud_card("TREINAMENTO & FINE-TUNING LLM", items, STARRY_GOLD)
+                continue
+
+            elif prompt == "/export":
+                exported_file = trainer.export_session_dataset(agent._history)
+                print(f"{CYPRESS_GREEN}✓ Dataset de sessão exportado para:{CLR_RST} {exported_file}\n")
+                continue
+
+            elif prompt == "/devices":
+                devs = registry.scan(quick=False)
+                if devs:
+                    items = []
+                    for d in devs:
+                        items.append((d.id, f"{d.label} | Porta: {d.port} | Firmware: {d.firmware_id}"))
+                    render_hud_card("LABORATÓRIO DE HARDWARE USB", items, CYPRESS_GREEN)
+                else:
+                    print(f"\n{ALERT_SCARLET}Nenhuma placa ESP32/USB detectada.{CLR_RST}")
+                    print(f"{SHADOW_GRAY}Conecte o LilyGo T-Embed ou o ESP32DIV e execute /devices novamente.{CLR_RST}\n")
+                continue
+
+            elif prompt.startswith("/cmd"):
                 parts = prompt.split(maxsplit=2)
                 if len(parts) >= 3:
-                    dev_id, cmd = parts[1], parts[2]
-                    res = registry.send(dev_id, cmd, wait=5.0)
-                    print(f"{CYAN_NEON}[{dev_id}]{CLR_RST} → {res.get('response', 'sem resposta')}\n")
+                    target_dev, cmd_str = parts[1], parts[2]
+                    dev = registry.get(target_dev)
+                    if dev and dev.online:
+                        print(f"[{target_dev}] ← {cmd_str}")
+                        r = registry.send(target_dev, cmd_str)
+                        print(f"[{target_dev}] → {r.get('response', '')}")
+                    else:
+                        print(f"{ALERT_SCARLET}Dispositivo '{target_dev}' offline ou não encontrado.{CLR_RST}")
                 else:
-                    print(f"{AMBER_WARN}Uso: /cmd <DEVICE_ID> <comando_serial>{CLR_RST}\n")
+                    print(f"{CHROME_YELLOW}Uso:{CLR_RST} /cmd <TEMBED|ESP32DIV> <comando_serial>")
                 continue
 
-            if prompt == "/clear":
-                agent._history.clear()
-                print(f"{GREEN_MATRIX}✔ Contexto e memória limpos com sucesso.{CLR_RST}\n")
+            elif prompt == "/stats":
+                c_stats = agent.caveman.get_stats()
+                items = agent.telemetry.get_summary_cards(agent.display_model, c_stats)
+                render_hud_card("TELEMETRIA PONYTAIL & ECONOMIA DE TOKENS", items, COBALT_BLUE)
                 continue
 
-            if prompt in ["/help", "/?", "help"]:
-                render_section_header("CENTRAL DE COMANDOS VINCENT CLI 4.0", "◈", CYAN_NEON)
-                print(f"  {CYAN_NEON}/models{CLR_RST}             Lista mais de 1200 modelos categorizados")
-                print(f"  {CYAN_NEON}/search <termo>{CLR_RST}     Busca inteligente por modelos e capacidades")
-                print(f"  {CYAN_NEON}/model <id>{CLR_RST}         Troca o modelo ativo em tempo real")
-                print(f"  {CYAN_NEON}/caveman <modo>{CLR_RST}     Ativa compressão Caveman (lite, full, ultra, off)")
-                print(f"  {CYAN_NEON}/gsd <tarefa>{CLR_RST}       Executa tarefa via Swarm Multi-Agente autônomo")
-                print(f"  {CYAN_NEON}/squad{CLR_RST}              Exibe agentes do squad (Product, Coder, Auditor, etc.)")
-                print(f"  {CYAN_NEON}/plugins{CLR_RST}            Lista plugins/skills instalados (~/.agents/skills)")
-                print(f"  {CYAN_NEON}/plugin <nome>{CLR_RST}      Liga/desliga um plugin (injeta no system prompt)")
-                print(f"  {CYAN_NEON}/devices{CLR_RST}            Inspeciona placas de hardware conectadas (TEMBED/ESP32DIV)")
-                print(f"  {CYAN_NEON}/cmd <dev> <cmd>{CLR_RST}    Envia comando serial direto para a placa")
-                print(f"  {CYAN_NEON}/stats{CLR_RST}              Mostra telemetria de latência, CPU e tokens economizados")
-                print(f"  {CYAN_NEON}/clear{CLR_RST}              Limpa o histórico da sessão")
-                print(f"  {CYAN_NEON}/exit{CLR_RST}               Fecha o Vincent CLI\n")
+            elif prompt == "/help":
+                render_section_header("GUIA DE COMANDOS DA GALERIA VINCENT", "💡", COBALT_BLUE)
+                print(f"  {COBALT_BLUE}/models{CLR_RST}               Exibe todas as rotas e modelos de IA indexados")
+                print(f"  {COBALT_BLUE}/search <termo>{CLR_RST}        Filtra modelos por palavra-chave (ex: /search free)")
+                print(f"  {COBALT_BLUE}/model <id>{CLR_RST}            Sintoniza o modelo ativo em tempo real")
+                print(f"  {COBALT_BLUE}/caveman <modo>{CLR_RST}        Ativa compressão extrema de tokens (off, lite, full, ultra)")
+                print(f"  {COBALT_BLUE}/gsd <tarefa>{CLR_RST}          Dispara plano autônomo com o Swarm de Agentes")
+                print(f"  {COBALT_BLUE}/login | /key <tok>{CLR_RST}   Autenticação e injeção de chave da Galeria")
+                print(f"  {COBALT_BLUE}/train | /lora{CLR_RST}        Gera pipeline de fine-tuning LlamaFactory")
+                print(f"  {COBALT_BLUE}/export{CLR_RST}                Exporta histórico para dataset de treino")
+                print(f"  {COBALT_BLUE}/devices{CLR_RST}              Varre e inspeciona placas ESP32 conectadas")
+                print(f"  {COBALT_BLUE}/cmd <dev> <cmd>{CLR_RST}       Envia comando serial direto para a placa")
+                print(f"  {COBALT_BLUE}/stats{CLR_RST}                Relatório de telemetria, hardware e economia de tokens")
+                print(f"  {COBALT_BLUE}/clear{CLR_RST}                Limpa a tela e o histórico da sessão")
+                print(f"  {COBALT_BLUE}/exit{CLR_RST}                 Encerra o CLI\n")
                 continue
 
-            # ─── Execução Padrão de Inferência ────────────────────────────────
-            with NeuralSpinner(f"Vincent processando via [{agent.display_model}]..."):
+            # ── Execução de Pergunta / Prompt Normal com Redemoinho Neural ──
+            mode_label = f"Caveman ({agent.caveman.mode})" if agent.caveman.mode != "off" else "Standard"
+            with NeuralSpinner(f"Pintando resposta com [{agent.display_model}]...", color=COBALT_BLUE):
                 reply = agent.ask(prompt)
 
             render_response_box(
-                reply,
-                agent.display_model,
-                agent.telemetry.last_latency,
-                mode=f"Caveman ({agent.caveman.mode})" if agent.caveman.mode != "off" else "Standard",
-                tokens_saved=agent.caveman.total_tokens_saved
+                reply=reply,
+                model=agent.display_model,
+                latency=agent.telemetry.last_latency,
+                mode=mode_label,
+                tokens_saved=agent.caveman.total_saved
             )
 
         except KeyboardInterrupt:
-            print(f"\n{AMBER_WARN}[Interrompido]{CLR_RST} Digite /exit para fechar o Vincent.\n")
-        except EOFError:
-            break
+            print(f"\n{SHADOW_GRAY}Pincelada interrompida pelo usuário. Use /exit para sair.{CLR_RST}\n")
+        except Exception as e:
+            print(f"\n{ALERT_SCARLET}[ERRO VINCENT]: {e}{CLR_RST}\n")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Vincent OS CLI 4.0 — Cyberpunk Neural Orchestrator")
+    parser = argparse.ArgumentParser(description="Vincent CLI 4.0 — Van Gogh 'Starry Night' Cyber-Impressionist Orchestrator")
     parser.add_argument("prompt", nargs="*", help="Pergunta ou comando direto para o Vincent")
     parser.add_argument("-m", "--model", default="qwen3:0.6b", help="Modelo inicial (ex: qwen3:0.6b, qwen2.5-coder:7b, auto/best-free)")
     parser.add_argument("-l", "--list-models", action="store_true", help="Listar todos os modelos do catálogo")
     parser.add_argument("-s", "--search", type=str, default="", help="Filtrar modelos por termo de busca")
     parser.add_argument("-c", "--caveman", type=str, default=None, help="Modo caveman (lite, full, ultra)")
-    parser.add_argument("-g", "--gsd", type=str, default=None, help="Executar tarefa via GSD Multi-Agent Swarm")
-    parser.add_argument("-d", "--devices", action="store_true", help="Listar dispositivos de hardware conectados")
-    parser.add_argument("-p", "--plugin", action="append", default=[], help="Ativa plugin/skill por nome (repetível, ex: -p ponytail -p gsd-quick)")
+    parser.add_argument("-g", "--gsd", type=str, default=None, help="Executar plano autônomo via GSD Swarm")
+    parser.add_argument("-d", "--devices", action="store_true", help="Listar dispositivos de hardware USB conectados")
+    parser.add_argument("-t", "--train", action="store_true", help="Gerar configuração de treino LoRA via LlamaFactory")
+    parser.add_argument("--auth", action="store_true", help="Exibir status ou conectar à Galeria Vincent")
+
     args = parser.parse_args()
 
-    registry = DeviceRegistry(lambda ev: None)
-    agent = VincentAgent(registry, model=args.model)
+    registry = DeviceRegistry(lambda evt: None)
+    agent = VincentAgent(registry=registry, model=args.model)
 
     if args.caveman:
         agent.set_caveman_mode(args.caveman)
 
-    for plugin_name in args.plugin:
-        if agent.plugins.toggle(plugin_name) is None:
-            print(f"{AMBER_WARN}Plugin '{plugin_name}' não encontrado.{CLR_RST}")
+    if args.list_models:
+        display_models_catalog(agent, search_term=args.search)
+        sys.exit(0)
 
-    if args.list_models or args.search:
-        display_models_catalog(agent, args.search)
-        return
+    if args.search:
+        display_models_catalog(agent, search_term=args.search)
+        sys.exit(0)
 
     if args.devices:
-        devs = registry.scan()
-        items = [(d.id, f"{d.label} | Porta: {d.port} | Firmware: {d.firmware_id}") for d in devs]
-        render_hud_card("HARDWARE CONECTADO", items if items else [("STATUS", "Nenhum dispositivo")], MAGENTA_NEON)
-        return
+        devs = registry.scan(quick=False)
+        if devs:
+            items = [(d.id, f"{d.label} | Porta: {d.port} | Firmware: {d.firmware_id}") for d in devs]
+            render_hud_card("LABORATÓRIO DE HARDWARE USB", items, CYPRESS_GREEN)
+        else:
+            print(f"\n{ALERT_SCARLET}Nenhuma placa ESP32 detectada.{CLR_RST}\n")
+        sys.exit(0)
+
+    if args.train:
+        trainer = LlamaFactoryOrchestrator()
+        cfg = trainer.generate_lora_config(base_model=agent.model)
+        cmd = trainer.build_training_command(cfg)
+        items = [
+            ("FRAMEWORK", "LlamaFactory Native Fine-Tuning Hook"),
+            ("CONFIGURAÇÃO YAML", cfg),
+            ("MODELO BASE", agent.model),
+            ("COMANDO", f"{LEMON_YELLOW}{cmd}{CLR_RST}")
+        ]
+        render_hud_card("TREINAMENTO & FINE-TUNING LLM", items, STARRY_GOLD)
+        sys.exit(0)
+
+    if args.auth:
+        auth = VincentAuth()
+        render_hud_card("AUTENTICAÇÃO DA GALERIA", auth.status_card_data(), COBALT_BLUE)
+        sys.exit(0)
 
     if args.gsd:
         gsd = GSDOrchestrator(agent)
-        with NeuralSpinner(f"GSD Swarm executando: '{args.gsd}'..."):
+        with NeuralSpinner(f"GSD Swarm orquestrando: '{args.gsd}'...", color=VIOLET_SWIRL):
             res = gsd.execute_plan(args.gsd)
-        render_response_box(res, agent.display_model, agent.telemetry.last_latency, agent.caveman.mode)
-        return
+        render_response_box(res, agent.display_model, agent.telemetry.last_latency, mode="GSD Swarm Plan")
+        sys.exit(0)
 
     if args.prompt:
         question = " ".join(args.prompt)
-        registry.scan()
-        with NeuralSpinner(f"Vincent processando via [{agent.display_model}]..."):
+        with NeuralSpinner(f"Processando com [{agent.display_model}]...", color=COBALT_BLUE):
             reply = agent.ask(question)
-        render_response_box(reply, agent.display_model, agent.telemetry.last_latency, agent.caveman.mode)
-        return
+        mode_label = f"Caveman ({agent.caveman.mode})" if agent.caveman.mode != "off" else "Standard"
+        render_response_box(reply, agent.display_model, agent.telemetry.last_latency, mode=mode_label, tokens_saved=agent.caveman.total_saved)
+        sys.exit(0)
 
-    # Inicia REPL interativo
+    # Entra no REPL interativo futurista
     interactive_repl(agent, registry)
 
 

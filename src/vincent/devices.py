@@ -384,8 +384,10 @@ class DeviceRegistry:
                 else:
                     profile_id = "TEMBED"
 
-            if not profile_id:
-                profile_id = "ESP-" + port.replace("/dev/tty", "").upper()
+            if not firmware_id:
+                firmware_id = "ESP32-S3 (Universal)"
+            if not profile_id or profile_id.startswith("ESP-"):
+                profile_id = "TEMBED" if "ACM" in port.upper() else "ESP32DIV"
 
             dev_id = profile_id
             # Resolve conflitos de ID (dois devices mesma família)
@@ -393,17 +395,15 @@ class DeviceRegistry:
                 if dev_id in self._devices and self._devices[dev_id].online:
                     dev_id = f"{profile_id}-2"
 
-            dev = Device(dev_id, port, ser, firmware_id or "unknown", self.on_event)
+            dev = Device(dev_id, port, ser, firmware_id, self.on_event)
 
             with self._lock:
                 self._devices[dev_id] = dev
 
             self.on_event(DeviceEvent(dev_id, "connected", dev.status_dict()))
-            print(f"[REGISTRY] {port} → {dev_id} ({firmware_id})", flush=True)
             return dev
 
-        except Exception as e:
-            print(f"[REGISTRY] {port}: falha ({e})", flush=True)
+        except Exception:
             return None
 
     # ── Acesso ────────────────────────────────────────────────────────────────

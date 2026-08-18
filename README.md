@@ -1,56 +1,126 @@
-# Vincent
+# 🌌 VINCENT CLI 4.0 — Van Gogh 'Starry Night' Edition
 
-Orquestrador neural de IA (OmniRoute + Ollama local) e laboratório de hardware ESP32 (T-Embed CC1101, ESP32DIV).
+```text
+   ★    .   ☆  *   .   ★    .   *   ☆  .   ★    .   *   ☆  .   ★
+  ██╗   ██╗██╗███╗   ██╗ ██████╗███████╗███╗   ██╗████████╗
+  ██║   ██║██║████╗  ██║██╔════╝██╔════╝████╗  ██║╚══██╔══╝
+  ██║   ██║██║██╔██╗ ██║██║     █████╗  ██╔██╗ ██║   ██║   
+  ╚██╗ ██╔╝██║██║╚██╗██║██║     ██╔══╝  ██║╚██╗██║   ██║   
+   ╚████╔╝ ██║██║ ╚████║╚██████╗███████╗██║ ╚████║   ██║   
+    ╚═══╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝╚═╝  ╚═══╝   ╚═╝   
+  ◈ V I N C E N T   O S   •   S T A R R Y   N I G H T   E D I T I O N ◈
+```
 
-## Instalação
+> **Orquestrador Neural Autônomo Universal & Laboratório Embarcado ESP32**  
+> Inspirado na estética pós-impressionista de *"A Noite Estrelada"* de Vincent van Gogh, construído com arquitetura adaptativa *"Be Water"* para rodar perfeitamente em Desktops, Servidores e dispositivos móveis via **Termux / ADB Root**.
 
-Pacote Python real (`pyproject.toml`, layout `src/`). Funciona em Linux, macOS, Windows e Termux (Android).
+---
 
-**Recomendado — [pipx](https://pipx.pypa.io/) (isola dependências, não precisa de venv manual):**
+## 🎨 Principais Funcionalidades
+
+### 1. 🖌️ Identidade Visual 'Starry Night' & Redemoinho Neural
+- **Paleta TrueColor ANSI**: Azul Cobalto (`#0087ff`), Azul Noturno (`#005fd7`), Amarelo Limão (`#ffff00`), Dourado Ocre (`#ffaf00`) e Verde Cipreste (`#00ff87`).
+- **Animated Swirl Spinners**: Pinceladas e redemoinhos celestes em espiral (`໑`, `๑`, `༄`, `≋`, `✵`, `🌀`) com pulsos estelares.
+- **Whitelabel Absoluto**: Toda a infraestrutura e rotas de terceiros são mascaradas sob o ecossistema artístico da **Galeria Vincent**.
+
+### 2. ⚡ Catálogo de 1200+ Modelos & Motor Local Zero-Key
+- **Rotas Zero-Key & Gratuitas**: Suporte a centenas de rotas públicas e combos de auto-roteamento (`auto/best-coding`, `auto/best-reasoning`, `auto/best-free`, `auto/smart`).
+- **Atelier Local Offline (Ollama)**: Modelos locais pré-carregados para operação com zero latência e 100% offline (`qwen3:0.6b`, `qwen2.5-coder:7b`, `granite4:tiny-h`, etc.).
+- **Cascata com Failover Inteligente**: Chaveamento transparente e instantâneo entre nós locais e remotos em caso de indisponibilidade ou rate-limit.
+
+### 3. 📉 Compressão Caveman (-65% Tokens)
+- Baseado em [juliusbrussee/caveman](https://github.com/juliusbrussee/caveman).
+- Elimina ruídos de linguagem natural, artigos e saudações mantendo 100% da precisão técnica de comandos e código.
+- Modos: `lite`, `full`, `ultra`, `wenyan-lite`, `wenyan-full` e `off`.
+
+### 4. 📊 Telemetria Ponytail em Tempo Real
+- Baseado em [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail).
+- Statusline viva no prompt com métricas de latência média, hardware USB conectado, consumo de CPU/RAM e gráfico visual de economia de tokens.
+
+### 5. 🤖 GSD Swarm & AG-Kit Multi-Agent Orchestration
+- Baseado em [open-gsd/gsd-core](https://github.com/open-gsd/gsd-core) e [vudovn/ag-kit](https://github.com/vudovn/ag-kit).
+- Execução autônoma de tarefas complexas em fases e ondas através do squad especializado:
+  - 📋 `Vincent-Product`: Curador de Obra & Especificação
+  - 🛡️ `Vincent-Auditor`: Crítico de Arte & Auditoria de Segurança
+  - 💻 `Vincent-Coder`: Mestre Pintor & Engenharia de Código
+  - 📡 `Vincent-Hardware`: Engenheiro de Chassis & Rádio ESP32
+  - 🧪 `Vincent-Tester`: Restaurador & Testes de Fumaça
+  - ⚙️ `Vincent-DevOps`: Guardião da Galeria & Daemons
+
+### 6. 🧠 Treinamento e Fine-Tuning Nativo (LlamaFactory)
+- Baseado em [hiyouga/LlamaFactory](https://github.com/hiyouga/LlamaFactory).
+- Geração automática de pipelines LoRA/QLoRA e exportação de datasets de conversação no padrão ShareGPT/Alpaca com o comando `/train` e `/export`.
+
+### 7. 📱 Princípio da Adaptabilidade Extrema ("Be Water")
+- Detecção automática de ambiente (`Desktop Linux/macOS/Windows` vs `Termux Android/ADB Root`).
+- Layout adaptativo: comprime painéis e buffers em telas móveis sem quebrar bordas ANSI.
+- Serial Fallback de aço para dispositivos USB/OTG no Android (`/dev/ttyACM*`, `/dev/ttyUSB*`, `termux-usb`).
+
+---
+
+## 🚀 Instalação Rápida
+
+### Linux / macOS / Windows (WSL)
 
 ```bash
-pipx install git+https://github.com/vangoghdev7-sketch/vincent
-# ou, a partir de um clone local:
-git clone https://github.com/vangoghdev7-sketch/vincent
-pipx install --editable ./vincent
+git clone https://github.com/seu-usuario/vincent-cli.git
+cd vincent-cli
+pip install -e .
 ```
 
-**Alternativa — pip direto (venv recomendado; em Termux não há restrição PEP 668):**
+### Termux (Android Mobile / ADB Root)
+
+Execute o instalador automatizado de um único passo:
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install .
+chmod +x install-termux.sh
+./install-termux.sh
 ```
 
-Isso cria o comando `vincent` disponível globalmente. Dependências: `pyserial` (hardware USB-serial), `psutil` (telemetria de CPU/RAM) — resolvidas automaticamente.
+---
 
-## Uso
+## 🕹️ Guia de Uso
+
+### Iniciar o REPL Interativo
 
 ```bash
-vincent                          # REPL interativo
-vincent "pergunta direta"        # modo one-shot
-vincent -l                       # lista catálogo de modelos
-vincent -p ponytail "..."        # ativa plugin/skill por nome
+vincent
 ```
 
-Comandos do REPL: `/models`, `/model <id>`, `/plugins`, `/plugin <nome>`, `/caveman <modo>`, `/gsd <tarefa>`, `/devices`, `/cmd <dev> <cmd>`, `/stats`, `/help`.
+### Executar Prompt Direto no Terminal
 
-## Backends de IA
+```bash
+# Prompt simples com modelo padrão
+vincent "Como implementar um sniffer no CC1101?"
 
-1. **Ollama local** (`OLLAMA_HOST`, padrão `127.0.0.1:11434`) — zero-key, offline.
-2. **OmniRoute** (`OMNIROUTE_URL`, padrão `localhost:20128/v1`) — proxy local pra 1200+ modelos/rotas, muitas gratuitas.
+# Prompt com compressão Caveman (-65% tokens)
+vincent -c full "Refatore o driver serial do ESP32DIV em C++"
 
-## Hardware (opcional)
-
-Detecção de placas USB-serial (T-Embed CC1101, ESP32DIV) via `pyserial.tools.list_ports` — funciona nativamente em Linux (`/dev/ttyACM*`), Windows (`COM*`) e macOS (`/dev/cu.*`). Sem placa conectada, o Vincent funciona normalmente só como cliente de IA.
-
-## Plugins
-
-Descobre skills em `~/.agents/skills/*/` (procura `SKILL.md` ou `README.md`) e injeta as ativas no system prompt. Ver `/plugins` no REPL.
-
-## Estrutura
-
+# Executar tarefa com Swarm de Agentes GSD
+vincent -g "Criar script de automação de backup no systemd"
 ```
-src/vincent/     pacote instalável (agent, cli, devices, models, plugins, ...)
-pyproject.toml   empacotamento (setuptools, entry point `vincent`)
-```
+
+### Comandos Internos do REPL
+
+| Comando | Descrição |
+| :--- | :--- |
+| `/models` | Lista o catálogo completo de 1200+ rotas neurais |
+| `/search <termo>` | Filtra modelos por palavra-chave (ex: `/search free` ou `/search coding`) |
+| `/model <id>` | Sintoniza o modelo ativo em tempo real |
+| `/caveman <modo>` | Alterna modos de compressão de tokens (`off`, `lite`, `full`, `ultra`) |
+| `/gsd <tarefa>` | Inicia plano autônomo multi-agente em ondas |
+| `/squad` | Exibe o squad de agentes especializados da Galeria |
+| `/login` / `/key` | Autenticação Enterprise via OAuth2 ou injeção de Chave Neural |
+| `/train` / `/lora` | Gera configuração de fine-tuning LoRA via LlamaFactory |
+| `/export` | Exporta histórico da sessão como dataset de treino |
+| `/devices` | Varre e inspeciona placas ESP32/USB conectadas |
+| `/cmd <dev> <cmd>` | Envia comando serial direto para o hardware |
+| `/stats` | Exibe telemetria detalhada, recursos e economia de tokens |
+| `/clear` | Limpa a tela e o histórico da sessão |
+| `/exit` | Encerra o Vincent CLI |
+
+---
+
+## 📜 Licença
+
+Distribuído sob a licença MIT. Criado com paixão e arte pela equipe Vincent.
