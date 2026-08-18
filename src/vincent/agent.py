@@ -20,6 +20,7 @@ from .caveman import CavemanEngine
 from .telemetry import PonytailTelemetry
 from .agent_tools import execute_agent_tool, TOOL_DEFINITIONS
 from .memory import recall_context, save_summary
+from .skills import skills_context
 
 OBSIDIAN_VAULT_CANDIDATES = [
     os.environ.get("VINCENT_OBSIDIAN_VAULT", ""),
@@ -139,7 +140,7 @@ class VincentAgent:
         reply, used_model, latency = self.model_manager.execute_inference(
             messages_to_send,
             target_model=target_m,
-            system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context
+            system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context + skills_context(question)
         )
 
         in_toks = CavemanEngine.estimate_tokens(user_content)
@@ -164,6 +165,7 @@ class VincentAgent:
         processed_task, _ = self.caveman.compress_prompt(task)
         state = self._device_state()
         self._heal_attempts: Dict[str, int] = {}
+        skills_ctx = skills_context(task)
 
         turn_messages: List[Dict[str, str]] = [
             {"role": "user", "content": f"[{state}]\nTarefa Agênica: {processed_task}"}
@@ -179,7 +181,7 @@ class VincentAgent:
             reply, used_model, lat = self.model_manager.execute_inference(
                 turn_messages,
                 target_model=target_m,
-                system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context
+                system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context + skills_ctx
             )
             total_latency += lat
 

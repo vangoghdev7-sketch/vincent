@@ -86,7 +86,7 @@ def display_models_catalog(agent: VincentAgent, search_term: str = ""):
 BARE_COMMAND_ALIASES = {
     "models", "search", "model", "act", "agent", "bg", "vision", "commit", "caveman",
     "vault", "auth", "login", "key", "train", "lora", "export", "devices",
-    "cmd", "stats", "help", "config",
+    "cmd", "stats", "help", "config", "skills", "skill",
 }
 
 
@@ -236,6 +236,35 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                     print(f"{SHADOW_GRAY}Continue trabalhando — aviso quando terminar.{CLR_RST}\n")
                 else:
                     print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /bg <tarefa> — roda em segundo plano, não trava o REPL")
+                continue
+
+            elif prompt.startswith("/skill add"):
+                url = prompt.split(maxsplit=2)[2].strip() if len(prompt.split(maxsplit=2)) > 2 else ""
+                if not url:
+                    print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /skill add <git-url>")
+                else:
+                    from vincent.skills import add_skill_from_git
+                    try:
+                        with NeuralSpinner(f"Clonando skills de {url}...", color=VIOLET_SWIRL):
+                            installed = add_skill_from_git(url)
+                        if installed:
+                            print(f"{CYPRESS_GREEN}✓ Skills instaladas:{CLR_RST} {', '.join(installed)}\n")
+                        else:
+                            print(f"{ALERT_SCARLET}✗ Nenhum SKILL.md encontrado nesse repo (esperado: skills/<nome>/SKILL.md).{CLR_RST}\n")
+                    except (ValueError, RuntimeError) as e:
+                        print(f"{ALERT_SCARLET}✗ {e}{CLR_RST}\n")
+                continue
+
+            elif prompt == "/skills":
+                from vincent.skills import list_skills
+                sk = list_skills()
+                if not sk:
+                    print(f"{SHADOW_GRAY}Nenhuma skill instalada. Use /skill add <git-url>.{CLR_RST}\n")
+                else:
+                    render_section_header(f"SKILLS INSTALADAS ({len(sk)})", "🧠", VIOLET_SWIRL)
+                    for s in sk:
+                        print(f"  {VIOLET_SWIRL}◆{CLR_RST} {CLR_BOLD}{s['name']}{CLR_RST} — {SHADOW_GRAY}{s['description']}{CLR_RST}")
+                    print()
                 continue
 
             elif prompt.startswith("/vision"):
@@ -406,6 +435,8 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 print(f"  {COBALT_BLUE}/vault | /key{CLR_RST}          Gerencia chaves de API com segurança (chmod 0600)")
                 print(f"  {COBALT_BLUE}/train | /lora{CLR_RST}        Gera pipeline de fine-tuning LlamaFactory")
                 print(f"  {COBALT_BLUE}/export{CLR_RST}                Exporta histórico para dataset de treino")
+                print(f"  {COBALT_BLUE}/skills{CLR_RST}               Lista skills instaladas (SKILL.md carregado sob demanda)")
+                print(f"  {COBALT_BLUE}/skill add <git-url>{CLR_RST}   Clona um repo de skills (ex: obsidian-skills) pra ~/.vincent/skills")
                 print(f"  {COBALT_BLUE}/devices{CLR_RST}              Varre e inspeciona placas ESP32 conectadas")
                 print(f"  {COBALT_BLUE}/cmd <dev> <cmd>{CLR_RST}       Envia comando serial direto para a placa")
                 print(f"  {COBALT_BLUE}/stats{CLR_RST}                Relatório de telemetria, hardware e economia de tokens")
