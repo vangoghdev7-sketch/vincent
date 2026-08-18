@@ -1,7 +1,7 @@
 """
 Vincent CLI 4.0 — UI/UX Pro Max Design System
-Cyberpunk Neo-Tokyo / Matrix HUD Interface with TrueColor ANSI, glowing borders,
-dynamic neural spinners, syntax highlighting and responsive terminal layouts.
+Van Gogh Starry Night Neural HUD — cobalt blue and chrome yellow TrueColor ANSI,
+glowing borders, dynamic neural spinners, syntax highlighting and responsive layouts.
 """
 
 import os
@@ -19,18 +19,18 @@ CLR_DIM = "\033[2m"
 CLR_ITALIC = "\033[3m"
 CLR_UNDERLINE = "\033[4m"
 
-# Cyberpunk Neon Palette (UI/UX Pro Max)
-CYAN_NEON    = "\033[38;5;51m"   # #00f0ff - Primary HUD & Accent
-CYAN_DARK    = "\033[38;5;38m"   # #00afd7 - Secondary Cyan
-MAGENTA_NEON = "\033[38;5;201m"  # #ff00ff - Highlights & Prompts
-MAGENTA_DEEP = "\033[38;5;165m"  # #d700ff - Secondary Magenta
-PURPLE_GLOW  = "\033[38;5;141m"  # #af87ff - Neural / Pro Tiers
+# Van Gogh Starry Night Palette (UI/UX Pro Max)
+CYAN_NEON    = "\033[38;5;33m"   # #0087ff - Starry Night Cobalt Blue - Primary HUD & Accent
+CYAN_DARK    = "\033[38;5;25m"   # #005fd7 - Deep Prussian Blue - Secondary
+MAGENTA_NEON = "\033[38;5;220m"  # #ffd700 - Chrome Yellow - Highlights & Prompts
+MAGENTA_DEEP = "\033[38;5;178m"  # #d7af00 - Ochre Gold - Secondary Highlight
+PURPLE_GLOW  = "\033[38;5;141m"  # #af87ff - Swirling Violet - Neural / Pro Tiers
 GREEN_MATRIX = "\033[38;5;48m"   # #00ff87 - Success / Online / Free
-GREEN_DARK   = "\033[38;5;28m"   # #008700 - Subdued Green
+GREEN_DARK   = "\033[38;5;28m"   # #008700 - Cypress Green - Subdued
 AMBER_WARN   = "\033[38;5;214m"  # #ffaf00 - Warnings / Hardware
 RED_ALERT    = "\033[38;5;196m"  # #ff0000 - Errors / Critical
 ORANGE_FIRE  = "\033[38;5;208m"  # #ff8700 - Active Processes
-BLUE_ELECTRIC= "\033[38;5;75m"   # #5fafff - Info / OmniRoute
+BLUE_ELECTRIC= "\033[38;5;75m"   # #5fafff - Info / Núcleo Vincent
 GRAY_LIGHT   = "\033[38;5;250m"  # #bcbcbc - Normal Text
 GRAY_MUTED   = "\033[38;5;242m"  # #6c6c6c - Dim / Secondary
 GRAY_DARK    = "\033[38;5;236m"  # #303030 - Dark Borders
@@ -45,7 +45,8 @@ BANNER = f"""
    ╚████╔╝ ██║██║ ╚████║╚██████╗███████╗██║ ╚████║   ██║   
     ╚═══╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝╚═╝  ╚═══╝   ╚═╝   {CLR_RST}
   {MAGENTA_NEON}◈ V I N C E N T   O S   N E U R A L   C L I   v 4 . 0 ◈{CLR_RST}
-  {GRAY_LIGHT}1200+ OmniRoute Models • Zero-Key Free Gateways • Caveman • GSD Swarm • ESP32 Lab{CLR_RST}
+  {GRAY_LIGHT}1200+ Rotas Neurais Vincent • Zero-Key Free • Caveman • GSD Swarm • ESP32 Lab{CLR_RST}
+  {GRAY_MUTED}van Gogh Edition — Starry Night HUD{CLR_RST}
 """
 
 def get_terminal_width(default: int = 80) -> int:

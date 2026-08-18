@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Vincent CLI 4.0 — Cyberpunk Neural HUD & Autonomous Orchestrator.
-Integrates 1200+ OmniRoute Models, Zero-Key Free Gateways, Local Ollama Engine,
+Integrates 1200+ Vincent Neural Routes, Zero-Key Free Gateways, Local Offline Engine,
 UI/UX Pro Max Interface, Caveman Ultra-Compression, and GSD Multi-Agent Swarm.
 """
 
@@ -30,12 +30,12 @@ def display_models_catalog(agent: VincentAgent, search_term: str = ""):
     all_models = agent.model_manager.get_all_models()
     if not all_models:
         print(f"\n{RED_ALERT}⚠ Nenhum modelo indexado nos gateways.{CLR_RST}")
-        print(f"{GRAY_MUTED}Certifique-se de que o OmniRoute (:20128) ou Ollama (:11434) estejam ativos.{CLR_RST}\n")
+        print(f"{GRAY_MUTED}Certifique-se de que o Núcleo Vincent (:20128) ou o Motor Local (:11434) estejam ativos.{CLR_RST}\n")
         return
 
     if search_term:
         term = search_term.lower()
-        all_models = [m for m in all_models if term in m["id"].lower() or term in m.get("name", "").lower() or term in m.get("provider", "").lower()]
+        all_models = [m for m in all_models if term in m["display_id"].lower() or term in m.get("name", "").lower() or term in m.get("provider", "").lower()]
         render_section_header(f"BUSCA POR '{search_term}': {len(all_models)} MODELOS ENCONTRADOS", "🔍", CYAN_NEON)
     else:
         render_section_header(f"CATÁLOGO DE MODELOS NEURAIS ({len(all_models)}+ MODELOS)", "⚡", CYAN_NEON)
@@ -48,26 +48,26 @@ def display_models_catalog(agent: VincentAgent, search_term: str = ""):
     if local_models:
         print(f"\n{GREEN_MATRIX}◈ MODELOS LOCAIS OFFLINE ZERO-KEY ({len(local_models)}):{CLR_RST} {GRAY_MUTED}(Zero Latência / Sem Internet / Sem Chave){CLR_RST}")
         for m in local_models:
-            print(f"  {GREEN_MATRIX}⚡{CLR_RST} {CLR_BOLD}{m['id']:<28}{CLR_RST} {GRAY_MUTED}→ {m['name']}{CLR_RST}")
+            print(f"  {GREEN_MATRIX}⚡{CLR_RST} {CLR_BOLD}{m['display_id']:<28}{CLR_RST} {GRAY_MUTED}→ {m['name']}{CLR_RST}")
 
     if combos:
         print(f"\n{CYAN_NEON}◈ COMBOS DE ROTEAMENTO DINÂMICO ({len(combos)}):{CLR_RST}")
         for m in combos[:12]:
-            print(f"  {CYAN_NEON}◆{CLR_RST} {m['id']:<28} {GRAY_MUTED}[Auto-Routing Failover]{CLR_RST}")
+            print(f"  {CYAN_NEON}◆{CLR_RST} {m['display_id']:<28} {GRAY_MUTED}[Auto-Routing Failover]{CLR_RST}")
         if len(combos) > 12:
             print(f"  {GRAY_MUTED}... +{len(combos)-12} combos adicionais (use /search combo){CLR_RST}")
 
     if free_models:
         print(f"\n{AMBER_WARN}◈ ROTAS ZERO-KEY / FREE GATEWAYS ({len(free_models)}):{CLR_RST}")
         for m in free_models[:14]:
-            print(f"  {AMBER_WARN}🆓{CLR_RST} {m['id']:<32} {GRAY_MUTED}({m.get('provider', 'cloud')}){CLR_RST}")
+            print(f"  {AMBER_WARN}🆓{CLR_RST} {m['display_id']:<32} {GRAY_MUTED}({m.get('provider', 'vincent-cloud')}){CLR_RST}")
         if len(free_models) > 14:
             print(f"  {GRAY_MUTED}... +{len(free_models)-14} rotas gratuitas (use /search free){CLR_RST}")
 
     if pro_models:
         print(f"\n{PURPLE_GLOW}◈ MODELOS PRO / CODING / CLOUD ({len(pro_models)}):{CLR_RST}")
         for m in pro_models[:12]:
-            print(f"  {MAGENTA_NEON}▲{CLR_RST} {m['id']:<32} {GRAY_MUTED}({m.get('provider', 'cloud')}){CLR_RST}")
+            print(f"  {MAGENTA_NEON}▲{CLR_RST} {m['display_id']:<32} {GRAY_MUTED}({m.get('provider', 'vincent-cloud')}){CLR_RST}")
         if len(pro_models) > 12:
             print(f"  {GRAY_MUTED}... +{len(pro_models)-12} modelos avançados (use /search pro){CLR_RST}")
 
@@ -85,10 +85,10 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     is_free = agent.model_manager.is_free_tier(agent.model)
     
     hud_items = [
-        ("NÚCLEO NEURAL", f"{GREEN_MATRIX}ATIVO{CLR_RST} ({agent.model})"),
+        ("NÚCLEO NEURAL", f"{GREEN_MATRIX}ATIVO{CLR_RST} ({agent.display_model})"),
         ("TIPO DO MODELO", f"{GREEN_MATRIX}ZERO-KEY / OFFLINE 🆓{CLR_RST}" if is_free else f"{PURPLE_GLOW}PRO GATEWAY ⚡{CLR_RST}"),
-        ("GATEWAY OMNIROUTE", f"{GREEN_MATRIX}ONLINE{CLR_RST} (:20128) — {omni_count} rotas"),
-        ("MOTOR LOCAL OLLAMA", f"{GREEN_MATRIX}ONLINE{CLR_RST} (:11434) — {ollama_count} modelos quentes"),
+        ("NÚCLEO VINCENT CLOUD", f"{GREEN_MATRIX}ONLINE{CLR_RST} (:20128) — {omni_count} rotas"),
+        ("MOTOR LOCAL VINCENT", f"{GREEN_MATRIX}ONLINE{CLR_RST} (:11434) — {ollama_count} modelos quentes"),
         ("DISPOSITIVOS HW", f"{len(devs)} Placas Conectadas (TEMBED / ESP32DIV)"),
         ("MODO CAVEMAN", f"{GRAY_MUTED}DESATIVADO (/caveman lite|full|ultra){CLR_RST}"),
         ("PLUGINS", f"{len(agent.plugins.active_plugins)} ativos / {len(agent.plugins.skills)} instalados (/plugins)")
@@ -105,7 +105,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
         try:
             # Ponytail Live Statusline
             statusline = agent.telemetry.render_statusline(
-                current_model=agent.model,
+                current_model=agent.display_model,
                 is_free=agent.model_manager.is_free_tier(agent.model),
                 hw_count=len(registry.all()),
                 omniroute_ok=(omni_count > 0),
@@ -115,7 +115,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
             print(f"{GRAY_DARK}─" * 80 + f"{CLR_RST}")
             print(statusline)
 
-            prompt = input(f"{CYAN_NEON}vincent{CLR_RST} {MAGENTA_NEON}[{agent.model}]{CLR_RST} {CLR_BOLD}❯{CLR_RST} ").strip()
+            prompt = input(f"{CYAN_NEON}vincent{CLR_RST} {MAGENTA_NEON}[{agent.display_model}]{CLR_RST} {CLR_BOLD}❯{CLR_RST} ").strip()
             if not prompt:
                 continue
 
@@ -139,7 +139,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 if len(parts) > 1:
                     target = parts[1]
                     agent.set_model(target)
-                    print(f"{GREEN_MATRIX}✔ Sintonizado para o modelo: {agent.model}{CLR_RST}\n")
+                    print(f"{GREEN_MATRIX}✔ Sintonizado para o modelo: {agent.display_model}{CLR_RST}\n")
                 else:
                     print(f"{AMBER_WARN}Uso: /model <id_do_modelo> (ex: /model qwen2.5-coder:7b ou /model auto/best-free){CLR_RST}\n")
                 continue
@@ -200,7 +200,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 continue
 
             if prompt in ["/stats", "/telemetry"]:
-                cards = agent.telemetry.get_summary_cards(agent.model, agent.caveman.get_stats())
+                cards = agent.telemetry.get_summary_cards(agent.display_model, agent.caveman.get_stats())
                 render_hud_card("TELEMETRIA PONYTAIL & CAVEMAN", cards, PURPLE_GLOW)
                 print()
                 continue
@@ -245,12 +245,12 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 continue
 
             # ─── Execução Padrão de Inferência ────────────────────────────────
-            with NeuralSpinner(f"Vincent processando via [{agent.model}]..."):
+            with NeuralSpinner(f"Vincent processando via [{agent.display_model}]..."):
                 reply = agent.ask(prompt)
 
             render_response_box(
                 reply,
-                agent.model,
+                agent.display_model,
                 agent.telemetry.last_latency,
                 mode=f"Caveman ({agent.caveman.mode})" if agent.caveman.mode != "off" else "Standard",
                 tokens_saved=agent.caveman.total_tokens_saved
@@ -298,15 +298,15 @@ def main():
         gsd = GSDOrchestrator(agent)
         with NeuralSpinner(f"GSD Swarm executando: '{args.gsd}'..."):
             res = gsd.execute_plan(args.gsd)
-        render_response_box(res, agent.model, agent.telemetry.last_latency, agent.caveman.mode)
+        render_response_box(res, agent.display_model, agent.telemetry.last_latency, agent.caveman.mode)
         return
 
     if args.prompt:
         question = " ".join(args.prompt)
         registry.scan()
-        with NeuralSpinner(f"Vincent processando via [{agent.model}]..."):
+        with NeuralSpinner(f"Vincent processando via [{agent.display_model}]..."):
             reply = agent.ask(question)
-        render_response_box(reply, agent.model, agent.telemetry.last_latency, agent.caveman.mode)
+        render_response_box(reply, agent.display_model, agent.telemetry.last_latency, agent.caveman.mode)
         return
 
     # Inicia REPL interativo

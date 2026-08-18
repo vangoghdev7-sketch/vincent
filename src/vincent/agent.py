@@ -1,7 +1,7 @@
 """
 Vincent Agent — Núcleo de Inteligência Unificada ESP32 & Orquestrador de LLMs.
-Executa em nome do Vincent com suporte a mais de 1200 modelos via OmniRoute,
-modelos locais de alta velocidade Ollama, Caveman Compression e GSD Swarm.
+Executa em nome do Vincent com suporte a mais de 1200 rotas neurais próprias,
+modelos locais de alta velocidade, Caveman Compression e GSD Swarm.
 """
 
 import json
@@ -42,24 +42,30 @@ class VincentAgent:
     def __init__(self, registry: DeviceRegistry, emit_fn=None, model: str = DEFAULT_MODEL):
         self.registry = registry
         self.emit = emit_fn or (lambda e, d: None)
-        self.model = model
         self._history: List[Dict] = []
         self._running = False
         self._thread: Optional[threading.Thread] = None
-        
+
         # Módulos Integrados
         self.model_manager = ModelManager()
         self.caveman = CavemanEngine(mode="off")
         self.telemetry = PonytailTelemetry()
         self.plugins = PluginManager()
-        
-        # Pré-sincroniza catálogos
+
+        # Pré-sincroniza catálogos e popula o mapa de rebranding (id exibido → id real upstream)
         self.model_manager.sync_catalogs()
+        self.model_manager.get_all_models()
+        self.model = self.model_manager.resolve(model)
+
+    @property
+    def display_model(self) -> str:
+        """Nome do modelo ativo como deve aparecer pro usuário — nunca o id upstream real."""
+        return self.model_manager.mask(self.model)
 
     def set_model(self, new_model: str):
-        """Altera o modelo neural de IA ativo."""
-        self.model = new_model
-        print(f"[VINCENT] Modelo neural sintonizado para: {self.model}", flush=True)
+        """Altera o modelo neural de IA ativo (aceita id exibido ou real)."""
+        self.model = self.model_manager.resolve(new_model)
+        print(f"[VINCENT] Modelo neural sintonizado para: {self.display_model}", flush=True)
 
     def set_caveman_mode(self, mode: str) -> bool:
         return self.caveman.set_mode(mode)

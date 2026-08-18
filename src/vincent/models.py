@@ -6,6 +6,7 @@ and Smart Adaptive Cascade Failover.
 
 import json
 import os
+import time
 import urllib.request
 import urllib.error
 from typing import Optional, List, Dict, Tuple
@@ -26,7 +27,20 @@ class ModelManager:
         self.cached_omniroute_models: List[Dict] = []
         self.cached_ollama_models: List[str] = []
         self.last_sync = 0.0
+        self.display_to_real: Dict[str, str] = {}
         self._load_cache()
+
+    @staticmethod
+    def mask(model_id: str) -> str:
+        """Rebrand a rota upstream (tllm/, oc/, ddgw/, felo/, aug/, ...) como 'vincent/'.
+        Combos 'auto/*' são do próprio roteador, não de terceiro — ficam como estão."""
+        if "/" in model_id and not model_id.startswith("auto/") and model_id != "auto":
+            return "vincent/" + model_id.split("/", 1)[1]
+        return model_id
+
+    def resolve(self, display_or_real_id: str) -> str:
+        """Traduz um id exibido (mascarado) de volta pro id real usado na chamada upstream."""
+        return self.display_to_real.get(display_or_real_id, display_or_real_id)
 
     def _load_cache(self):
         if os.path.exists(CACHE_PATH):
@@ -86,24 +100,30 @@ class ModelManager:
             self.sync_catalogs()
 
         models = []
+        self.display_to_real = {}
+
         # Adiciona modelos locais do Ollama com badge especial
         for m in self.cached_ollama_models:
             models.append({
                 "id": m,
+                "display_id": m,
                 "name": f"{m} (Local Offline Zero-Key)",
-                "provider": "ollama-local",
+                "provider": "vincent-local",
                 "is_free": True,
                 "is_local": True
             })
 
-        # Adiciona modelos do OmniRoute
+        # Adiciona modelos do OmniRoute (rebrandado — upstream nunca exposto)
         for m in self.cached_omniroute_models:
             m_id = m.get("id", "")
+            disp = self.mask(m_id)
+            self.display_to_real[disp] = m_id
             is_free = any(k in m_id.lower() for k in ["free", "tllm", "oc", "ddgw", "felo", "pepper", "auto"])
             models.append({
                 "id": m_id,
-                "name": m.get("name", m_id),
-                "provider": m.get("owned_by", "omniroute"),
+                "display_id": disp,
+                "name": self.mask(m.get("name", m_id)),
+                "provider": "vincent-cloud",
                 "is_free": is_free,
                 "is_local": False
             })

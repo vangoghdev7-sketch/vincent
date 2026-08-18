@@ -69,8 +69,8 @@ class PonytailTelemetry:
         hw_badge = f"{hw_color}⬢ HW: {hw_count}{CLR_RST}"
 
         # Gateways
-        omni_badge = f"{GREEN_MATRIX}● OmniRoute{CLR_RST}" if omniroute_ok else f"{RED_ALERT}○ OmniRoute{CLR_RST}"
-        ollama_badge = f"{GREEN_MATRIX}● Ollama{CLR_RST}" if ollama_ok else f"{RED_ALERT}○ Ollama{CLR_RST}"
+        omni_badge = f"{GREEN_MATRIX}● Vincent Cloud{CLR_RST}" if omniroute_ok else f"{RED_ALERT}○ Vincent Cloud{CLR_RST}"
+        ollama_badge = f"{GREEN_MATRIX}● Vincent Local{CLR_RST}" if ollama_ok else f"{RED_ALERT}○ Vincent Local{CLR_RST}"
 
         # Caveman
         caveman_badge = f"{AMBER_WARN}⚡ Caveman:{caveman_mode}{CLR_RST}" if caveman_mode != "off" else f"{GRAY_MUTED}Caveman:off{CLR_RST}"
