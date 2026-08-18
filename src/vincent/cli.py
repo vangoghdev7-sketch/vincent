@@ -105,8 +105,8 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     hud_items = [
         ("NÚCLEO NEURAL", f"{CYPRESS_GREEN}ATIVO{CLR_RST} ({agent.display_model})"),
         ("TIPO DE ROTA", f"{CYPRESS_GREEN}ZERO-KEY / OFFLINE 🆓{CLR_RST}" if is_free else f"{VIOLET_SWIRL}GALERIA PRO ⚡{CLR_RST}"),
-        ("GALERIA CLOUD", f"{CYPRESS_GREEN}ONLINE{CLR_RST} (:20128) — {omni_count} obras conectadas"),
-        ("ATELIER LOCAL", f"{CYPRESS_GREEN}ONLINE{CLR_RST} (:11434) — {ollama_count} modelos quentes"),
+        ("GALERIA CLOUD", (f"{CYPRESS_GREEN}ONLINE{CLR_RST}" if omni_count > 0 else f"{ALERT_SCARLET}OFFLINE{CLR_RST}") + f" (:20128) — {omni_count} obras conectadas"),
+        ("ATELIER LOCAL", (f"{CYPRESS_GREEN}ONLINE{CLR_RST}" if ollama_count > 0 else f"{ALERT_SCARLET}OFFLINE{CLR_RST}") + f" (:11434) — {ollama_count} modelos quentes"),
         ("HARDWARE LAB", f"{len(devs)} Placas Conectadas (TEMBED / ESP32DIV)"),
         ("KEY VAULT (0600)", f"{CYPRESS_GREEN}CHAVES ATIVAS{CLR_RST} ({auth.identity})" if auth.is_authenticated else f"{STARRY_GOLD}MODO ZERO-KEY (/vault){CLR_RST}"),
         ("AMBIENTE", f"{env_summary['os']} (Modo: {env_summary['layout_mode']})")
