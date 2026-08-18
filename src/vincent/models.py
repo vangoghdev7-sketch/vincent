@@ -171,6 +171,7 @@ class ModelManager:
                         "model": ollama_name,
                         "messages": ([{"role": "system", "content": system_prompt}] if system_prompt else []) + messages,
                         "stream": False,
+                        "think": False,
                         "options": {"num_predict": 512, "temperature": 0.3, "num_thread": 4}
                     }
                     req = urllib.request.Request(

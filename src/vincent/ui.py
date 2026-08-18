@@ -45,7 +45,8 @@ BANNER = f"""
    ╚████╔╝ ██║██║ ╚████║╚██████╗███████╗██║ ╚████║   ██║   
     ╚═══╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝╚═╝  ╚═══╝   ╚═╝   {CLR_RST}
   {MAGENTA_NEON}◈ V I N C E N T   O S   N E U R A L   C L I   v 4 . 0 ◈{CLR_RST}
-  {GRAY_LIGHT}1200+ Rotas Neurais Vincent • Zero-Key Free • Caveman • GSD Swarm • ESP32 Lab{CLR_RST}
+  {GRAY_LIGHT}Motor OmniRoute • Zero-Key Free • Caveman • GSD Swarm • ESP32 Lab{CLR_RST}
+  {GRAY_MUTED}Catálogo ao vivo: rode /models pra ver a contagem real conectada agora{CLR_RST}
   {GRAY_MUTED}van Gogh Edition — Starry Night HUD{CLR_RST}
 """
 
