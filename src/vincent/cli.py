@@ -316,8 +316,15 @@ def main():
     parser.add_argument("-d", "--devices", action="store_true", help="Listar dispositivos de hardware USB conectados")
     parser.add_argument("-t", "--train", action="store_true", help="Gerar configuração de treino LoRA via LlamaFactory")
     parser.add_argument("--auth", action="store_true", help="Exibir status ou conectar à Galeria Vincent")
+    parser.add_argument("--daemon", action="store_true", help="Rodar servidor MCP detached, socket Unix em background")
+    parser.add_argument("--socket", default=None, help="Servir MCP via socket Unix em PATH (em vez de stdio)")
 
     args = parser.parse_args()
+
+    if args.daemon or args.socket or args.prompt[:1] == ["serve"]:
+        from vincent import mcp_server
+        mcp_server.run(daemon=args.daemon, socket_path=args.socket)
+        return
 
     registry = DeviceRegistry(lambda evt: None)
     agent = VincentAgent(registry=registry, model=args.model)
