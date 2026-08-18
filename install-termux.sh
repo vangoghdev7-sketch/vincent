@@ -24,7 +24,8 @@ pkg update -y
 pkg install -y python python-pip git clang libffi openssl python-psutil
 
 echo -e "\033[38;5;254m[2/4] Instalando pacotes Python necessários...\033[0m"
-pip install --upgrade pip
+# "pip install --upgrade pip" é proibido no Termux (quebra o pacote
+# python-pip do apt) — pip já vem atual via pkg update/install acima.
 pip install pyserial pyyaml setuptools
 
 echo -e "\033[38;5;254m[3/4] Instalando pacote Vincent CLI em modo editável...\033[0m"

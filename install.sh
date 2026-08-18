@@ -63,7 +63,9 @@ fi
 cd "$INSTALL_DIR"
 if [ "$PLATFORM" = "termux" ]; then
     pkg install -y python-psutil
-    pip install --upgrade pip
+    # "pip install --upgrade pip" é proibido no Termux ("this will break
+    # the python-pip package") — pip já vem atual via pkg/apt, achado ao
+    # vivo rodando isso de verdade no telefone.
     pip install pyserial pyyaml setuptools
     pip install -e .
 elif command -v pipx >/dev/null 2>&1; then
