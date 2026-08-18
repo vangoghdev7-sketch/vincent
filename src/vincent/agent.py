@@ -22,6 +22,8 @@ from .agent_tools import execute_agent_tool, TOOL_DEFINITIONS
 from .memory import recall_context, save_summary
 from .skills import skills_context
 
+ESCALATION_MODEL = os.environ.get("VINCENT_ESCALATION_MODEL", "qwen2.5-coder:7b")
+
 OBSIDIAN_VAULT_CANDIDATES = [
     os.environ.get("VINCENT_OBSIDIAN_VAULT", ""),
     os.path.expanduser("~/Documents/Obsidian Vault"),
@@ -124,6 +126,28 @@ class VincentAgent:
     def set_caveman_mode(self, mode: str) -> bool:
         return self.caveman.set_mode(mode)
 
+    def _escalate_for_tools(self, model_id: str, on_step_callback: Optional[Callable[[str], None]] = None) -> str:
+        """
+        Modelos locais muito pequenos (<3B) nem sempre emitem o bloco
+        tool_call de forma confiavel — so descrevem o que fariam. Escala
+        SO NESTE TURNO pra um modelo melhor da cascata local, sem mudar
+        self.model (a troca e transparente, nao "gruda").
+        ponytail: threshold e alvo fixos (3B / qwen2.5-coder:7b); virar
+        cascata configuravel se a lista de modelos locais mudar muito.
+        """
+        m = re.search(r":(\d+(?:\.\d+)?)b\b", model_id.lower())
+        if not m or float(m.group(1)) >= 3:
+            return model_id  # cloud/desconhecido/já grande — não mexe
+
+        escalated = ESCALATION_MODEL
+        available = {mm["id"] for mm in self.model_manager.get_all_models()}
+        if escalated not in available or escalated == model_id:
+            return model_id
+
+        if on_step_callback:
+            on_step_callback(f"⚡ escalado para {escalated} (tool-calling — {model_id} é pequeno demais pra chamar ferramenta com confiança)")
+        return escalated
+
     def ask(self, question: str, model_override: str | None = None) -> str:
         """Execução direta padrão com compressão Caveman e comandos de hardware."""
         target_m = model_override or self.model
@@ -161,7 +185,7 @@ class VincentAgent:
         Agentic Loop com Function/Tool Calling autônomo e auto-cura.
         Investiga o código, executa ferramentas, inspeciona resultados e sintetiza a solução.
         """
-        target_m = self.model
+        target_m = self._escalate_for_tools(self.model, on_step_callback)
         processed_task, _ = self.caveman.compress_prompt(task)
         state = self._device_state()
         self._heal_attempts: Dict[str, int] = {}
