@@ -282,6 +282,9 @@ class VincentAgent:
         arriscado no loop principal) — adicionar se workers começarem a
         aplicar patch e quebrar sem chance de restaurar.
         """
+        if not subtasks:
+            return []
+
         from concurrent.futures import ThreadPoolExecutor, as_completed
 
         def _worker(i: int, task: str) -> str:

@@ -114,12 +114,11 @@ def test_spawn_workers_does_not_touch_shared_agent_state(agent_factory):
     assert not hasattr(agent, "_heal_attempts")
 
 
-def test_spawn_workers_empty_subtasks_raises_valueerror(agent_factory):
-    """ACHADO: spawn_workers([]) não retorna [] — ThreadPoolExecutor(max_workers=0)
-    levanta ValueError. Documentado aqui, não corrigido (fora de escopo: agent.py)."""
+def test_spawn_workers_empty_subtasks_returns_empty_list(agent_factory):
+    """Corrigido: spawn_workers([]) retorna [] em vez de explodir com
+    ValueError do ThreadPoolExecutor(max_workers=0)."""
     agent, _mm, _save = agent_factory()
-    with pytest.raises(ValueError, match="max_workers must be greater than 0"):
-        agent.spawn_workers([])
+    assert agent.spawn_workers([]) == []
 
 
 # ── _run_worker_task isolado ────────────────────────────────────────────

@@ -161,6 +161,7 @@ Um prompt sem barra que não seja um comando reconhecido vai direto para o chat 
 | `/vision <img> [pergunta]` | Lê uma imagem (print de erro, mockup) via modelo multimodal |
 | `/config` | Painel visual interativo (setas, curses) de modelo e chaves |
 | `/gateway` | Status ao vivo do gateway OmniRoute (alcançabilidade, circuit breaker, cooldown) |
+| `/tui` | Painel visual (Rich): modelo/tokens/custo, workers, log. Ao vivo se houver `/bg`/`/spawn` rodando, snapshot estático senão |
 | `/vault` / `/auth` / `/login` | Menu do cofre de chaves local (chmod 0600) — sem OAuth, chave real por provedor |
 | `/key [chave]` | Atalho para registrar direto a chave OmniRoute no cofre |
 | `/skills` | Lista as skills instaladas (`~/.vincent/skills/<nome>/SKILL.md`) |

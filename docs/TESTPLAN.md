@@ -350,18 +350,26 @@ T60. **[STATIC]** `/caveman bogus` — `set_caveman_mode` returns `False`
 
 ## J. Gateway status command
 
-T61. **[NETWORK]** `/gateway` (exact match, also `/gateway status` — both
-    are literal string matches in the dispatcher, nothing else) — prints an
-    HUD card: URL, ALCANÇÁVEL (yes/no + model count), CIRCUITO (circuit
-    breaker state from `routing/resilience.py`), COOLDOWN ATIVO. With no
-    network, expect ALCANÇÁVEL = NÃO and CIRCUITO likely `closed` (no
-    failures recorded yet) rather than a crash.
+T61. **[NETWORK]** `/gateway` (also `/gateway status`, `/gateway anything` —
+    fixed to `prompt.startswith("/gateway")`, no longer an exact-match quirk)
+    — prints an HUD card: URL, ALCANÇÁVEL (yes/no + model count), CIRCUITO
+    (circuit breaker state from `routing/resilience.py`), COOLDOWN ATIVO.
+    With no network, expect ALCANÇÁVEL = NÃO and CIRCUITO likely `closed`
+    (no failures recorded yet) rather than a crash.
 
-T62. **[STATIC]** `/gateway foo` (anything other than the two exact
-    strings) — does NOT match the `/gateway` branch; falls through to the
-    unknown-command branch (T27's path) since no other handler's
-    `startswith` catches it either. Confirms the exact-match quirk noted
-    while reading the dispatcher.
+T62. **[STATIC]** *(superseded — `/gateway foo` now matches via
+    `startswith`, see T61; the former exact-match-only quirk was fixed.)*
+
+T64. **[STATIC/INTERACTIVE]** `/tui` — with no `/bg`/`/spawn` task alive,
+    prints a single static Rich frame (header + workers panel showing
+    "no active workers" + last-10-messages log) and returns to the prompt.
+    With a `/bg`/`/spawn` task running, enters a live-refreshing view
+    (0.5s tick) until all tracked background threads finish, then renders
+    a final frame and returns; Ctrl+C exits the live view early without
+    killing the background task. `render_frame()`/`mount()` themselves are
+    covered by `tests/test_tui.py` (mocked state, no terminal needed); this
+    step is about the real wiring in `cli.py` (`bg_tasks` dict feeding
+    worker rows), which needs a live REPL to exercise end-to-end.
 
 ---
 
@@ -381,7 +389,8 @@ T63. **[STATIC]** `python3 -m pytest tests/ -v` — all three resilience/
 
 ## Summary
 
-- Total steps: 63 (T1–T63).
+- Total steps: 64 (T1–T64; T62 superseded by the `/gateway` startswith fix,
+  kept as a marker rather than renumbering everything below it).
 - **[STATIC]**: majority — runnable now via `py_compile`, `--help`, mocked
   `pytest`, or REPL paths that error out before reaching a model call.
 - **[LIVE LLM]**: T15, T16, T28, T30, T32, T33, T35, T53 — hand these to a
@@ -392,8 +401,9 @@ T63. **[STATIC]** `python3 -m pytest tests/ -v` — all three resilience/
 - **[NETWORK]**: T3, T4 (negative path), T21, T22, T47, T61 — need a
   reachable OmniRoute gateway / Ollama host / git remote, but not a full
   model completion.
-- **[INTERACTIVE]**: T9, T37, T40 — need a real pty with simulated
-  keystrokes, per this repo's existing testing convention for curses UIs.
+- **[INTERACTIVE]**: T9, T37, T40, T64 (live-view branch only) — need a
+  real pty with simulated keystrokes, per this repo's existing testing
+  convention for curses UIs.
 
 ### Verification performed while writing this plan
 

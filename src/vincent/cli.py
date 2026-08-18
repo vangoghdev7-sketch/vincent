@@ -86,7 +86,7 @@ def display_models_catalog(agent: VincentAgent, search_term: str = ""):
 BARE_COMMAND_ALIASES = {
     "models", "search", "model", "act", "agent", "bg", "vision", "commit", "caveman",
     "vault", "auth", "login", "key", "train", "lora", "export", "devices",
-    "cmd", "stats", "help", "config", "skills", "skill", "spawn", "gateway",
+    "cmd", "stats", "help", "config", "skills", "skill", "spawn", "gateway", "tui",
 }
 
 
@@ -132,6 +132,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     bg_results: "queue.Queue" = queue.Queue()
     bg_counter = [0]
     bg_threads: list = []  # rastreados só pra avisar em /exit se algo ainda roda
+    bg_tasks: dict = {}  # task_id -> (thread, label) — pro /tui mostrar workers reais
 
     def _spawn_background(task: str):
         bg_counter[0] += 1
@@ -144,8 +145,9 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 res = f"[VINCENT BG] Falhou: {e}"
             bg_results.put((task_id, task, res))
 
-        t = threading.Thread(target=_worker, daemon=True)
+        t = threading.Thread(target=_worker, daemon=True, name=f"bg-{task_id}")
         bg_threads.append(t)
+        bg_tasks[task_id] = (t, task[:60])
         t.start()
         return task_id
 
@@ -166,8 +168,9 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
             summary = "\n\n".join(f"── Worker {i+1} ──\n{r}" for i, r in enumerate(results))
             bg_results.put((batch_id, f"/spawn {len(subtasks)} workers", summary))
 
-        t = threading.Thread(target=_runner, daemon=True)
+        t = threading.Thread(target=_runner, daemon=True, name=f"spawn-{batch_id}")
         bg_threads.append(t)
+        bg_tasks[batch_id] = (t, f"/spawn {len(subtasks)} workers")
         t.start()
         return batch_id
 
@@ -331,7 +334,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                     print(f"{SHADOW_GRAY}Requer modelo multimodal ativo (ex: /model qwen2.5vl, /model auto/best-vision).{CLR_RST}")
                 continue
 
-            elif prompt in ("/gateway", "/gateway status"):
+            elif prompt.startswith("/gateway"):
                 status = agent.model_manager.gateway_status()
                 items = [
                     ("URL", status["url"]),
@@ -340,6 +343,45 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                     ("COOLDOWN ATIVO", "SIM" if status["cooldown_active"] else "NÃO"),
                 ]
                 render_hud_card("STATUS DO GATEWAY OMNIROUTE", items, COBALT_BLUE)
+                continue
+
+            elif prompt == "/tui":
+                from vincent import tui as _tui
+
+                def _collect_state():
+                    workers = [
+                        {"id": tid, "task": label, "status": "running" if t.is_alive() else "done"}
+                        for tid, (t, label) in bg_tasks.items()
+                    ]
+                    log = [
+                        {"role": m.get("role", "user"), "text": str(m.get("content", ""))[:300]}
+                        for m in agent._history[-10:]
+                    ]
+                    return {
+                        "model": agent.display_model,
+                        "tokens_used": agent.telemetry.tokens_in + agent.telemetry.tokens_out,
+                        "tokens_saved": agent.caveman.total_tokens_saved,
+                        "cost_usd": agent.caveman.get_stats()["estimated_cost_saved_usd"],
+                        "workers": workers,
+                        "log": log,
+                    }
+
+                any_alive = any(t.is_alive() for t, _ in bg_tasks.values())
+                if not any_alive:
+                    # sem worker rodando: só um snapshot estático, sem sentido ficar "ao vivo"
+                    console = _tui.Console()
+                    console.print(_tui.render_frame(_collect_state()))
+                else:
+                    live = _tui.mount(_collect_state())
+                    print(f"{SHADOW_GRAY}Ctrl+C pra sair do painel ao vivo (as tarefas em background continuam).{CLR_RST}")
+                    try:
+                        with live:
+                            while any(t.is_alive() for t, _ in bg_tasks.values()):
+                                live.update(_tui.render_frame(_collect_state()))
+                                time.sleep(0.5)
+                            live.update(_tui.render_frame(_collect_state()))
+                    except KeyboardInterrupt:
+                        pass
                 continue
 
             elif prompt == "/config":
@@ -379,11 +421,13 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                         ]
                         render_hud_card("MOTOR DE COMPRESSÃO CAVEMAN (-65%)", items, STARRY_GOLD)
                     else:
-                        print(f"{ALERT_SCARLET}Modo inválido. Opções: off, lite, full, ultra, wenyan-lite, wenyan-full{CLR_RST}")
+                        opcoes = ", ".join(agent.caveman.INTENSITY_LEVELS)
+                        print(f"{ALERT_SCARLET}Modo inválido. Opções: {opcoes}{CLR_RST}")
                 else:
                     curr = agent.caveman.mode
+                    opcoes = " | ".join(agent.caveman.INTENSITY_LEVELS)
                     print(f"{STARRY_GOLD}Modo Caveman ativo:{CLR_RST} {curr}")
-                    print(f"{SHADOW_GRAY}Uso: /caveman off | lite | full | ultra{CLR_RST}")
+                    print(f"{SHADOW_GRAY}Uso: /caveman {opcoes}{CLR_RST}")
                 continue
 
             # ── Key Vault & Autenticação Segura ─────────────────────────────
@@ -488,6 +532,8 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 print(f"  {COBALT_BLUE}/skills{CLR_RST}               Lista skills instaladas (SKILL.md carregado sob demanda)")
                 print(f"  {COBALT_BLUE}/skill add <git-url>{CLR_RST}   Clona um repo de skills (ex: obsidian-skills) pra ~/.vincent/skills")
                 print(f"  {COBALT_BLUE}/spawn <n> <tarefas>{CLR_RST}   N workers paralelos (separe por ';' ou repete a mesma tarefa)")
+                print(f"  {COBALT_BLUE}/tui{CLR_RST}                  Painel visual (Rich) — ao vivo se tiver /bg ou /spawn rodando")
+                print(f"  {COBALT_BLUE}/gateway{CLR_RST}              Status do gateway OmniRoute (circuito, cooldown, modelos)")
                 print(f"  {COBALT_BLUE}/devices{CLR_RST}              Varre e inspeciona placas ESP32 conectadas")
                 print(f"  {COBALT_BLUE}/cmd <dev> <cmd>{CLR_RST}       Envia comando serial direto para a placa")
                 print(f"  {COBALT_BLUE}/stats{CLR_RST}                Relatório de telemetria, hardware e economia de tokens")
