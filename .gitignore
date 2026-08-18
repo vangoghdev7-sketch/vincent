@@ -10,3 +10,5 @@ build/
 dist/
 .claude-flow/
 .vincent/
+CLAUDE.md
+.claude/
