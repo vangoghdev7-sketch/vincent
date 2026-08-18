@@ -2,8 +2,8 @@
 """
 Vincent CLI 4.0 — Van Gogh 'Starry Night' Cyber-Impressionist Orchestrator.
 Integrates 1200+ Whitelabeled Neural Routes, Zero-Key Free Engine, Local Offline Models,
-Enterprise Authentication (OAuth2/Key), LlamaFactory Fine-Tuning, Caveman Compression (-65%),
-Ponytail Real-time Telemetry, GSD Multi-Agent Swarm, and Termux/ADB Universal Adaptation.
+Local Key Vault (chmod 0600), MCP Server (JSON-RPC stdio/socket), Agentic Loop with Tool Calling,
+LlamaFactory Fine-Tuning, Caveman Compression (-65%), and Termux/ADB Universal Adaptation.
 """
 
 import argparse
@@ -18,9 +18,10 @@ if _DIR not in sys.path:
 from vincent.devices import DeviceRegistry
 from vincent.agent import VincentAgent
 from vincent.gsd import GSDOrchestrator
-from vincent.auth import VincentAuth
+from vincent.auth import VincentAuth, SUPPORTED_PROVIDERS
 from vincent.llama_factory import LlamaFactoryOrchestrator
 from vincent.env_detect import PlatformEnvironment
+from vincent.mcp_server import run_server
 from vincent.ui import (
     BANNER, CLR_RST, CLR_BOLD, CLR_DIM, COBALT_BLUE, PRUSSIAN_BLUE,
     LEMON_YELLOW, CHROME_YELLOW, STARRY_GOLD, CYPRESS_GREEN, CYPRESS_DARK,
@@ -98,22 +99,21 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
         ("GALERIA CLOUD", f"{CYPRESS_GREEN}ONLINE{CLR_RST} (:20128) — {omni_count} obras conectadas"),
         ("ATELIER LOCAL", f"{CYPRESS_GREEN}ONLINE{CLR_RST} (:11434) — {ollama_count} modelos quentes"),
         ("HARDWARE LAB", f"{len(devs)} Placas Conectadas (TEMBED / ESP32DIV)"),
-        ("AUTENTICAÇÃO", f"{CYPRESS_GREEN}CONECTADO{CLR_RST} ({auth.identity})" if auth.is_authenticated else f"{STARRY_GOLD}MODO ZERO-KEY (/login ou /key){CLR_RST}"),
+        ("KEY VAULT (0600)", f"{CYPRESS_GREEN}CHAVES ATIVAS{CLR_RST} ({auth.identity})" if auth.is_authenticated else f"{STARRY_GOLD}MODO ZERO-KEY (/vault){CLR_RST}"),
         ("AMBIENTE", f"{env_summary['os']} (Modo: {env_summary['layout_mode']})")
     ]
     render_hud_card("TELEMETRIA NOITE ESTRELADA — VINCENT HUD", hud_items, COBALT_BLUE)
     
     print(f"\n{SHADOW_GRAY}Comandos essenciais da Galeria:{CLR_RST}")
-    print(f"  {COBALT_BLUE}/models{CLR_RST} (catálogo)    • {COBALT_BLUE}/search <termo>{CLR_RST} (buscar)     • {COBALT_BLUE}/model <id>{CLR_RST} (trocar)")
-    print(f"  {COBALT_BLUE}/caveman on|off{CLR_RST} (tokens) • {COBALT_BLUE}/gsd <tarefa>{CLR_RST} (swarm)     • {COBALT_BLUE}/squad{CLR_RST} (agentes)")
-    print(f"  {COBALT_BLUE}/login /key <tok>{CLR_RST} (auth) • {COBALT_BLUE}/train /lora{CLR_RST} (finetune)  • {COBALT_BLUE}/export{CLR_RST} (dataset)")
-    print(f"  {COBALT_BLUE}/devices{CLR_RST} (hardware)   • {COBALT_BLUE}/cmd <dev> <cmd>{CLR_RST} (serial)  • {COBALT_BLUE}/stats{CLR_RST} (telemetria) • {COBALT_BLUE}/exit{CLR_RST}\n")
+    print(f"  {COBALT_BLUE}/act <tarefa>{CLR_RST} (agentic loop) • {COBALT_BLUE}/models{CLR_RST} (catálogo)    • {COBALT_BLUE}/search <termo>{CLR_RST} (buscar)")
+    print(f"  {COBALT_BLUE}/caveman on|off{CLR_RST} (tokens)      • {COBALT_BLUE}/gsd <tarefa>{CLR_RST} (swarm)     • {COBALT_BLUE}/squad{CLR_RST} (agentes)")
+    print(f"  {COBALT_BLUE}/vault /key{CLR_RST} (credenciais)     • {COBALT_BLUE}/train /lora{CLR_RST} (finetune)  • {COBALT_BLUE}/export{CLR_RST} (dataset)")
+    print(f"  {COBALT_BLUE}/devices{CLR_RST} (hardware)          • {COBALT_BLUE}/cmd <dev> <cmd>{CLR_RST} (serial)  • {COBALT_BLUE}/stats{CLR_RST} (telemetria) • {COBALT_BLUE}/exit{CLR_RST}\n")
 
     term_w = get_terminal_width()
 
     while True:
         try:
-            # Ponytail Live Statusline
             statusline = agent.telemetry.render_statusline(
                 current_model=agent.display_model,
                 is_free=agent.model_manager.is_free_tier(agent.model),
@@ -154,9 +154,23 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 if len(parts) > 1:
                     new_m = parts[1].strip()
                     agent.set_model(new_m)
+                    print(f"{CYPRESS_GREEN}✓ Modelo ativo alterado para: {agent.display_model}{CLR_RST}\n")
                 else:
                     print(f"{CHROME_YELLOW}Modelo atual:{CLR_RST} {agent.display_model}")
                     print(f"{SHADOW_GRAY}Uso: /model <id_do_modelo> (ex: /model auto/best-coding ou /model qwen3:0.6b){CLR_RST}")
+                continue
+
+            # ── Agentic Loop com Tool Calling e Auto-cura ───────────────────
+            elif prompt.startswith("/act") or prompt.startswith("/agent"):
+                parts = prompt.split(maxsplit=1)
+                if len(parts) > 1:
+                    task = parts[1].strip()
+                    spinner = NeuralSpinner(f"Vincent Agentic Loop iniciando para: '{task}'...", color=VIOLET_SWIRL)
+                    with spinner:
+                        res = agent.agentic_run(task, on_step_callback=lambda step: spinner.update_message(f"Vincent: {step}"))
+                    render_response_box(res, agent.display_model, agent.telemetry.last_latency, mode="Agentic Loop (Tools)")
+                else:
+                    print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /act <descrição da tarefa de código/investigação>")
                 continue
 
             elif prompt.startswith("/caveman"):
@@ -194,29 +208,34 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 gsd.list_squad()
                 continue
 
-            elif prompt in ("/login", "/auth"):
-                key = input(f"{COBALT_BLUE}Chave neural (API key):{CLR_RST} ").strip()
-                if auth.login_with_key(key):
-                    print(f"{CYPRESS_GREEN}✓ Chave Neural da Galeria registrada com sucesso!{CLR_RST}\n")
-                else:
-                    print(f"{ALERT_SCARLET}✗ Chave inválida.{CLR_RST}\n")
+            # ── Key Vault & Autenticação Segura ─────────────────────────────
+            elif prompt in ("/vault", "/auth", "/login"):
+                render_section_header("COFRE DE CHAVES LOCAL (CHMOD 0600)", "🔐", COBALT_BLUE)
+                print(f"  1. Inserir chave OmniRoute / Galeria Vincent")
+                print(f"  2. Inserir chave OpenAI")
+                print(f"  3. Inserir chave Anthropic")
+                print(f"  4. Inserir chave Gemini")
+                print(f"  5. Inserir chave DeepSeek")
+                print(f"  6. Configurar Host Ollama Local")
+                print(f"  7. Ver status do cofre\n")
+                choice = input(f"{CHROME_YELLOW}Escolha uma opção (1-7 ou Enter para voltar):{CLR_RST} ").strip()
+                prov_map = {"1": "omniroute", "2": "openai", "3": "anthropic", "4": "gemini", "5": "deepseek", "6": "ollama_host"}
+                if choice in prov_map:
+                    auth.interactive_login(prov_map[choice])
+                elif choice == "7":
+                    render_hud_card("STATUS DO COFRE DE CHAVES", auth.status_card_data(), COBALT_BLUE)
                 continue
 
             elif prompt.startswith("/key"):
                 parts = prompt.split(maxsplit=1)
                 if len(parts) > 1:
                     key = parts[1].strip()
-                    if auth.login_with_key(key):
-                        print(f"{CYPRESS_GREEN}✓ Chave Neural da Galeria registrada com sucesso!{CLR_RST}\n")
+                    if auth.set_key("omniroute", key):
+                        print(f"{CYPRESS_GREEN}✓ Chave Neural da Galeria registrada no cofre (chmod 0600)!{CLR_RST}\n")
                     else:
                         print(f"{ALERT_SCARLET}✗ Chave inválida.{CLR_RST}\n")
                 else:
-                    print(f"{CHROME_YELLOW}Uso:{CLR_RST} /key <sua_chave_neural>")
-                continue
-
-            elif prompt == "/logout":
-                auth.logout()
-                print(f"{STARRY_GOLD}✓ Sessão desconectada. Operando em modo público / Zero-Key.{CLR_RST}\n")
+                    auth.interactive_login("omniroute")
                 continue
 
             elif prompt.startswith("/train") or prompt.startswith("/lora"):
@@ -271,12 +290,13 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
 
             elif prompt == "/help":
                 render_section_header("GUIA DE COMANDOS DA GALERIA VINCENT", "💡", COBALT_BLUE)
+                print(f"  {COBALT_BLUE}/act <tarefa>{CLR_RST}           Agentic Loop: investiga e altera código com ferramentas")
                 print(f"  {COBALT_BLUE}/models{CLR_RST}               Exibe todas as rotas e modelos de IA indexados")
                 print(f"  {COBALT_BLUE}/search <termo>{CLR_RST}        Filtra modelos por palavra-chave (ex: /search free)")
                 print(f"  {COBALT_BLUE}/model <id>{CLR_RST}            Sintoniza o modelo ativo em tempo real")
                 print(f"  {COBALT_BLUE}/caveman <modo>{CLR_RST}        Ativa compressão extrema de tokens (off, lite, full, ultra)")
                 print(f"  {COBALT_BLUE}/gsd <tarefa>{CLR_RST}          Dispara plano autônomo com o Swarm de Agentes")
-                print(f"  {COBALT_BLUE}/login | /key <tok>{CLR_RST}   Autenticação e injeção de chave da Galeria")
+                print(f"  {COBALT_BLUE}/vault | /key{CLR_RST}          Gerencia chaves de API com segurança (chmod 0600)")
                 print(f"  {COBALT_BLUE}/train | /lora{CLR_RST}        Gera pipeline de fine-tuning LlamaFactory")
                 print(f"  {COBALT_BLUE}/export{CLR_RST}                Exporta histórico para dataset de treino")
                 print(f"  {COBALT_BLUE}/devices{CLR_RST}              Varre e inspeciona placas ESP32 conectadas")
@@ -286,7 +306,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 print(f"  {COBALT_BLUE}/exit{CLR_RST}                 Encerra o CLI\n")
                 continue
 
-            # ── Execução de Pergunta / Prompt Normal com Redemoinho Neural ──
+            # ── Execução de Prompt Padrão ────────────────────────────────────
             mode_label = f"Caveman ({agent.caveman.mode})" if agent.caveman.mode != "off" else "Standard"
             with NeuralSpinner(f"Pintando resposta com [{agent.display_model}]...", color=COBALT_BLUE):
                 reply = agent.ask(prompt)
@@ -296,7 +316,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 model=agent.display_model,
                 latency=agent.telemetry.last_latency,
                 mode=mode_label,
-                tokens_saved=agent.caveman.total_tokens_saved
+                tokens_saved=agent.caveman.total_saved
             )
 
         except KeyboardInterrupt:
@@ -309,22 +329,29 @@ def main():
     parser = argparse.ArgumentParser(description="Vincent CLI 4.0 — Van Gogh 'Starry Night' Cyber-Impressionist Orchestrator")
     parser.add_argument("prompt", nargs="*", help="Pergunta ou comando direto para o Vincent")
     parser.add_argument("-m", "--model", default="qwen3:0.6b", help="Modelo inicial (ex: qwen3:0.6b, qwen2.5-coder:7b, auto/best-free)")
+    parser.add_argument("-a", "--agent", type=str, default=None, help="Executar tarefa via Agentic Loop autônomo com Tool Calling")
     parser.add_argument("-l", "--list-models", action="store_true", help="Listar todos os modelos do catálogo")
     parser.add_argument("-s", "--search", type=str, default="", help="Filtrar modelos por termo de busca")
     parser.add_argument("-c", "--caveman", type=str, default=None, help="Modo caveman (lite, full, ultra)")
     parser.add_argument("-g", "--gsd", type=str, default=None, help="Executar plano autônomo via GSD Swarm")
     parser.add_argument("-d", "--devices", action="store_true", help="Listar dispositivos de hardware USB conectados")
     parser.add_argument("-t", "--train", action="store_true", help="Gerar configuração de treino LoRA via LlamaFactory")
-    parser.add_argument("--auth", action="store_true", help="Exibir status ou conectar à Galeria Vincent")
-    parser.add_argument("--daemon", action="store_true", help="Rodar servidor MCP detached, socket Unix em background")
-    parser.add_argument("--socket", default=None, help="Servir MCP via socket Unix em PATH (em vez de stdio)")
+    parser.add_argument("--vault", "--auth", action="store_true", help="Exibir status do cofre de chaves (chmod 0600)")
+    parser.add_argument("--serve", "--daemon", action="store_true", help="Iniciar servidor MCP em segundo plano (daemon rastreável)")
+    parser.add_argument("--mcp", action="store_true", help="Iniciar servidor MCP no terminal via stdio")
+    parser.add_argument("--socket", type=str, default=None, help="Caminho do socket Unix para o servidor MCP")
 
     args = parser.parse_args()
 
-    if args.daemon or args.socket or args.prompt[:1] == ["serve"]:
-        from vincent import mcp_server
-        mcp_server.run(daemon=args.daemon, socket_path=args.socket)
-        return
+    # Modo Servidor MCP / Daemon
+    if args.serve:
+        print(f"{CYPRESS_GREEN}Iniciando servidor MCP em segundo plano (daemon)...{CLR_RST}")
+        run_server(daemon=True, socket_path=args.socket)
+        sys.exit(0)
+
+    if args.mcp:
+        run_server(daemon=False, socket_path=args.socket)
+        sys.exit(0)
 
     registry = DeviceRegistry(lambda evt: None)
     agent = VincentAgent(registry=registry, model=args.model)
@@ -362,9 +389,16 @@ def main():
         render_hud_card("TREINAMENTO & FINE-TUNING LLM", items, STARRY_GOLD)
         sys.exit(0)
 
-    if args.auth:
+    if args.vault:
         auth = VincentAuth()
-        render_hud_card("AUTENTICAÇÃO DA GALERIA", auth.status_card_data(), COBALT_BLUE)
+        render_hud_card("COFRE DE CHAVES LOCAL (CHMOD 0600)", auth.status_card_data(), COBALT_BLUE)
+        sys.exit(0)
+
+    if args.agent:
+        spinner = NeuralSpinner(f"Vincent Agentic Loop iniciando para: '{args.agent}'...", color=VIOLET_SWIRL)
+        with spinner:
+            res = agent.agentic_run(args.agent, on_step_callback=lambda step: spinner.update_message(f"Vincent: {step}"))
+        render_response_box(res, agent.display_model, agent.telemetry.last_latency, mode="Agentic Loop (Tools)")
         sys.exit(0)
 
     if args.gsd:
@@ -379,7 +413,7 @@ def main():
         with NeuralSpinner(f"Processando com [{agent.display_model}]...", color=COBALT_BLUE):
             reply = agent.ask(question)
         mode_label = f"Caveman ({agent.caveman.mode})" if agent.caveman.mode != "off" else "Standard"
-        render_response_box(reply, agent.display_model, agent.telemetry.last_latency, mode=mode_label, tokens_saved=agent.caveman.total_tokens_saved)
+        render_response_box(reply, agent.display_model, agent.telemetry.last_latency, mode=mode_label, tokens_saved=agent.caveman.total_saved)
         sys.exit(0)
 
     # Entra no REPL interativo futurista
