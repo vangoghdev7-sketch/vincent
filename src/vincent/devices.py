@@ -5,6 +5,7 @@ Cada Device sabe o que é, o que pode fazer e o que não pode.
 
 import glob
 import json
+import os
 import queue
 import re
 import threading
@@ -320,7 +321,12 @@ class DeviceRegistry:
         """Varre portas USB, identifica dispositivos e conecta os novos. Multiplataforma (Linux/Windows/macOS/Termux)."""
         if serial is None:
             return []
+        # pyserial não tem backend de enumeração pra Android/Termux (emite warning ruidoso
+        # e não acha nada mesmo) — pula direto pro fallback silencioso via /dev
+        is_android = "ANDROID_ROOT" in os.environ or "ANDROID_DATA" in os.environ
         try:
+            if is_android:
+                raise ImportError
             from serial.tools import list_ports
             # hwid == "n/a" = porta serial fixa (ex: UART de placa-mãe), não USB-serial real
             ports = sorted(p.device for p in list_ports.comports() if p.hwid != "n/a")

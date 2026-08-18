@@ -187,7 +187,7 @@ class ModelManager:
                             dt = time.time() - t0
                             return text, model, dt
                 except Exception as e:
-                    last_error = f"Ollama ({model}): {e}"
+                    last_error = f"Vincent Local ({model}): {e}"
                     continue
 
             # 2. Tentativa via OmniRoute Gateway
@@ -216,7 +216,7 @@ class ModelManager:
                         dt = time.time() - t0
                         return text, model, dt
             except Exception as e:
-                last_error = f"OmniRoute ({model}): {e}"
+                last_error = f"Vincent Cloud ({self.mask(model)}): {e}"
                 continue
 
         # Se todas as rotas falharem
