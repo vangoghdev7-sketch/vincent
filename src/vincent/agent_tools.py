@@ -14,6 +14,8 @@ import re
 import glob
 import subprocess
 import fnmatch
+import tempfile
+import time
 import urllib.request
 import urllib.parse
 import html as html_lib
@@ -411,6 +413,66 @@ def tool_fetch_url(url: str, max_chars: int = 4000) -> Dict[str, Any]:
     return {"url": url, "content": text[:max_chars], "truncated": len(text) > max_chars}
 
 
+def _pyautogui():
+    """Import tardio: pyautogui exige display real (X11/Wayland) e é dependência opcional."""
+    try:
+        import pyautogui  # type: ignore
+        return pyautogui
+    except Exception as exc:
+        raise RuntimeError(
+            f"Controle de tela indisponível ({exc}). Requer `pip install pyautogui` e um display gráfico ativo."
+        )
+
+
+def tool_computer_screenshot(path: Optional[str] = None) -> Dict[str, Any]:
+    """Captura a tela atual e salva em PNG — visão do agente sobre o que está na tela."""
+    try:
+        pag = _pyautogui()
+    except RuntimeError as exc:
+        return {"error": str(exc)}
+    out_path = path or os.path.join(tempfile.gettempdir(), f"vincent_screenshot_{int(time.time())}.png")
+    try:
+        img = pag.screenshot()
+        img.save(out_path)
+    except Exception as exc:
+        return {"error": f"Falha ao capturar tela: {exc}"}
+    return {"path": out_path, "width": img.width, "height": img.height}
+
+
+def tool_computer_action(
+    action: str,
+    x: Optional[int] = None,
+    y: Optional[int] = None,
+    text: Optional[str] = None,
+    button: str = "left",
+    amount: int = 0,
+) -> Dict[str, Any]:
+    """Controla mouse/teclado: move, click, double_click, type, key, scroll."""
+    try:
+        pag = _pyautogui()
+    except RuntimeError as exc:
+        return {"error": str(exc)}
+    action = (action or "").strip().lower()
+    try:
+        if action == "move":
+            pag.moveTo(x, y)
+        elif action == "click":
+            pag.click(x=x, y=y, button=button)
+        elif action == "double_click":
+            pag.doubleClick(x=x, y=y)
+        elif action == "type":
+            pag.typewrite(text or "", interval=0.02)
+        elif action == "key":
+            pag.press(text or "")
+        elif action == "scroll":
+            pag.scroll(amount)
+        else:
+            return {"error": f"Ação desconhecida: '{action}'. Use move/click/double_click/type/key/scroll."}
+    except Exception as exc:
+        return {"error": f"Falha ao executar ação '{action}': {exc}"}
+    return {"ok": True, "action": action}
+
+
 # ─── Esquemas de Ferramentas (JSON Schema / Tool Definitions) ─────────────────
 
 TOOL_DEFINITIONS = [
@@ -539,6 +601,33 @@ TOOL_DEFINITIONS = [
             },
             "required": ["url"]
         }
+    },
+    {
+        "name": "computer_screenshot",
+        "description": "Captura a tela do desktop atual em PNG — use antes de clicar/digitar pra saber onde estão os elementos.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Caminho de saída do PNG (opcional, padrão: temp)"}
+            },
+            "required": []
+        }
+    },
+    {
+        "name": "computer_action",
+        "description": "Controla mouse e teclado do desktop: mover, clicar, digitar texto, apertar tecla, scroll. Só use quando o usuário pedir interação com a tela/GUI, não pra tarefas de código.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "description": "move | click | double_click | type | key | scroll"},
+                "x": {"type": "integer", "description": "Coordenada X (pixels, origem no canto superior esquerdo)"},
+                "y": {"type": "integer", "description": "Coordenada Y (pixels)"},
+                "text": {"type": "string", "description": "Texto a digitar (action=type) ou nome da tecla (action=key, ex: 'enter')"},
+                "button": {"type": "string", "description": "Botão do mouse pra click: left/right/middle (padrão: left)"},
+                "amount": {"type": "integer", "description": "Quantidade de scroll (positivo=cima, negativo=baixo)"}
+            },
+            "required": ["action"]
+        }
     }
 ]
 
@@ -596,6 +685,17 @@ def execute_agent_tool(tool_name: str, arguments: Dict[str, Any]) -> Dict[str, A
         return tool_fetch_url(
             url=arguments.get("url", ""),
             max_chars=arguments.get("max_chars", 4000)
+        )
+    elif name in ("computer_screenshot", "screenshot"):
+        return tool_computer_screenshot(path=arguments.get("path"))
+    elif name in ("computer_action", "computer_use", "computer"):
+        return tool_computer_action(
+            action=arguments.get("action", ""),
+            x=arguments.get("x"),
+            y=arguments.get("y"),
+            text=arguments.get("text"),
+            button=arguments.get("button", "left"),
+            amount=arguments.get("amount", 0)
         )
     else:
         return {"error": f"Ferramenta desconhecida: {tool_name}"}

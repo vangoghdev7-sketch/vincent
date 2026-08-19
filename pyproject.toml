@@ -14,6 +14,7 @@ dependencies = [
 [project.optional-dependencies]
 hardware = ["pyserial>=3.5"]
 api = ["flask>=3.0", "flask-socketio>=5.3"]
+computer = ["pyautogui>=0.9.54"]
 
 [project.scripts]
 vincent = "vincent.cli:main"

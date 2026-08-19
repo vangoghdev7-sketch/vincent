@@ -64,6 +64,14 @@ Ferramentas suportadas:
 9. `git_rollback`: {"path": "arquivo_a_reverter"}
 10. `web_search`: {"query": "termo de busca"}
 11. `fetch_url`: {"url": "https://..."}
+12. `computer_screenshot`: {} — captura a tela atual em PNG.
+13. `computer_action`: {"action": "move|click|double_click|type|key|scroll", "x": 0, "y": 0, "text": "opcional", "amount": 0} — controla mouse/teclado do desktop.
+
+## Regra de Controle de Tela:
+- `computer_screenshot`/`computer_action` são só pra quando o usuário pede explicitamente pra
+  interagir com a tela/GUI (clicar em algo visível, preencher um formulário, etc). Não use pra
+  tarefas de código — isso já é coberto pelas ferramentas de workspace acima. Tire um screenshot
+  ANTES de clicar/digitar pra confirmar coordenadas; nunca "chute" posição de pixel sem ver a tela.
 
 ## Regras de GitOps:
 - Antes de aplicar um `apply_diff` arriscado, confira `git_status`/`git_diff` primeiro.
