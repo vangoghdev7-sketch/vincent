@@ -331,6 +331,8 @@ class ModelManager:
                             dt = time.time() - t0
                             return text, model, dt
                     self._ollama_circuit.record_result("ollama", success=False, status_code=503)
+                    last_error = f"Vincent Local ({model}): resposta vazia"
+                    continue
                 except Exception as e:
                     code = e.code if isinstance(e, urllib.error.HTTPError) else 503
                     self._ollama_circuit.record_result("ollama", success=False, status_code=code)
