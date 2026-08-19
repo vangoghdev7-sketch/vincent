@@ -334,6 +334,9 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                     except KeyboardInterrupt:
                         print(f"\n{ALERT_SCARLET}✗ Tarefa interrompida pelo usuário (Ctrl+C). Voltando ao prompt.{CLR_RST}\n")
                         continue
+                    except Exception as e:
+                        print(f"\n{ALERT_SCARLET}✗ Erro na execução da tarefa: {e}{CLR_RST}\n")
+                        continue
                     render_response_box(res, agent.display_model, agent.telemetry.last_latency, mode="Agentic Loop (Tools)")
                 else:
                     print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /act <descrição da tarefa de código/investigação>")
