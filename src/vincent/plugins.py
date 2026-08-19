@@ -103,11 +103,16 @@ class PluginManager:
             return True
 
     def system_prompt_addon(self) -> str:
-        """Gera aditivo de contexto com as skills ativas."""
+        """Gera aditivo de contexto com as skills ativas.
+
+        Ordenação determinística (sorted): active_plugins é um set, e iterar
+        direto nele produz ordem aleatória entre execuções — o que muda o
+        system prompt a cada boot e invalida cache de prompt nos gateways.
+        """
         if not self.active_plugins:
             return ""
         lines = ["\n## Plugins & Capacidades Neurais Ativas:"]
-        for p in self.active_plugins:
+        for p in sorted(self.active_plugins):
             desc = self.skills.get(p, {}).get("description", "")
             lines.append(f"- **{p}**: {desc}")
         return "\n".join(lines) + "\n"
