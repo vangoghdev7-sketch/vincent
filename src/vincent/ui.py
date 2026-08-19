@@ -155,6 +155,12 @@ class NeuralSpinner:
         if self.is_tty:
             self.thread = threading.Thread(target=self._spin, daemon=True)
             self.thread.start()
+        else:
+            try:
+                sys.stdout.write(f"{self.color}🌀{CLR_RST} {CANVAS_WHITE}{self.message}{CLR_RST}\n")
+                sys.stdout.flush()
+            except (BrokenPipeError, OSError):
+                pass
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
