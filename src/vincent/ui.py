@@ -54,7 +54,7 @@ GRAY_DARK    = "\033[38;5;236m"
 # Desativa automaticamente todas as cores ANSI quando a saída não é um terminal
 # real (pipe, redirect para arquivo, CI) ou quando NO_COLOR está definida —
 # evita poluir logs/arquivos com sequências de escape ilegíveis.
-if os.environ.get("NO_COLOR") or not sys.stdout.isatty():
+if os.environ.get("NO_COLOR") or not getattr(sys.stdout, "isatty", lambda: False)():
     for _name, _val in list(globals().items()):
         if isinstance(_val, str) and _val.startswith("\033["):
             globals()[_name] = ""
