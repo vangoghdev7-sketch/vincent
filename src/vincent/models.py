@@ -11,7 +11,7 @@ import os
 import time
 import urllib.request
 import urllib.error
-from typing import Optional, List, Dict, Tuple, Any
+from typing import Optional, List, Dict, Tuple, Any, Callable
 
 from .routing.resilience import CircuitBreaker, Cooldown
 
@@ -205,10 +205,17 @@ class ModelManager:
             return True
         return any(k in model_name.lower() for k in ["free", "tllm", "oc", "ddgw", "felo", "pepper", "auto"])
 
-    def execute_inference(self, messages: List[Dict], target_model: str, system_prompt: str = "") -> Tuple[Optional[str], str, float]:
+    def execute_inference(self, messages: List[Dict], target_model: str, system_prompt: str = "",
+                          stream_callback: Optional[Callable[[str], None]] = None) -> Tuple[Optional[str], str, float]:
         """
         Executa inferência com cascata inteligente e failover automático.
         Retorna (texto_resposta, modelo_utilizado, tempo_gasto).
+
+        Se `stream_callback` for fornecido E a rota escolhida for local (Ollama),
+        a resposta é lida token a token: o texto completo é acumulado e retornado
+        igual antes, mas cada pedaço parcial também é entregue via stream_callback(pedaço)
+        em tempo real. Quando None, mantém o comportamento antigo (stream=False).
+        O OmniRoute não streama (fica igual) — foco no Ollama local.
         """
         import time
         t0 = time.time()
@@ -242,14 +249,18 @@ class ModelManager:
                     last_error = f"Vincent Local ({model}): circuito aberto (falhas recentes)"
                     continue
                 try:
+                    use_stream = stream_callback is not None
                     payload = {
                         "model": ollama_name,
                         "messages": _messages_for_ollama(
                             ([{"role": "system", "content": system_prompt}] if system_prompt else []) + messages
                         ),
-                        "stream": False,
+                        "stream": use_stream,
                         "think": False,
-                        "options": {"num_predict": 512, "temperature": 0.3, "num_thread": 4}
+                        # num_thread removido: deixa o Ollama auto-detectar e usar
+                        # todos os núcleos físicos (a máquina tem 12 threads; o fixo
+                        # em 4 tornava a inferência de modelos 7B/8B ~3x mais lenta).
+                        "options": {"num_predict": 512, "temperature": 0.3}
                     }
                     req = urllib.request.Request(
                         f"{OLLAMA_URL}/api/chat",
@@ -257,10 +268,37 @@ class ModelManager:
                         headers={"Content-Type": "application/json"},
                         method="POST"
                     )
-                    timeout_val = 25 if idx == 0 else 12
+                    # Timeout generoso: modelos 7B/8B no CPU (sem GPU) podem levar
+                    # dezenas de segundos pra gerar 512 tokens. O antigo 25s foi
+                    # calibrado pro qwen3:0.6b e estourava com modelos maiores.
+                    timeout_val = 300 if idx == 0 else 120
                     with urllib.request.urlopen(req, timeout=timeout_val) as resp:
-                        res_data = json.loads(resp.read().decode("utf-8"))
-                        text = res_data.get("message", {}).get("content", "").strip()
+                        if use_stream:
+                            # Streaming: cada linha é um JSON com message.content parcial
+                            # e um flag done. Acumula o texto completo e repassa cada
+                            # pedaço ao callback em tempo real.
+                            parts: List[str] = []
+                            for raw_line in resp:
+                                line = raw_line.decode("utf-8").strip()
+                                if not line:
+                                    continue
+                                try:
+                                    chunk = json.loads(line)
+                                except Exception:
+                                    continue
+                                piece = chunk.get("message", {}).get("content", "")
+                                if piece:
+                                    parts.append(piece)
+                                    try:
+                                        stream_callback(piece)
+                                    except Exception:
+                                        pass  # callback do usuário não pode derrubar a inferência
+                                if chunk.get("done"):
+                                    break
+                            text = "".join(parts).strip()
+                        else:
+                            res_data = json.loads(resp.read().decode("utf-8"))
+                            text = res_data.get("message", {}).get("content", "").strip()
                         if text:
                             self._ollama_circuit.record_result("ollama", success=True)
                             dt = time.time() - t0

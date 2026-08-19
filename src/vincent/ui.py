@@ -85,6 +85,8 @@ class NeuralSpinner:
         self.star_pulse   = ["★", "✦", "✧", "☆", "✹", "✺"]
         self.is_tty = sys.stdout.isatty()
         self.is_mobile = PlatformEnvironment.is_mobile()
+        self._lock = threading.Lock()   # serializa escritas no stdout (spin vs log)
+        self._start = time.time()
 
     def _spin(self):
         idx = 0
@@ -92,20 +94,35 @@ class NeuralSpinner:
             if self.is_tty:
                 swirl = self.swirl_frames[idx % len(self.swirl_frames)]
                 star  = self.star_pulse[(idx // 2) % len(self.star_pulse)]
-                
-                # Adaptação para telas estreitas de celular (Termux)
-                msg_display = self.message
-                if self.is_mobile and len(msg_display) > 28:
-                    msg_display = msg_display[:25] + "..."
 
-                line = f"\r{self.color}{swirl}{CLR_RST} {LEMON_YELLOW}{star}{CLR_RST} {CANVAS_WHITE}{msg_display}{CLR_RST}"
-                sys.stdout.write(line)
-                sys.stdout.flush()
+                # Cronômetro ao vivo — deixa claro que está trabalhando, não travado
+                elapsed = int(time.time() - self._start)
+                msg_display = self.message
+                if self.is_mobile and len(msg_display) > 24:
+                    msg_display = msg_display[:21] + "..."
+
+                line = f"{self.color}{swirl}{CLR_RST} {LEMON_YELLOW}{star}{CLR_RST} {CANVAS_WHITE}{msg_display}{CLR_RST} {SHADOW_GRAY}· {elapsed}s{CLR_RST}"
+                with self._lock:
+                    sys.stdout.write("\r\033[K" + line)
+                    sys.stdout.flush()
             idx += 1
-            time.sleep(0.06)
+            time.sleep(0.1)
         if self.is_tty:
-            sys.stdout.write("\r\033[K")
+            with self._lock:
+                sys.stdout.write("\r\033[K")
+                sys.stdout.flush()
+
+    def log(self, msg: str):
+        """Imprime uma linha PERSISTENTE (que fica no histórico do terminal)
+        sem quebrar a animação do spinner: limpa a linha do spinner, escreve a
+        mensagem com quebra de linha, e o spinner segue girando na linha de baixo.
+        Reinicia o cronômetro a cada evento pra medir cada passo isoladamente."""
+        with self._lock:
+            if self.is_tty:
+                sys.stdout.write("\r\033[K")
+            sys.stdout.write(msg + "\n")
             sys.stdout.flush()
+        self._start = time.time()
 
     def update_message(self, new_msg: str):
         self.message = new_msg

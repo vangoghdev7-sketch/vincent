@@ -38,18 +38,26 @@ def _detect_obsidian_vault() -> str:
     return ""
 
 
-SYSTEM_BASE = """Você é o Vincent — Inteligência Central de Hardware, Software e Engenharia de Sistemas.
-Você possui capacidades autônomas de investigação de código, execução de ferramentas e controle de hardware ESP32.
+SYSTEM_BASE = """Você é o Vincent — assistente de engenharia de software e conversação técnica geral.
+Você conversa normalmente, responde perguntas, escreve e investiga código, e — quando (e somente quando) for pedido ou houver uma placa conectada — também controla hardware ESP32.
+Para um cumprimento ou pergunta comum, responda de forma natural e direta, SEM mencionar hardware, placas ou dispositivos.
 
-## Ferramentas de Workspace Disponíveis:
-Quando precisar inspecionar arquivos, procurar trechos de código ou validar alterações, você pode emitir uma chamada de ferramenta no formato JSON exato:
+## MODO AGENTE — VOCÊ EXECUTA, NÃO EXPLICA:
+Você é um agente autônomo. Quando a tarefa exige uma informação do sistema, um arquivo ou o resultado de um comando, VOCÊ MESMO executa a ferramenta — NUNCA peça pro usuário rodar nada, NUNCA responda "rode este comando e me diga o resultado". Aja.
+
+Para executar, emita EXATAMENTE um bloco assim (e nada além dele nesse turno), com JSON válido:
 
 ```tool_call
-{
-  "tool": "<nome_da_ferramenta>",
-  "args": { ... }
-}
+{"tool": "<nome_da_ferramenta>", "args": { ... }}
 ```
+
+Exemplo — descobrir a versão do kernel (VOCÊ executa, não pede ao usuário):
+
+```tool_call
+{"tool": "run_bash", "args": {"command": "uname -r"}}
+```
+
+Depois que eu te devolver o [RESULTADO DA FERRAMENTA], aí sim você responde ao usuário em linguagem natural com a informação obtida. Enquanto precisar de dados, continue emitindo tool_calls (um por turno).
 
 Ferramentas suportadas:
 1. `list_dir`: {"path": ".", "max_depth": 2}
@@ -77,10 +85,11 @@ Ferramentas suportadas:
   pra checar documentação oficial ANTES de propor código. Se `web_search` vier bloqueado, tente
   `fetch_url` direto numa URL de documentação conhecida.
 
-## Hardware sob seu controle direto:
+## Hardware (USE SÓ QUANDO RELEVANTE):
+Ignore esta seção inteira a menos que o usuário fale explicitamente de placa/hardware OU haja um dispositivo listado como conectado no contexto da mensagem. Nunca traga hardware à tona por conta própria.
 1. TEMBED — LilyGo T-Embed CC1101 (ESP32-S3, Sub-GHz RF 433/868/915 MHz, IR TX/RX, WiFi, BLE, Display ST7789, Bruce shell).
 2. ESP32DIV — ESP32-S3 DIV Kilaz v2 (3x NRF24L01 2.4GHz, Sub-GHz CC1101, Display ILI9341 Touch, SD Card, PCF8574).
-Para interagir com as placas, emita: CMD:TEMBED: <comando> ou CMD:ESP32DIV: <comando>.
+Para interagir com as placas (só se conectadas), emita: CMD:TEMBED: <comando> ou CMD:ESP32DIV: <comando>.
 
 ## Regras de Atuação:
 - Seja assertivo, técnico, objetivo, direto e inteligente.
@@ -88,6 +97,16 @@ Para interagir com as placas, emita: CMD:TEMBED: <comando> ou CMD:ESP32DIV: <com
 - Ao propor correções em arquivos existentes, use `apply_diff` com search_block exato para modificações cirúrgicas.
 - Responda em Português do Brasil.
 """
+
+
+# System prompt enxuto para CHAT normal (VincentAgent.ask). O SYSTEM_BASE
+# completo — com JSON de tool-calling e o manual de hardware — é pesado demais
+# e domina modelos locais pequenos (ex.: qwen3:0.6b passa a responder sobre
+# ESP32 até num "ola"). Para conversa direta basta a identidade + regras.
+# Os loops agênticos (agentic_run / _run_worker_task) continuam usando SYSTEM_BASE.
+SYSTEM_CHAT = """Você é o Vincent, um assistente técnico que responde em Português do Brasil.
+Converse de forma natural, direta, objetiva e inteligente. Responda exatamente o que o usuário perguntou.
+Você entende de programação, engenharia de software e sistemas. Só fale de hardware, placas ou ESP32 se o usuário perguntar isso explicitamente — nunca traga o assunto por conta própria."""
 
 
 class VincentAgent:
@@ -154,7 +173,8 @@ class VincentAgent:
         processed_prompt, _ = self.caveman.compress_prompt(question)
         
         state = self._device_state()
-        user_content = f"[{state}]\nPergunta: {processed_prompt}"
+        hw_prefix = f"[{state}]\n" if state else ""
+        user_content = f"{hw_prefix}Pergunta: {processed_prompt}"
         
         if len(self._history) >= 6:
             self._history = self._history[-5:]
@@ -164,7 +184,7 @@ class VincentAgent:
         reply, used_model, latency = self.model_manager.execute_inference(
             messages_to_send,
             target_model=target_m,
-            system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context + skills_context(question)
+            system_prompt=SYSTEM_CHAT + self.plugins.system_prompt_addon() + self._memory_context + skills_context(question)
         )
 
         in_toks = CavemanEngine.estimate_tokens(user_content)
@@ -175,37 +195,71 @@ class VincentAgent:
             self._history.append({"role": "user", "content": processed_prompt})
             self._history.append({"role": "assistant", "content": reply})
             self._execute_commands(reply)
-            save_summary(f"Pergunta: {processed_prompt[:300]}\nResposta: {reply[:500]}")
+            # NÃO salvamos chat trivial na memória de longo prazo (brain.db):
+            # o recall_context() reinjeta essas respostas no system prompt do
+            # próximo boot, e modelos pequenos copiam a última resposta ao pé da
+            # letra — criava um loop de autoenvenenamento. A memória persistente
+            # fica reservada para os loops agênticos (tarefas complexas de fato).
             return reply
         
         return "[VINCENT] Resposta vazia ou falha de comunicação com os nós neurais."
 
-    def agentic_run(self, task: str, on_step_callback: Optional[Callable[[str], None]] = None, max_turns: int = 6) -> str:
+    def agentic_run(self, task: str, on_step_callback: Optional[Callable[[str], None]] = None, max_turns: int = 6,
+                    stream_callback: Optional[Callable[[str], None]] = None) -> str:
         """
         Agentic Loop com Function/Tool Calling autônomo e auto-cura.
         Investiga o código, executa ferramentas, inspeciona resultados e sintetiza a solução.
+
+        `stream_callback` (opcional): recebe pedaços da resposta em tempo real. É
+        puramente cosmético — o parsing de tool_call sempre usa o texto COMPLETO
+        retornado por execute_inference, nunca o stream. Para não vazar JSON de
+        tool_call na tela, o stream é filtrado: pára de repassar pedaços assim que
+        o texto do turno começa a parecer um bloco tool_call (```/{"tool").
         """
+        def _guarded_stream():
+            """Fábrica de callback por-turno: só repassa enquanto não vira tool_call."""
+            if not stream_callback:
+                return None
+            buf = {"txt": "", "muted": False}
+
+            def _cb(piece: str):
+                if buf["muted"]:
+                    return
+                buf["txt"] += piece
+                # Heurística barata: se o acumulado do turno começar a formar um
+                # bloco de ferramenta, silencia o resto (o texto retornado ainda
+                # é parseado normalmente lá embaixo — isto é só visual).
+                low = buf["txt"].lstrip()
+                if low.startswith("```") or '"tool"' in buf["txt"] or "tool_call" in buf["txt"]:
+                    buf["muted"] = True
+                    return
+                stream_callback(piece)
+
+            return _cb
         target_m = self._escalate_for_tools(self.model, on_step_callback)
         processed_task, _ = self.caveman.compress_prompt(task)
         state = self._device_state()
         self._heal_attempts: Dict[str, int] = {}
         skills_ctx = skills_context(task)
 
+        hw_prefix = f"[{state}]\n" if state else ""
         turn_messages: List[Dict[str, str]] = [
-            {"role": "user", "content": f"[{state}]\nTarefa Agênica: {processed_task}"}
+            {"role": "user", "content": f"{hw_prefix}Tarefa Agênica: {processed_task}\n\nExecute você mesmo as ferramentas necessárias (emita um bloco ```tool_call). NÃO peça para eu rodar comandos."}
         ]
 
         total_latency = 0.0
         final_response = ""
+        last_sig = None   # assinatura da última tool_call — detecta repetição improdutiva
 
         for turn in range(max_turns):
             if on_step_callback:
-                on_step_callback(f"Raciocinando passo {turn + 1}/{max_turns}...")
+                on_step_callback(f"🧠 Passo {turn + 1}/{max_turns} — pensando…")
 
             reply, used_model, lat = self.model_manager.execute_inference(
                 turn_messages,
                 target_model=target_m,
-                system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context + skills_ctx
+                system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context + skills_ctx,
+                stream_callback=_guarded_stream()
             )
             total_latency += lat
 
@@ -216,14 +270,25 @@ class VincentAgent:
             tool_call = self._extract_tool_call(reply)
             if not tool_call:
                 # Não há mais ferramentas a chamar: loop concluído
-                final_response = reply
+                final_response = self._strip_tool_call(reply)
                 break
 
             tool_name = tool_call.get("tool", "")
             tool_args = tool_call.get("args", {})
 
+            # Detecta repetição EXATA da mesma chamada (loop improdutivo do modelo)
+            sig = f"{tool_name.strip().lower()}::{json.dumps(tool_args, sort_keys=True, ensure_ascii=False)}"
+            repeated = (sig == last_sig)
+            last_sig = sig
+
             if on_step_callback:
-                on_step_callback(f"Executando ferramenta: {tool_name}...")
+                # Mostra o QUE vai executar (comando/caminho/query), estilo Claude Code
+                arg_preview = (
+                    tool_args.get("command") or tool_args.get("path") or tool_args.get("pattern")
+                    or tool_args.get("query") or tool_args.get("url") or tool_args.get("message") or ""
+                )
+                arg_preview = str(arg_preview).replace("\n", " ")[:120]
+                on_step_callback(f"⚙️  {tool_name}  ›  {arg_preview}" if arg_preview else f"⚙️  {tool_name}")
 
             # Snapshot em memória ANTES do patch, para auto-cura poder desfazer só
             # a mudança deste loop (git_rollback voltaria pro último commit, o que
@@ -251,25 +316,70 @@ class VincentAgent:
             is_error = bool(tool_result.get("error")) or (tool_result.get("exit_code", 0) != 0)
             prefix = "[AUTO-CURA: ERRO NA FERRAMENTA]" if is_error else "[RESULTADO DA FERRAMENTA]"
 
+            if on_step_callback:
+                # Mostra a SAÍDA da ferramenta ao vivo (preview), estilo Claude Code
+                if is_error:
+                    out_preview = str(tool_result.get("error") or tool_result.get("stderr") or "erro")
+                    on_step_callback(f"   ↳ ⚠️  {out_preview.replace(chr(10), ' ')[:160]}")
+                elif "results" in tool_result:
+                    # web_search: mostra quantos achou + 1º título (antes só dizia "ok")
+                    res = tool_result.get("results") or []
+                    n = tool_result.get("total_results", len(res))
+                    first_t = (res[0].get("title", "") if res else "")
+                    out_preview = f"{n} resultado(s)" + (f" — {first_t}" if first_t else " (nenhum — busca sem retorno útil)")
+                    on_step_callback(f"   ↳ {out_preview.replace(chr(10), ' ')[:160]}")
+                else:
+                    out_preview = str(
+                        tool_result.get("stdout") or tool_result.get("content")
+                        or tool_result.get("result") or tool_result.get("output") or "ok"
+                    )
+                    on_step_callback(f"   ↳ {out_preview.replace(chr(10), ' ')[:160]}")
+
             turn_messages.append({"role": "assistant", "content": reply})
-            turn_messages.append({
-                "role": "user",
-                "content": f"{prefix} {tool_name}:\n{json.dumps(tool_result, ensure_ascii=False, indent=2)}\n\nAnalise o resultado acima e continue sua investigação ou aplique a correção necessária."
-            })
+            result_json = json.dumps(tool_result, ensure_ascii=False, indent=2)
+            if repeated:
+                followup = (
+                    f"{prefix} {tool_name}:\n{result_json}\n\n"
+                    "⚠️ Você repetiu EXATAMENTE a mesma chamada de ferramenta. NÃO repita de novo. "
+                    "Com base no que já obteve, escreva AGORA a resposta final ao usuário em texto natural, SEM emitir tool_call."
+                )
+            else:
+                followup = (
+                    f"{prefix} {tool_name}:\n{result_json}\n\n"
+                    "Analise o resultado. Se ainda precisa de dados, emita a PRÓXIMA tool_call (diferente da anterior). "
+                    "Se já tem o suficiente, escreva a resposta final ao usuário SEM tool_call."
+                )
+            turn_messages.append({"role": "user", "content": followup})
             time.sleep(0.1)
+
+        # Esgotou os passos ainda emitindo tool_calls: força uma SÍNTESE limpa em
+        # vez de devolver o último bloco tool_call cru (que aparecia feio na tela).
+        if not final_response:
+            if on_step_callback:
+                on_step_callback("🧾 Sintetizando resposta final…")
+            synth_msgs = turn_messages + [{
+                "role": "user",
+                "content": ("PARE de usar ferramentas. Com base em tudo que você executou e observou acima, "
+                            "escreva AGORA a resposta final ao usuário, em português, clara e direta. NÃO emita tool_call."),
+            }]
+            synth_reply, _, lat2 = self.model_manager.execute_inference(
+                synth_msgs, target_model=target_m,
+                system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context + skills_ctx,
+                stream_callback=_guarded_stream()
+            )
+            total_latency += lat2
+            final_response = self._strip_tool_call(synth_reply) or \
+                "[VINCENT] Executei os passos acima, mas não consegui fechar uma resposta final clara. Veja o trace."
 
         in_toks = CavemanEngine.estimate_tokens(processed_task)
         out_toks = CavemanEngine.estimate_tokens(final_response or "")
         self.telemetry.record_query(total_latency, in_toks, out_toks)
 
-        if final_response:
-            self._history.append({"role": "user", "content": processed_task})
-            self._history.append({"role": "assistant", "content": final_response})
-            self._execute_commands(final_response)
-            save_summary(f"Tarefa: {processed_task}\nResultado: {final_response[:500]}")
-            return final_response
-
-        return reply or "[VINCENT AGENTIC] Limite de passos atingido sem conclusão."
+        self._history.append({"role": "user", "content": processed_task})
+        self._history.append({"role": "assistant", "content": final_response})
+        self._execute_commands(final_response)
+        save_summary(f"Tarefa: {processed_task}\nResultado: {final_response[:500]}")
+        return final_response
 
     def spawn_workers(self, subtasks: List[str], on_worker_event: Optional[Callable[[int, str], None]] = None) -> List[str]:
         """
@@ -314,8 +424,9 @@ class VincentAgent:
         heal_attempts: Dict[str, int] = {}
         skills_ctx = skills_context(task)
 
+        hw_prefix = f"[{state}]\n" if state else ""
         turn_messages: List[Dict[str, str]] = [
-            {"role": "user", "content": f"[{state}]\nTarefa (worker): {processed_task}"}
+            {"role": "user", "content": f"{hw_prefix}Tarefa (worker): {processed_task}\n\nExecute você mesmo as ferramentas necessárias (emita um bloco ```tool_call). NÃO peça para eu rodar comandos."}
         ]
         final_response = ""
         reply = ""
@@ -330,7 +441,7 @@ class VincentAgent:
                 break
             tool_call = self._extract_tool_call(reply)
             if not tool_call:
-                final_response = reply
+                final_response = self._strip_tool_call(reply)
                 break
 
             tool_name = tool_call.get("tool", "")
@@ -344,7 +455,7 @@ class VincentAgent:
                 "content": f"{prefix} {tool_name}:\n{json.dumps(tool_result, ensure_ascii=False, indent=2)}\n\nContinue ou finalize."
             })
 
-        final_response = final_response or reply or "[VINCENT WORKER] Limite de passos atingido sem conclusão."
+        final_response = final_response or self._strip_tool_call(reply) or "[VINCENT WORKER] Limite de passos atingido sem conclusão."
         save_summary(f"Tarefa (worker): {processed_task}\nResultado: {final_response[:500]}")
         return final_response
 
@@ -391,6 +502,18 @@ class VincentAgent:
             )
         }
 
+    def _strip_tool_call(self, text: str) -> str:
+        """Remove blocos tool_call (fenced ou JSON solto) do texto — garante que a
+        resposta final ao usuário nunca contenha JSON cru de ferramenta."""
+        if not text:
+            return ""
+        # 1. bloco fenced ```tool_call {...}``` (inclui o objeto com "args" aninhado)
+        t = re.sub(r"```(?:tool_call|json)?\s*\{\s*\"tool\".*?\}\s*```", "", text, flags=re.DOTALL)
+        # 2. JSON solto {"tool": "...", "args": {...}} — tolera 1 nível de aninhamento
+        #    pra não deixar um `}` órfão quando há "args": { ... }.
+        t = re.sub(r"\{\s*\"tool\"\s*:\s*\"[^\"]+\"(?:[^{}]|\{[^{}]*\})*\}", "", t, flags=re.DOTALL)
+        return t.strip()
+
     def _extract_tool_call(self, text: str) -> Optional[Dict[str, Any]]:
         """Extrai bloco tool_call em JSON da resposta do modelo."""
         # 1. Procura por bloco ```tool_call ... ```
@@ -430,7 +553,11 @@ class VincentAgent:
     def _device_state(self) -> str:
         devs = self.registry.all()
         if not devs:
-            return "Nenhum dispositivo físico conectado no momento."
+            # Sem placa conectada: não injeta contexto de hardware nenhum.
+            # Antes retornava "Nenhum dispositivo físico conectado...", o que
+            # fazia modelos pequenos responderem sobre hardware pra qualquer
+            # pergunta (ex.: "ola" -> resposta sobre ESP32).
+            return ""
         lines = ["Dispositivos conectados:"]
         for d in devs:
             hw = ", ".join(d.hardware[:5])

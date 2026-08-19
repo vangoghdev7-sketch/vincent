@@ -34,6 +34,70 @@ from vincent.ui import (
 )
 
 
+def _style_trace(step: str) -> str:
+    """Colore uma linha do trace ao vivo do loop agêntico conforme o tipo de evento
+    (pensamento / execução de ferramenta / saída), estilo Claude Code."""
+    s = step.lstrip()
+    if step.startswith("🧠"):
+        return f"{VIOLET_SWIRL}{step}{CLR_RST}"
+    if step.startswith("⚙️") or step.startswith("⚙"):
+        return f"{CHROME_YELLOW}{CLR_BOLD}{step}{CLR_RST}"
+    if s.startswith("↳"):
+        return f"{SHADOW_GRAY}{step}{CLR_RST}"
+    return f"{CANVAS_WHITE}{step}{CLR_RST}"
+
+
+class _StreamCoordinator:
+    """
+    Coordena o NeuralSpinner (fase de 'pensando' / trace de ferramentas) com o
+    streaming da resposta final ao vivo, sem que o `\\r` do spinner conflite com
+    o texto que flui. Uso:
+
+        with _StreamCoordinator("processando…", COBALT_BLUE) as sc:
+            reply = agent.agentic_run(task, on_step_callback=sc.on_step,
+                                      stream_callback=sc.on_token)
+
+    Enquanto nenhum token chega, o spinner gira e as linhas de trace são
+    persistidas via spinner.log(). No PRIMEIRO token da resposta, o spinner é
+    parado, imprime-se um cabeçalho 'Vincent:' e os pedaços passam a ser escritos
+    direto no stdout (write+flush), aparecendo caractere a caractere.
+    """
+    def __init__(self, message: str, color: str):
+        self._spinner = NeuralSpinner(message, color=color)
+        self._streaming = False
+
+    def __enter__(self):
+        self._spinner.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._streaming:
+            # já streamou: fecha a linha de texto ao vivo com uma quebra
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+        return self._spinner.__exit__(exc_type, exc_val, exc_tb)
+
+    def on_step(self, step: str):
+        """Linha de trace do loop agêntico (só faz sentido antes de streamar)."""
+        if not self._streaming:
+            self._spinner.log(_style_trace(step))
+
+    def on_token(self, piece: str):
+        """Pedaço da resposta final — para o spinner na 1ª vez e escreve ao vivo."""
+        if not self._streaming:
+            self._streaming = True
+            # Encerra o spinner (limpa a linha \r do redemoinho) antes de escrever.
+            self._spinner.stop_event.set()
+            if self._spinner.thread:
+                self._spinner.thread.join(timeout=0.4)
+            if sys.stdout.isatty():
+                sys.stdout.write("\r\033[K")
+            sys.stdout.write(f"\n{CYPRESS_GREEN}{CLR_BOLD}Vincent:{CLR_RST} ")
+            sys.stdout.flush()
+        sys.stdout.write(piece)
+        sys.stdout.flush()
+
+
 def display_models_catalog(agent: VincentAgent, search_term: str = ""):
     """Exibe o catálogo estruturado e whitelabeled de 1200+ modelos e rotas neurais."""
     all_models = agent.model_manager.get_all_models()
@@ -105,8 +169,8 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     hud_items = [
         ("NÚCLEO NEURAL", f"{CYPRESS_GREEN}ATIVO{CLR_RST} ({agent.display_model})"),
         ("TIPO DE ROTA", f"{CYPRESS_GREEN}ZERO-KEY / OFFLINE 🆓{CLR_RST}" if is_free else f"{VIOLET_SWIRL}GALERIA PRO ⚡{CLR_RST}"),
-        ("GALERIA CLOUD", f"{CYPRESS_GREEN}ONLINE{CLR_RST} (:20128) — {omni_count} obras conectadas"),
-        ("ATELIER LOCAL", f"{CYPRESS_GREEN}ONLINE{CLR_RST} (:11434) — {ollama_count} modelos quentes"),
+        ("GALERIA CLOUD", f"{CYPRESS_GREEN}ONLINE{CLR_RST} (:20128) — {omni_count} obras conectadas" if omni_count > 0 else f"{ALERT_SCARLET}OFFLINE{CLR_RST} (:20128) — {omni_count} obras conectadas"),
+        ("ATELIER LOCAL", f"{CYPRESS_GREEN}ONLINE{CLR_RST} (:11434) — {ollama_count} modelos quentes" if ollama_count > 0 else f"{ALERT_SCARLET}OFFLINE{CLR_RST} (:11434) — {ollama_count} modelos quentes"),
         ("HARDWARE LAB", f"{len(devs)} Placas Conectadas (TEMBED / ESP32DIV)"),
         ("KEY VAULT (0600)", f"{CYPRESS_GREEN}CHAVES ATIVAS{CLR_RST} ({auth.identity})" if auth.is_authenticated else f"{STARRY_GOLD}MODO ZERO-KEY (/vault){CLR_RST}"),
         ("AMBIENTE", f"{env_summary['os']} (Modo: {env_summary['layout_mode']})")
@@ -244,9 +308,9 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 parts = prompt.split(maxsplit=1)
                 if len(parts) > 1:
                     task = parts[1].strip()
-                    spinner = NeuralSpinner(f"Vincent Agentic Loop iniciando para: '{task}'...", color=VIOLET_SWIRL)
-                    with spinner:
-                        res = agent.agentic_run(task, on_step_callback=lambda step: spinner.update_message(f"Vincent: {step}"))
+                    print(f"\n{VIOLET_SWIRL}◈ Agentic Loop{CLR_RST} {SHADOW_GRAY}— trace ao vivo:{CLR_RST}")
+                    with _StreamCoordinator("processando…", VIOLET_SWIRL) as sc:
+                        res = agent.agentic_run(task, on_step_callback=sc.on_step, stream_callback=sc.on_token)
                     render_response_box(res, agent.display_model, agent.telemetry.last_latency, mode="Agentic Loop (Tools)")
                 else:
                     print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /act <descrição da tarefa de código/investigação>")
@@ -554,9 +618,8 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
             # Um único caminho: agentic_run já sai em 1 turno se o modelo não
             # pedir ferramenta (ex: "oi"), e executa de verdade quando pede.
             mode_label = f"Caveman ({agent.caveman.mode})" if agent.caveman.mode != "off" else "Standard"
-            spinner = NeuralSpinner(f"Pintando resposta com [{agent.display_model}]...", color=COBALT_BLUE)
-            with spinner:
-                reply = agent.agentic_run(prompt, on_step_callback=lambda step: spinner.update_message(f"Vincent: {step}"))
+            with _StreamCoordinator("processando…", COBALT_BLUE) as sc:
+                reply = agent.agentic_run(prompt, on_step_callback=sc.on_step, stream_callback=sc.on_token)
 
             render_response_box(
                 reply=reply,

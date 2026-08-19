@@ -157,7 +157,7 @@ def tool_grep(pattern: str, path: str = ".", is_regex: bool = False, case_insens
 
 # ─── 4. BashTool ──────────────────────────────────────────────────────────────
 
-def tool_bash(command: str, timeout_sec: int = 30, cwd: Optional[str] = None) -> Dict[str, Any]:
+def tool_bash(command: str, timeout_sec: int = 600, cwd: Optional[str] = None) -> Dict[str, Any]:
     """Executa comandos de terminal em subprocesso isolado com controle de timeout."""
     work_dir = os.path.abspath(os.path.expanduser(cwd)) if cwd else os.getcwd()
     
@@ -459,7 +459,7 @@ TOOL_DEFINITIONS = [
             "type": "object",
             "properties": {
                 "command": {"type": "string", "description": "Comando de shell a executar"},
-                "timeout_sec": {"type": "integer", "description": "Tempo limite em segundos (padrão: 30)"}
+                "timeout_sec": {"type": "integer", "description": "Tempo limite em segundos (padrão: 600 — espera o suficiente até comandos lentos como 'claude' responderem)"}
             },
             "required": ["command"]
         }
@@ -566,7 +566,7 @@ def execute_agent_tool(tool_name: str, arguments: Dict[str, Any]) -> Dict[str, A
     elif name in ("run_bash", "bash", "exec"):
         return tool_bash(
             command=arguments.get("command", ""),
-            timeout_sec=arguments.get("timeout_sec", 30)
+            timeout_sec=arguments.get("timeout_sec", 600)
         )
     elif name in ("apply_diff", "patch", "replace"):
         return tool_apply_diff(
