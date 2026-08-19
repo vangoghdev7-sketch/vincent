@@ -400,6 +400,8 @@ def tool_fetch_url(url: str, max_chars: int = 4000) -> Dict[str, Any]:
     """Baixa uma URL e retorna o texto legível (sem tags HTML) — para ler documentação/fóruns."""
     if not url or not url.strip():
         return {"error": "URL vazia."}
+    if not url.strip().lower().startswith(("http://", "https://")):
+        return {"error": "Apenas URLs http/https são permitidas."}
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (VincentCLI Agentic Fetch)"})
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
