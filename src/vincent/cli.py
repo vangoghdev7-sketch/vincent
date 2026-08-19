@@ -162,7 +162,12 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     devs = registry.scan()
     
     # HUD Telemetria Inicial Starry Night
-    omni_count, ollama_count = agent.model_manager.sync_catalogs()
+    try:
+        omni_count, ollama_count = agent.model_manager.sync_catalogs()
+    except Exception as e:
+        print(f"\n{ALERT_SCARLET}⚠ Falha ao sincronizar catálogos de modelos: {e}{CLR_RST}")
+        print(f"{SHADOW_GRAY}Prosseguindo em modo degradado — /models pode ficar incompleto até a próxima sincronização.{CLR_RST}")
+        omni_count, ollama_count = 0, 0
     is_free = agent.model_manager.is_free_tier(agent.model)
     env_summary = PlatformEnvironment.get_device_summary()
     
