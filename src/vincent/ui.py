@@ -142,7 +142,7 @@ class NeuralSpinner:
             try:
                 if self.is_tty:
                     sys.stdout.write("\r\033[K")
-                sys.stdout.write(msg + "\n")
+                sys.stdout.write(str(msg) + "\n")
                 sys.stdout.flush()
             except (BrokenPipeError, OSError):
                 pass
