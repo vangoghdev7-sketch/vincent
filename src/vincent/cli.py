@@ -300,8 +300,11 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 parts = prompt.split(maxsplit=1)
                 if len(parts) > 1:
                     new_m = parts[1].strip()
-                    agent.set_model(new_m)
-                    print(f"{CYPRESS_GREEN}✓ Modelo ativo alterado para: {agent.display_model}{CLR_RST}\n")
+                    try:
+                        agent.set_model(new_m)
+                        print(f"{CYPRESS_GREEN}✓ Modelo ativo alterado para: {agent.display_model}{CLR_RST}\n")
+                    except Exception as e:
+                        print(f"{ALERT_SCARLET}✗ Falha ao trocar de modelo: {e}{CLR_RST}\n")
                 else:
                     print(f"{CHROME_YELLOW}Modelo atual:{CLR_RST} {agent.display_model}")
                     print(f"{SHADOW_GRAY}Uso: /model <id_do_modelo> (ex: /model auto/best-coding ou /model qwen3:0.6b){CLR_RST}")
