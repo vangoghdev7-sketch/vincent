@@ -388,5 +388,19 @@ class ModelManager:
 
         # Se todas as rotas falharem
         dt = time.time() - t0
-        err_msg = f"[ERRO NEURAL VINCENT] Não foi possível obter resposta após cascata em {len(models_ordered)} modelos. Último erro: {last_error}"
+        has_local = bool(self.cached_ollama_models)
+        has_key = bool(os.environ.get("OMNIROUTE_API_KEY") or os.environ.get("VINCENT_AUTH_KEY"))
+        if not has_local and not has_key:
+            # Caso mais comum em instalação nova: sem Ollama local e sem
+            # chave configurada — erro cru de urllib não ajuda ninguém,
+            # aqui é guiar pro próximo passo real.
+            err_msg = (
+                "[VINCENT] Nenhum motor de IA disponível ainda. Escolha um caminho:\n"
+                "  1. /vault — cole uma chave de API (OpenAI/Anthropic/Gemini/DeepSeek)\n"
+                "  2. instale o Ollama (https://ollama.com) e rode: ollama pull qwen3:0.6b\n"
+                "  3. tem um gateway OmniRoute rodando em outra máquina? export "
+                "VINCENT_GATEWAY_URL=http://<ip>:20128/v1 antes de abrir o vincent"
+            )
+        else:
+            err_msg = f"[ERRO NEURAL VINCENT] Não foi possível obter resposta após cascata em {len(models_ordered)} modelos. Último erro: {last_error}"
         return err_msg, target_model, dt

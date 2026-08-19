@@ -585,6 +585,14 @@ class VincentAgent:
                 time.sleep(0.2)
 
     def _device_state(self) -> str:
+        """
+        Vazio quando não há hardware conectado — de propósito. Injetar "nenhum
+        dispositivo conectado" em TODA mensagem (achado ao vivo: usuário disse
+        "oi" e "spawn agents", modelo pequeno respondeu falando de hardware
+        desconectado nos dois casos) prende modelos pequenos nesse tema mesmo
+        quando a pergunta não tem nada a ver com ESP32. Só vale a pena mencionar
+        quando há dispositivo de verdade pra descrever.
+        """
         devs = self.registry.all()
         if not devs:
             # Sem placa conectada: não injeta contexto de hardware nenhum.
