@@ -50,7 +50,7 @@ class PonytailTelemetry:
         if psutil is None:
             return {"cpu_pct": 0, "mem_mb": 0, "mem_pct": 0}
         try:
-            cpu = psutil.cpu_percent(interval=None)
+            cpu = psutil.cpu_percent(interval=0.1)
             mem = psutil.virtual_memory()
             mem_used_mb = int(mem.used / (1024 * 1024))
             mem_pct = mem.percent
