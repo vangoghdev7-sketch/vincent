@@ -206,6 +206,7 @@ class Device:
         if not ok:
             return {"ok": False, "cmd": cmd, "response": reason, "blocked": True}
 
+        write_error: Optional[Exception] = None
         with self._lock:
             # Limpa buffer pendente
             while not self._rx_q.empty():
@@ -222,7 +223,14 @@ class Device:
                 self.ser.write((cmd + "\r\n").encode())
             except Exception as e:
                 self._alive = False
-                return {"ok": False, "cmd": cmd, "response": f"erro de comunicação serial: {e}", "blocked": False}
+                write_error = e
+
+        if write_error is not None:
+            self.on_event(DeviceEvent(
+                self.id, "disconnected",
+                {"reason": type(write_error).__name__, "detail": str(write_error)},
+            ))
+            return {"ok": False, "cmd": cmd, "response": f"erro de comunicação serial: {write_error}", "blocked": False}
 
             # Coleta resposta
             lines: list[str] = []
