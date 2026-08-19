@@ -136,8 +136,9 @@ class ModelManager:
         omni_count = len(self.cached_omniroute_models)
         try:
             omni_headers = {"User-Agent": "Vincent-CLI/4.0"}
-            if "OMNIROUTE_API_KEY" in os.environ:
-                omni_headers["Authorization"] = f"Bearer {os.environ['OMNIROUTE_API_KEY']}"
+            api_key = os.environ.get("OMNIROUTE_API_KEY") or os.environ.get("VINCENT_AUTH_KEY")
+            if api_key:
+                omni_headers["Authorization"] = f"Bearer {api_key}"
             req = urllib.request.Request(f"{OMNIROUTE_URL}/models", headers=omni_headers)
             with urllib.request.urlopen(req, timeout=5) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
