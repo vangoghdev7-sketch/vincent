@@ -186,6 +186,18 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
 
     term_w = get_terminal_width()
 
+    # Permission prompt (estilo Claude Code): com /autoedit off, o loop agêntico
+    # chama isto antes de rodar comando/editar/commitar e espera [s/N].
+    def _ask_permission(tool_name, args):
+        preview = str(args.get("command") or args.get("path") or args.get("message") or "")[:90]
+        try:
+            ans = input(f"\n{CHROME_YELLOW}  ⚠ Permitir {tool_name}{(' › ' + preview) if preview else ''}? [s/N] {CLR_RST}").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return False
+        return ans in ("s", "sim", "y", "yes")
+    agent.permission_callback = _ask_permission
+
     # Spawn de tarefas em background (thread + queue, stdlib puro). São
     # I/O-bound (chamadas de rede pro Ollama/OmniRoute), então threading já
     # sobrepõe de verdade enquanto o usuário segue digitando.
@@ -592,6 +604,47 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 c_stats = agent.caveman.get_stats()
                 items = agent.telemetry.get_summary_cards(agent.display_model, c_stats)
                 render_hud_card("TELEMETRIA PONYTAIL & ECONOMIA DE TOKENS", items, COBALT_BLUE)
+                continue
+
+            elif prompt in ("/reload-plugins", "/reload", "/reload_plugins"):
+                n = agent.plugins.scan_skills()
+                print(f"{CYPRESS_GREEN}✓ Plugins/skills recarregados ({n} encontrados).{CLR_RST} {SHADOW_GRAY}Use /skills pra ver.{CLR_RST}\n")
+                continue
+
+            elif prompt.startswith("/effort"):
+                parts = prompt.split(maxsplit=1)
+                val = parts[1].strip().lower() if len(parts) > 1 else ""
+                val = "medium" if val == "med" else val
+                if val in ("low", "medium", "high"):
+                    agent.model_manager.effort = val
+                    desc = {"low": "rápido / curto", "medium": "equilibrado", "high": "raciocínio profundo / longo"}[val]
+                    print(f"{CYPRESS_GREEN}✓ Effort: {val}{CLR_RST} {SHADOW_GRAY}({desc}){CLR_RST}\n")
+                else:
+                    print(f"{CHROME_YELLOW}Uso:{CLR_RST} /effort low | medium | high  {SHADOW_GRAY}(atual: {agent.model_manager.effort}){CLR_RST}\n")
+                continue
+
+            elif prompt.startswith("/autoedit"):
+                parts = prompt.split(maxsplit=1)
+                val = parts[1].strip().lower() if len(parts) > 1 else ""
+                if val in ("on", "off"):
+                    agent.autoedit = (val == "on")
+                    msg = "executa sem perguntar" if agent.autoedit else "PERGUNTA [s/N] antes de rodar comando/editar/commitar"
+                    print(f"{CYPRESS_GREEN}✓ Autoedit: {val}{CLR_RST} {SHADOW_GRAY}— {msg}{CLR_RST}\n")
+                else:
+                    cur = "on" if agent.autoedit else "off"
+                    print(f"{CHROME_YELLOW}Uso:{CLR_RST} /autoedit on | off  {SHADOW_GRAY}(atual: {cur} — off = pede permissão, tipo Claude Code){CLR_RST}\n")
+                continue
+
+            elif prompt.startswith("/auto "):
+                goal = prompt.split(maxsplit=1)[1].strip()
+                task = (f"OBJETIVO (modo autônomo contínuo): {goal}\n\n"
+                        "Trabalhe de forma AUTÔNOMA até completar 100% do objetivo. Encadeie quantas "
+                        "ferramentas forem necessárias, verifique cada resultado, e só finalize quando estiver de fato pronto.")
+                print(f"\n{VIOLET_SWIRL}◈ Auto-mode contínuo{CLR_RST} {SHADOW_GRAY}— trabalha até terminar (máx 40 passos):{CLR_RST}")
+                spinner = NeuralSpinner("Auto-mode: processando…", color=VIOLET_SWIRL)
+                with spinner:
+                    res = agent.agentic_run(task, on_step_callback=lambda s: spinner.log(_style_trace(s)), max_turns=40)
+                render_response_box(res, agent.display_model, agent.telemetry.last_latency, mode="Auto-mode Contínuo")
                 continue
 
             elif prompt == "/help":

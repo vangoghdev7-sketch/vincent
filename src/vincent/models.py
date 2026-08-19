@@ -84,6 +84,15 @@ class ModelManager:
         self._ollama_circuit = CircuitBreaker("local")
         self._omniroute_cooldown = Cooldown("api_key")
         self._load_cache()
+        # Nível de esforço/raciocínio: ajusta num_predict + temperatura. /effort no REPL.
+        self.effort = os.environ.get("VINCENT_EFFORT", "medium")
+
+    # (num_predict, temperature) por nível de effort
+    _EFFORT_OPTS = {"low": (384, 0.2), "medium": (768, 0.3), "high": (2048, 0.45)}
+
+    def _ollama_options(self) -> Dict[str, Any]:
+        np_, temp_ = self._EFFORT_OPTS.get(self.effort, self._EFFORT_OPTS["medium"])
+        return {"num_predict": np_, "temperature": temp_}
 
     @staticmethod
     def mask(model_id: str) -> str:
@@ -272,7 +281,7 @@ class ModelManager:
                         # num_thread removido: deixa o Ollama auto-detectar e usar
                         # todos os núcleos físicos (a máquina tem 12 threads; o fixo
                         # em 4 tornava a inferência de modelos 7B/8B ~3x mais lenta).
-                        "options": {"num_predict": 512, "temperature": 0.3}
+                        "options": self._ollama_options()
                     }
                     req = urllib.request.Request(
                         f"{OLLAMA_URL}/api/chat",

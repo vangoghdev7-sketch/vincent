@@ -127,6 +127,9 @@ class VincentAgent:
         self.caveman = CavemanEngine(mode="off")
         self.telemetry = PonytailTelemetry()
         self.plugins = PluginManager()
+        # Features estilo Claude Code:
+        self.autoedit = True              # False = pergunta antes de rodar comando/editar
+        self.permission_callback = None   # callable(tool_name, args)->bool, setado pelo REPL
         self._obsidian_vault = _detect_obsidian_vault()
         vault_note = (
             f"\n\n## Segundo Cérebro (Obsidian):\nVault Markdown disponível em: {self._obsidian_vault}\n"
@@ -321,11 +324,19 @@ class VincentAgent:
                     except Exception:
                         pre_patch_snapshot = None
 
-            # Executa ferramenta real no workspace
-            try:
-                tool_result = execute_agent_tool(tool_name, tool_args)
-            except Exception as e:
-                tool_result = {"success": False, "error": f"Exceção não tratada na ferramenta: {e}"}
+            # Permission prompt (estilo Claude Code): se autoedit=off, pergunta antes de
+            # rodar comando/editar/commitar. Só em ferramentas que MODIFICAM o sistema.
+            _mutating = tool_name.strip().lower() in ("run_bash", "bash", "exec", "apply_diff",
+                                                      "patch", "replace", "git_commit", "git_rollback")
+            if (not self.autoedit) and self.permission_callback and _mutating \
+                    and not self.permission_callback(tool_name, tool_args):
+                tool_result = {"success": False, "error": "Execução negada pelo usuário.", "denied": True}
+            else:
+                # Executa ferramenta real no workspace
+                try:
+                    tool_result = execute_agent_tool(tool_name, tool_args)
+                except Exception as e:
+                    tool_result = {"success": False, "error": f"Exceção não tratada na ferramenta: {e}"}
 
             if pre_patch_snapshot is not None and tool_result.get("success"):
                 tool_result["auto_heal"] = self._auto_heal_check(
