@@ -401,6 +401,8 @@ class VincentAgent:
 
             turn_messages.append({"role": "assistant", "content": reply})
             result_json = json.dumps(tool_result, ensure_ascii=False, indent=2)
+            if len(result_json) > 6000:
+                result_json = result_json[:6000] + f"\n... [SAÍDA TRUNCADA — {len(result_json)} chars no total, mostrando os 6000 primeiros]"
             if repeated:
                 followup = (
                     f"{prefix} {tool_name}:\n{result_json}\n\n"
