@@ -274,7 +274,7 @@ class VincentAgent:
                 break
 
             tool_name = tool_call.get("tool", "")
-            tool_args = tool_call.get("args", {})
+            tool_args = tool_call.get("args") or {}
 
             # Detecta repetição EXATA da mesma chamada (loop improdutivo do modelo)
             sig = f"{tool_name.strip().lower()}::{json.dumps(tool_args, sort_keys=True, ensure_ascii=False)}"
