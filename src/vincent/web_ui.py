@@ -88,11 +88,17 @@ def agent_act():
     task = (body.get("task") or "").strip()
     if not task:
         return jsonify({"error": "campo 'task' obrigatório"}), 400
+    # O loop emite o preview de diff das edições no trace (`ui.diff_lines`).
+    # No navegador não dá pra perguntar de forma síncrona, mas devolver o diff
+    # junto da resposta é o mínimo pro usuário ver o que foi escrito nos
+    # arquivos dele em vez de só ler "pronto, ajustei".
+    trace: list = []
     try:
-        answer = agent.agentic_run(task)
+        answer = agent.agentic_run(task, on_step_callback=trace.append)
     except Exception as e:
         return jsonify({"error": f"falha no modo agente: {e}"}), 500
-    return jsonify({"answer": answer})
+    diff = [line for line in trace if str(line)[:2] in ("◆ ", "@@", "+ ", "- ", "· ")]
+    return jsonify({"answer": answer, "diff": diff})
 
 
 # ─── Chat com Streaming ao vivo (Server-Sent Events) ─────────────────────────

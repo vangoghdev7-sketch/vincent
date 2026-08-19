@@ -190,8 +190,9 @@ def strip_ansi(text: str) -> str:
 #     ·    12 │ contexto
 #     -    13 │ linha removida
 #     +    13 │ linha adicionada
-_HUNK_RE = re.compile(r"^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+_HUNK_RE = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 _MAX_DIFF_COL = 200
+_DIFF_HEADERS = ("--- ", "+++ ", "diff ", "index ")
 
 
 def _diff_gutter(n: int) -> str:
@@ -205,16 +206,26 @@ def diff_lines(diff_text: str, title: str = "", max_lines: int = 120) -> list[st
     chama simplesmente não renderizar preview nenhum.
     """
     old_no = new_no = 0
+    old_left = new_left = 0     # linhas que ainda faltam no hunk corrente
     added = removed = 0
     body: list[str] = []
 
     for raw in str(diff_text or "").splitlines():
-        if raw.startswith(("--- ", "+++ ", "diff ", "index ", "\\")):
-            continue
         hunk = _HUNK_RE.match(raw)
         if hunk:
-            old_no, new_no = int(hunk.group(1)), int(hunk.group(2))
+            old_no, new_no = int(hunk.group(1)), int(hunk.group(3))
+            old_left = int(hunk.group(2) or 1)
+            new_left = int(hunk.group(4) or 1)
             body.append(raw.rstrip())
+            continue
+        if raw.startswith("\\"):        # "\ No newline at end of file"
+            continue
+        # DENTRO do hunk toda linha é conteúdo: apagar `-- comentário` (SQL, Lua,
+        # Haskell) vira `--- comentário`, e tratar isso como cabeçalho sumia com a
+        # mudança — preview vazio é exatamente a aprovação às cegas que isto evita.
+        # Contamos as linhas declaradas no @@ pra saber onde o hunk termina.
+        in_hunk = old_left > 0 or new_left > 0
+        if not in_hunk and raw.startswith(_DIFF_HEADERS):
             continue
         content = raw[1:] if raw[:1] in ("+", "-", " ") else raw
         content = content.replace("\t", "    ")
@@ -224,14 +235,18 @@ def diff_lines(diff_text: str, title: str = "", max_lines: int = 120) -> list[st
             added += 1
             body.append(f"+ {_diff_gutter(new_no)} │ {content}")
             new_no += 1
+            new_left -= 1
         elif raw.startswith("-"):
             removed += 1
             body.append(f"- {_diff_gutter(old_no)} │ {content}")
             old_no += 1
+            old_left -= 1
         else:
             body.append(f"· {_diff_gutter(new_no)} │ {content}")
             old_no += 1
             new_no += 1
+            old_left -= 1
+            new_left -= 1
 
     if not body or not (added or removed):
         return []

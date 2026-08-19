@@ -148,6 +148,41 @@ def test_diff_lines_corta_linha_absurdamente_longa():
     assert len(linhas[-1]) < 250 and linhas[-1].endswith("…")
 
 
+def test_diff_lines_nao_engole_linha_que_comeca_com_tracos(tmp_path):
+    """Apagar `-- comentário` (SQL/Lua/Haskell) vira `--- comentário` no diff:
+    tratar isso como cabeçalho zerava o preview — aprovação às cegas de novo."""
+    p = tmp_path / "q.sql"
+    p.write_text("SELECT 1;\n-- comentario velho\nSELECT 2;\n", encoding="utf-8")
+    linhas = diff_lines(build_edit_preview("apply_diff", {
+        "path": str(p), "search_block": "-- comentario velho\n", "replace_block": "",
+    }), title="q.sql")
+
+    assert linhas[0] == "◆ q.sql · +0 −1"
+    assert "-     2 │ -- comentario velho" in linhas
+
+
+def test_diff_lines_nao_engole_linha_adicionada_com_mais(tmp_path):
+    """Mesma armadilha do outro lado: `++ x` adicionado vira `+++ x` no diff."""
+    p = tmp_path / "c.cpp"
+    p.write_text("int i = 0;\nfoo();\n", encoding="utf-8")
+    linhas = diff_lines(build_edit_preview("apply_diff", {
+        "path": str(p), "search_block": "foo();", "replace_block": "++ i;\nfoo();",
+    }), title="c.cpp")
+
+    assert "+     2 │ ++ i;" in linhas
+
+
+def test_diff_lines_pula_cabecalho_entre_arquivos():
+    """Fim do hunk = fim do conteúdo: cabeçalho do arquivo seguinte não vira linha."""
+    linhas = diff_lines(
+        "diff --git a/x b/x\n--- a/x\n+++ b/x\n@@ -1 +1 @@\n-um\n+dois\n"
+        "diff --git a/y b/y\n--- a/y\n+++ b/y\n@@ -5 +5 @@\n-tres\n+quatro\n"
+    )
+    assert linhas[0] == "◆ edição · +2 −2"
+    assert not any(l.startswith(("---", "+++", "diff ")) for l in linhas[1:])
+    assert "-     1 │ um" in linhas and "-     5 │ tres" in linhas
+
+
 def test_diff_lines_sem_hunk_nao_inventa_numero():
     linhas = diff_lines("+solta\n-outra")
     assert linhas[1] == "+       │ solta"
@@ -343,6 +378,31 @@ def test_permissao_modo_texto_nega_sem_stdin(monkeypatch, arquivo):
         raise EOFError
     monkeypatch.setattr("builtins.input", _boom)
     assert cli.make_permission_asker()("apply_diff", {"path": str(arquivo)}) is False
+
+
+def test_web_act_devolve_o_diff_junto_da_resposta(monkeypatch):
+    """GUI web: o loop escreve nos arquivos do usuário — a resposta carrega o
+    diff do que mudou em vez de só 'pronto, ajustei'."""
+    from flask import Flask
+    from vincent import api, web_ui
+
+    trace = ["🧠 Passo 1/8 — pensando…", "⚙️  apply_diff  ›  x.py",
+             "◆ x.py · +1 −1", "@@ -1 +1 @@", "-     1 │ velho", "+     1 │ novo",
+             "   ↳ ok"]
+
+    class _Agente:
+        def agentic_run(self, task, on_step_callback=None, **kw):
+            for linha in trace:
+                on_step_callback(linha)
+            return "Pronto, troquei."
+
+    monkeypatch.setattr(api, "_agent", _Agente(), raising=False)
+    app = Flask(__name__)
+    app.register_blueprint(web_ui.bp)
+
+    data = app.test_client().post("/api/agent/act", json={"task": "troca"}).get_json()
+    assert data["answer"] == "Pronto, troquei."
+    assert data["diff"] == trace[2:6]     # só as linhas de diff, sem o resto do trace
 
 
 def test_spinner_step_persiste_diff_e_atualiza_o_resto():

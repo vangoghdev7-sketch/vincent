@@ -220,6 +220,14 @@ body.day .msg.bot .bubble{background:#fff}
 .bubble table{border-collapse:collapse;margin:8px 0;font-size:13px;display:block;overflow-x:auto}
 .bubble th,.bubble td{border:1px solid var(--border);padding:6px 10px;text-align:left}
 .bubble th{background:var(--panel2);font-weight:700}
+/* diff da edição aplicada (mesmos prefixos do preview do CLI: ◆ @@ + - ·) */
+.vdiff{margin:10px 0;border:1px solid var(--border);border-radius:11px;background:var(--bg2);padding:9px 12px;overflow-x:auto;font-family:ui-monospace,"Fira Code",monospace;font-size:12.5px;line-height:1.5;white-space:pre}
+body.day .vdiff{background:#f6f7fc}
+.vdiff .dl{display:block;color:var(--tx3)}
+.vdiff .d-head{color:var(--gold);font-weight:700}
+.vdiff .d-hunk{color:var(--cobalt-soft)}
+.vdiff .d-add{color:var(--ok)}
+.vdiff .d-del{color:var(--err)}
 /* code block */
 .codeblock{margin:10px 0;border-radius:11px;overflow:hidden;border:1px solid var(--border);background:var(--bg2)}
 body.day .codeblock{background:#f6f7fc}
@@ -619,6 +627,16 @@ async function api(path, opts){
   return { ok:r.ok, status:r.status, data:data||{} };
 }
 function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+/* Diff da edição (linhas de ui.diff_lines vindas do /api/agent/act) → HTML colorido.
+   Mesma convenção do REPL: ◆ cabeçalho · @@ trecho · + verde · - vermelho · · contexto. */
+const DIFF_CLS={"◆ ":"d-head","@@":"d-hunk","+ ":"d-add","- ":"d-del","· ":"d-ctx"};
+function diffHTML(lines){
+  if(!Array.isArray(lines) || !lines.length) return "";
+  return `<div class="vdiff">`+lines.map(l=>{
+    const cls=DIFF_CLS[String(l).slice(0,2)]||"d-ctx";
+    return `<span class="dl ${cls}">${esc(l)}</span>`;
+  }).join("")+`</div>`;
+}
 function nowTime(){ const d=new Date(); return d.getHours().toString().padStart(2,"0")+":"+d.getMinutes().toString().padStart(2,"0"); }
 function fmtTime(ts){ if(!ts) return nowTime(); const d=new Date(ts); return d.getHours().toString().padStart(2,"0")+":"+d.getMinutes().toString().padStart(2,"0"); }
 function copyText(txt){
@@ -859,7 +877,7 @@ function renderChat(){
   chatInner.innerHTML=c.msgs.map(m=>{
     if(m.role==="user") return msgHTML("user", mdToHtml(m.content), fmtTime(m.ts), false);
     if(m.error) return `<div class="msg bot"><div class="av">✦</div><div class="col"><div class="rolebar">vincent<span class="ts">${fmtTime(m.ts)}</span></div><div class="bubble err">${esc(m.content)}</div></div></div>`;
-    return msgHTML("bot", mdToHtml(m.content), fmtTime(m.ts), true);
+    return msgHTML("bot", diffHTML(m.diff)+mdToHtml(m.content), fmtTime(m.ts), true);
   }).join("");
   wireCopyButtons();
   scrollDown(true);
@@ -1001,8 +1019,11 @@ async function blockingAsk(text, convo, agentMode, silentFallback){
     if(r.ok && data.answer!=null){
       // gentle typing effect for non-stream
       const full=data.answer;
+      // Diff do que foi escrito nos arquivos aparece ANTES da resposta, não some.
+      const dh=diffHTML(data.diff);
+      if(dh && bubble){ bubble.insertAdjacentHTML("beforebegin", dh); }
       await typeInto(bubble, full);
-      convo.msgs.push({role:"bot", content:full, ts:Date.now()});
+      convo.msgs.push({role:"bot", content:full, ts:Date.now(), diff:data.diff||null});
     }else{
       pushBotError(convo, data.error||"Falha ao obter resposta.");
     }
