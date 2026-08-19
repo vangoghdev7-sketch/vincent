@@ -68,6 +68,8 @@ BANNER = f"""
 def get_terminal_width(default: int = 80) -> int:
     try:
         cols, _ = PlatformEnvironment.get_terminal_dimensions()
+        if not isinstance(cols, int) or cols <= 0:
+            raise ValueError("largura de terminal inválida")
         return cols
     except Exception:
         return shutil.get_terminal_size((default, 24)).columns
