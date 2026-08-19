@@ -25,7 +25,12 @@ class PluginManager:
         if not os.path.isdir(SKILLS_DIR):
             return 0
 
-        for entry in os.listdir(SKILLS_DIR):
+        try:
+            entries = os.listdir(SKILLS_DIR)
+        except OSError:
+            return 0
+
+        for entry in entries:
             skill_path = os.path.join(SKILLS_DIR, entry)
             if not os.path.isdir(skill_path):
                 continue
