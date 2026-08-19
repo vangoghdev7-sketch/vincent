@@ -185,6 +185,7 @@ class VincentAgent:
 
     def _auto_heal_check(self, path: str, snapshot: str, on_step: Optional[Callable[[str], None]] = None) -> Dict[str, Any]:
         """Valida sintaxe de arquivo .py alterado e restaura snapshot se houver erro de sintaxe."""
+        path = os.path.abspath(os.path.expanduser(path)) if path else ""
         if not path.endswith(".py") or not os.path.isfile(path):
             return {"healed": False}
         try:
