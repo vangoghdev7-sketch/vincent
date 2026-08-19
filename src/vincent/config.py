@@ -125,6 +125,9 @@ import os
 _BASE = os.path.expanduser(
     "~/Downloads/PROJETO MERCADO LIVRE/admin/hardware-lab"
 )
+if not os.path.isdir(_BASE):
+    import warnings
+    warnings.warn(f"hardware-lab não encontrado em {_BASE!r} — caminhos de FLASH_IMAGES podem estar inválidos")
 
 FLASH_IMAGES = {
     "TEMBED": {
