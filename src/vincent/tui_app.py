@@ -52,8 +52,13 @@ from rich.markup import escape as rich_escape
 try:
     # O fuzzy COM pontuação do REPL — a TUI usava só subsequência crua.
     from vincent.interactive import score_item as _score_item
+    # Índice de arquivos do projeto (respeita .gitignore) pro '@arquivo'.
+    from vincent.interactive import rank_mentions as _rank_mentions
+    from vincent.interactive import mention_text as _mention_text
 except Exception:  # pragma: no cover - só sem prompt_toolkit/instalação parcial
     _score_item = None
+    _rank_mentions = None
+    _mention_text = None
 
 try:
     # Preview de diff no modal de permissão (stdlib puro, sem dependência nova).
@@ -69,6 +74,7 @@ from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll, Container
 from textual.reactive import reactive
 from textual.screen import ModalScreen, Screen
+from textual.suggester import Suggester
 from textual.widgets import (
     Footer,
     Header,
@@ -159,6 +165,10 @@ sozinho quando usar ferramentas).
 | `/ask <pergunta>` | chat direto simples (sem loop de ferramentas) |
 | `/clear` | limpa a conversa |
 | `/exit` | sai |
+
+## Menções a arquivo
+`@caminho` anexa o arquivo (ou a listagem do diretório) à mensagem — digite
+`@` e o Vincent completa com os caminhos do projeto; `→` aceita a sugestão.
 
 ## Atalhos
 `Enter` envia · `^P` palette de comandos · `^O` modelos · `^S` skills
@@ -268,6 +278,44 @@ def _diff_text(lines: List[str]) -> Text:
             out.append("\n")
         out.append(line, style=_DIFF_STYLES.get(line[:2], FG))
     return out
+
+
+def mention_suggestion(value: str) -> Optional[str]:
+    """Ghost-text de '@caminho' pro Input da TUI. None = nada a sugerir.
+
+    Só completa por PREFIXO (o Input do Textual desenha `sugestão[len(valor):]`,
+    então uma sugestão fuzzy que não começa pelo que foi digitado apareceria
+    embaralhada). O ranking fuzzy do REPL decide qual prefixo vem primeiro.
+    """
+    if _rank_mentions is None or not value:
+        return None
+    head, sep, word = value.rpartition(" ")
+    if not word.startswith("@"):
+        return None
+    frag = word[1:]
+    try:
+        hits = _rank_mentions(frag)
+    except Exception:
+        return None
+    low = frag.lower()
+    for e in hits:
+        if not e["path"].lower().startswith(low):
+            continue
+        texto = _mention_text(e)
+        if len(texto) > len(word):     # '@src' ainda sugere '@src/' (entrar na pasta)
+            return head + sep + texto
+    return None
+
+
+class MentionSuggester(Suggester):
+    """Completa '@arquivo' no rodapé da TUI (→ ou End aceitam a sugestão)."""
+
+    def __init__(self) -> None:
+        # Sem cache: o índice do projeto muda em disco enquanto o Vincent edita.
+        super().__init__(use_cache=False, case_sensitive=True)
+
+    async def get_suggestion(self, value: str) -> Optional[str]:
+        return mention_suggestion(value)
 
 
 def _preview_args(args: Any, width: int = 220) -> str:
@@ -1155,7 +1203,11 @@ class VincentTUI(App):
         with Horizontal(id="prompt-row"):
             with Horizontal(id="promptwrap"):
                 yield Static("❯", id="chevron")
-                yield Input(placeholder="Pergunte, ou peça uma tarefa…   (/help para comandos)", id="prompt")
+                yield Input(
+                    placeholder="Pergunte, ou peça uma tarefa…   (/help comandos · @ anexa arquivo)",
+                    id="prompt",
+                    suggester=MentionSuggester(),
+                )
             yield Static(Text("Enter ↵", style=f"{FG_MUTED}"), id="prompt-hint")
         yield Footer()
 
@@ -1518,6 +1570,11 @@ class VincentTUI(App):
             return
 
         self._add_message("user", task)
+        # '@arquivo' vira contexto de verdade: a bolha mostra o que foi digitado,
+        # o modelo recebe o conteúdo dos arquivos citados anexado.
+        prompt, notas = self._expand_mentions(task)
+        if notas:
+            self._add_message("system", "\n".join(notas))
         # Bolha do Vincent que será preenchida ao vivo pelo stream.
         self._active_vincent = self._add_message("vincent", "")
         self._stream_started = False
@@ -1528,7 +1585,22 @@ class VincentTUI(App):
         trace.rule()
         trace.step(f"🧠 novo pedido: {rich_escape(task[:70])}")
 
-        self._agent_worker(task, agentic)
+        self._agent_worker(prompt, agentic)
+
+    @staticmethod
+    def _expand_mentions(task: str) -> Tuple[str, List[str]]:
+        """(prompt com os arquivos citados anexados, notas pro usuário).
+
+        Import tardio: `vincent.cli` puxa agente/rede e a TUI sobe sem isso.
+        Qualquer falha devolve o texto original — nunca engole o pedido.
+        """
+        if "@" not in (task or ""):
+            return task, []
+        try:
+            from vincent.cli import expand_mentions
+            return expand_mentions(task)
+        except Exception:
+            return task, []
 
     @work(thread=True, exclusive=True, group="agent")
     def _agent_worker(self, task: str, agentic: bool) -> None:

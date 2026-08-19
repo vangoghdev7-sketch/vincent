@@ -490,3 +490,102 @@ async def test_command_palette_lists_vincent_commands():
         await pilot.pause()
         await pilot.pause()
         assert "Palette" in app.screen.__class__.__name__ or "Command" in app.screen.__class__.__name__
+
+
+# ── Menções a arquivo com '@' ─────────────────────────────────────────────────
+@pytest.fixture
+def projeto_tui(tmp_path, monkeypatch):
+    """Projetinho de 2 arquivos como cwd, com o índice de menções zerado."""
+    from vincent import interactive as ia
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "ui.py").write_text("linha 1\nlinha 2\n", encoding="utf-8")
+    (tmp_path / "README.md").write_text("leia\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    ia._mention_cache.clear()
+    yield tmp_path
+    ia._mention_cache.clear()
+
+
+def test_mention_suggestion_completa_por_prefixo(projeto_tui):
+    # O Input do Textual desenha sugestão[len(valor):] — a sugestão SEMPRE
+    # precisa começar pelo que já está digitado, senão sai texto embaralhado.
+    for valor, esperado in [
+        ("olha o @src/u", "olha o @src/ui.py"),
+        ("@src", "@src/"),                 # pasta: sugere a barra pra entrar nela
+        ("@READ", "@README.md"),
+    ]:
+        sug = tui_app.mention_suggestion(valor)
+        assert sug == esperado
+        assert sug.startswith(valor)
+
+
+def test_mention_suggestion_silencia_quando_nao_ha_o_que_sugerir(projeto_tui):
+    assert tui_app.mention_suggestion("sem arroba nenhuma") is None
+    assert tui_app.mention_suggestion("@zzzznaoexiste") is None
+    assert tui_app.mention_suggestion("") is None
+    assert tui_app.mention_suggestion("@README.md") is None   # já está completo
+
+
+def test_mention_suggestion_nao_estoura_sem_o_indice(projeto_tui, monkeypatch):
+    monkeypatch.setattr(tui_app, "_rank_mentions", None)      # instalação parcial
+    assert tui_app.mention_suggestion("@src/u") is None
+
+
+@pytest.mark.asyncio
+async def test_prompt_com_mencao_manda_o_arquivo_pro_modelo(projeto_tui):
+    """Digitar '@src/ui.py' tem que virar contexto de verdade: a bolha mostra o
+    que foi digitado, o modelo recebe o conteúdo anexado."""
+    agent = FakeAgent()
+    capturado = {}
+
+    def _agentic_run(task, **kw):
+        capturado["task"] = task
+        return "pronto"
+
+    agent.agentic_run = _agentic_run
+    app = VincentTUI(agent=agent)
+    async with app.run_test(size=(120, 40)) as pilot:
+        app.query_one("#prompt", Input).value = "explica o @src/ui.py"
+        await pilot.press("enter")
+        await pilot.pause()
+        await app.workers.wait_for_complete()
+        await pilot.pause()
+
+        assert "linha 2" in capturado["task"]
+        assert "[arquivo: src/ui.py] 2 linha(s)" in capturado["task"]
+
+        bolhas = list(app.query(tui_app.ChatMessage))
+        user = [b for b in bolhas if b.role == "user"][-1]
+        assert user._raw == "explica o @src/ui.py"          # a bolha fica limpa
+        notas = [b._raw for b in bolhas if b.role == "system"]
+        assert "◈ @src/ui.py — 2 linha(s)" in notas
+
+
+@pytest.mark.asyncio
+async def test_prompt_sem_mencao_segue_igual(projeto_tui):
+    agent = FakeAgent()
+    capturado = {}
+    agent.agentic_run = lambda task, **kw: capturado.setdefault("task", task) or "ok"
+    app = VincentTUI(agent=agent)
+    async with app.run_test(size=(120, 40)) as pilot:
+        app.query_one("#prompt", Input).value = "e-mail do fulano@gmail.com"
+        await pilot.press("enter")
+        await pilot.pause()
+        await app.workers.wait_for_complete()
+        assert capturado["task"] == "e-mail do fulano@gmail.com"
+
+
+@pytest.mark.asyncio
+async def test_input_mostra_o_ghost_text_da_mencao(projeto_tui):
+    """Fiação de verdade: o Input do rodapé tem o suggester plugado."""
+    app = VincentTUI(agent=FakeAgent())
+    async with app.run_test(size=(120, 40)) as pilot:
+        inp = app.query_one("#prompt", Input)
+        await pilot.press(*"@src/u")
+        await pilot.pause()
+        await app.workers.wait_for_complete()
+        await pilot.pause()
+        assert inp._suggestion == "@src/ui.py"
+        await pilot.press("right")            # → aceita a sugestão
+        await pilot.pause()
+        assert inp.value == "@src/ui.py"
