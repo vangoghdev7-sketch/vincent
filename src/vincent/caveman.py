@@ -70,8 +70,8 @@ class CavemanEngine:
             compressed = re.sub(f, "", compressed, flags=re.IGNORECASE)
 
         # 2. Intensidades específicas
-        if self.mode == "full":
-            # Modo padrão caveman: elimina artigos desnecessários e floreios,
+        if self.mode in ("full", "ultra"):
+            # Elimina artigos desnecessários e floreios,
             # preservando blocos de código (```...```) intactos.
             articles = [r"\bum\b", r"\buma\b", r"\buns\b", r"\bumas\b", r"\bo\b", r"\ba\b", r"\bos\b", r"\bas\b"]
             parts = re.split(r"(```.*?```)", compressed, flags=re.DOTALL)
@@ -80,6 +80,25 @@ class CavemanEngine:
                     continue
                 for art in articles:
                     part = re.sub(art, "", part, flags=re.IGNORECASE)
+                parts[i] = part
+            compressed = "".join(parts)
+
+        if self.mode == "ultra":
+            # Ultra: remove também preposições e verbos de ligação comuns,
+            # colapsa frases longas em fragmentos telegráficos.
+            stopwords = [
+                r"\bque\b", r"\bpara\b", r"\bcom\b", r"\bsem\b", r"\bsobre\b",
+                r"\bpelo\b", r"\bpela\b", r"\bpelos\b", r"\bpelas\b",
+                r"\bé\b", r"\bsão\b", r"\bfoi\b", r"\bforam\b", r"\bser\b",
+                r"\bthe\b", r"\bis\b", r"\bare\b", r"\bwas\b", r"\bwere\b",
+                r"\bof\b", r"\bto\b", r"\bfor\b", r"\bwith\b", r"\bthat\b"
+            ]
+            parts = re.split(r"(```.*?```)", compressed, flags=re.DOTALL)
+            for i, part in enumerate(parts):
+                if part.startswith("```"):
+                    continue
+                for sw in stopwords:
+                    part = re.sub(sw, "", part, flags=re.IGNORECASE)
                 parts[i] = part
             compressed = "".join(parts)
 
