@@ -189,7 +189,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     # Permission prompt (estilo Claude Code): com /autoedit off, o loop agêntico
     # chama isto antes de rodar comando/editar/commitar e espera [s/N].
     def _ask_permission(tool_name, args):
-        preview = str(args.get("command") or args.get("path") or args.get("message") or "")[:90]
+        preview = (str(args.get("command") or args.get("path") or args.get("message") or "") if isinstance(args, dict) else str(args or ""))[:90]
         try:
             ans = input(f"\n{CHROME_YELLOW}  ⚠ Permitir {tool_name}{(' › ' + preview) if preview else ''}? [s/N] {CLR_RST}").strip().lower()
         except (EOFError, KeyboardInterrupt):
