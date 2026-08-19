@@ -204,7 +204,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
 
         def _worker():
             try:
-                res = agent.agentic_run(task, max_turns=6)
+                res = agent.agentic_run(task)
             except Exception as e:
                 res = f"[VINCENT BG] Falhou: {e}"
             bg_results.put((task_id, task, res))

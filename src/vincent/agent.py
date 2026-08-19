@@ -24,6 +24,11 @@ from .skills import skills_context
 
 ESCALATION_MODEL = os.environ.get("VINCENT_ESCALATION_MODEL", "qwen2.5-coder:7b")
 
+# Teto de passos do loop agêntico. 6 era baixo demais e cortava tarefas no meio;
+# o loop JÁ para sozinho quando a tarefa termina (modelo para de pedir ferramenta),
+# então isto é só uma trava de segurança contra runaway. Configurável via env.
+MAX_TURNS = int(os.environ.get("VINCENT_MAX_TURNS", "25"))
+
 OBSIDIAN_VAULT_CANDIDATES = [
     os.environ.get("VINCENT_OBSIDIAN_VAULT", ""),
     os.path.expanduser("~/Documents/Obsidian Vault"),
@@ -212,7 +217,7 @@ class VincentAgent:
         
         return "[VINCENT] Resposta vazia ou falha de comunicação com os nós neurais."
 
-    def agentic_run(self, task: str, on_step_callback: Optional[Callable[[str], None]] = None, max_turns: int = 6,
+    def agentic_run(self, task: str, on_step_callback: Optional[Callable[[str], None]] = None, max_turns: int = MAX_TURNS,
                     stream_callback: Optional[Callable[[str], None]] = None) -> str:
         """
         Agentic Loop com Function/Tool Calling autônomo e auto-cura.
@@ -430,7 +435,7 @@ class VincentAgent:
                 results[futures[fut]] = fut.result()
         return results
 
-    def _run_worker_task(self, task: str, max_turns: int = 4) -> str:
+    def _run_worker_task(self, task: str, max_turns: int = MAX_TURNS) -> str:
         """Mesmo loop de tool-calling do agentic_run, mas com estado 100%
         local — seguro pra chamar de várias threads ao mesmo tempo."""
         target_m = self._escalate_for_tools(self.model)
