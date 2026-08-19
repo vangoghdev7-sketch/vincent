@@ -254,6 +254,12 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
         try:
             while not bg_results.empty():
                 bg_id, bg_task, bg_res = bg_results.get_nowait()
+        except Exception as e:
+            print(f"\n{ALERT_SCARLET}⚠ Erro no processamento de background: {e}{CLR_RST}")
+
+        try:
+            while not bg_results.empty():
+                bg_id, bg_task, bg_res = bg_results.get_nowait()
                 print(f"\n{CYPRESS_GREEN}◈ Tarefa em segundo plano #{bg_id} concluída:{CLR_RST} '{bg_task}'")
                 render_response_box(bg_res, agent.display_model, agent.telemetry.last_latency, mode=f"Background #{bg_id}")
 
