@@ -253,8 +253,8 @@ class ModelManager:
         if not messages:
             return "[VINCENT] Nenhuma mensagem para enviar — o prompt está vazio.", target_model, 0.0
 
-        if not self.cached_omniroute_models and not self.cached_ollama_models:
-            self.sync_catalogs()
+        if not self.display_to_real:
+            self.get_all_models()
 
         # Monta cascata de modelos prioritários (resolve ID exibido para ID real upstream)
         cascade: List[str] = [self.resolve(target_model)]
