@@ -57,7 +57,10 @@ def recent_summaries(limit: int = 5) -> List[str]:
 
 def recall_context() -> str:
     """Bloco de texto pronto para injetar no system prompt no boot do CLI."""
-    items = recent_summaries()
+    try:
+        items = recent_summaries()
+    except sqlite3.Error:
+        return ""
     if not items:
         return ""
     return "\n\n## Memória de Sessões Anteriores (Contexto Persistente):\n" + "\n".join(items)
