@@ -389,9 +389,12 @@ def tool_web_search(query: str, max_results: int = 5) -> Dict[str, Any]:
         raw, re.DOTALL
     ):
         href, title_html, snippet_html = m.groups()
-        title = html_lib.unescape(re.sub(r"<.*?>", "", title_html)).strip()
-        snippet = html_lib.unescape(re.sub(r"<.*?>", "", snippet_html)).strip()
-        results.append({"title": title, "url": _resolve_ddg_redirect(href), "snippet": snippet})
+        try:
+            title = html_lib.unescape(re.sub(r"<.*?>", "", title_html)).strip()
+            snippet = html_lib.unescape(re.sub(r"<.*?>", "", snippet_html)).strip()
+            results.append({"title": title, "url": _resolve_ddg_redirect(href), "snippet": snippet})
+        except Exception:
+            continue
         if len(results) >= max_results:
             break
 
