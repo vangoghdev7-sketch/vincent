@@ -380,6 +380,11 @@ class ModelManager:
                         self._omniroute_circuit.record_result("omniroute", success=True)
                         self._omniroute_cooldown.record_success("omniroute")
                         dt = time.time() - t0
+                        if stream_callback is not None:
+                            try:
+                                stream_callback(text)
+                            except Exception:
+                                pass
                         return text, model, dt
                 self._omniroute_circuit.record_result("omniroute", success=False, status_code=503)
             except Exception as e:
