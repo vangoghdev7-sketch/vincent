@@ -154,6 +154,12 @@ def add_skill_from_git(git_url: str) -> List[str]:
             name = os.path.basename(git_url.rstrip("/")).replace(".git", "")
             candidates.append((name, tmp))
 
+        if not candidates:
+            raise RuntimeError(
+                "Nenhuma skill encontrada em '{}': esperado skills/<nome>/SKILL.md "
+                "ou um SKILL.md na raiz do repo.".format(git_url)
+            )
+
         for name, src in candidates:
             dest = os.path.join(SKILLS_DIR, name)
             if os.path.isdir(dest):
