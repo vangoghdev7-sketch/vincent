@@ -21,6 +21,7 @@ class PluginManager:
 
     def scan_skills(self) -> int:
         """Varre o diretório de skills e indexa os manifestos."""
+        previously_active = set(self.active_plugins)  # preserva toggles manuais do usuário
         self.skills.clear()
         if not os.path.isdir(SKILLS_DIR):
             return 0
