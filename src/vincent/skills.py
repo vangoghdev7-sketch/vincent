@@ -38,7 +38,11 @@ _STOPWORDS = {
 
 def _split_frontmatter(text: str) -> tuple:
     """Separa frontmatter YAML (entre --- ---) do corpo. Retorna (meta, body)."""
-    m = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)$", text, re.DOTALL)
+    m = re.match(r"^---\s*\n(.*?)\n---\s*\n?(.*)$", text, re.DOTALL)
+    if not m:
+        # Tenta formato sem newline final após o segundo '---' (edge case comum
+        # em arquivos salvos por editores que não adicionam trailing newline)
+        m = re.match(r"^---\s*\r?\n(.*?)\r?\n---[ \t]*(?:\r?\n|$)(.*)", text, re.DOTALL)
     if not m:
         return {}, text
     try:
