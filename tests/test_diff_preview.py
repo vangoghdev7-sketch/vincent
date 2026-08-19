@@ -7,6 +7,7 @@ Preview de diff ANTES de aplicar a edição (a peça que faltava pro nível Clau
 """
 
 import os
+import subprocess
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
@@ -14,7 +15,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 import pytest
 
 from vincent import ui
-from vincent.agent_tools import build_edit_preview, is_edit_tool, tool_apply_diff
+from vincent.agent_tools import (
+    build_edit_preview, is_edit_tool, tool_apply_diff, tool_git_rollback,
+)
 from vincent.ui import colorize_diff_line, diff_lines
 
 
@@ -97,7 +100,59 @@ def test_preview_ignora_args_invalidos():
 
 def test_is_edit_tool_cobre_os_apelidos():
     assert is_edit_tool("apply_diff") and is_edit_tool("PATCH") and is_edit_tool(" replace ")
+    assert is_edit_tool("git_rollback") and is_edit_tool("GIT_UNDO")
     assert not is_edit_tool("run_bash") and not is_edit_tool("") and not is_edit_tool(None)
+
+
+# ── preview de rollback (o que vai ser JOGADO FORA) ───────────────────────────
+
+@pytest.fixture
+def repo(tmp_path):
+    """Repo git de verdade com um arquivo commitado e depois modificado."""
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "t@t"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "t"], cwd=tmp_path, check=True)
+    p = tmp_path / "modulo.py"
+    p.write_text(ARQUIVO, encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-qm", "base"], cwd=tmp_path, check=True)
+    p.write_text(ARQUIVO.replace("    return 1", "    return 42"), encoding="utf-8")
+    return tmp_path
+
+
+def test_preview_de_rollback_mostra_o_que_vai_ser_descartado(repo):
+    diff = build_edit_preview("git_rollback", {"path": "modulo.py", "cwd": str(repo)})
+    # O rollback DESFAZ a edição: o 42 sai (vermelho), o 1 volta (verde).
+    assert "-    return 42" in diff
+    assert "+    return 1" in diff
+
+
+def test_preview_de_rollback_bate_com_o_que_a_ferramenta_faz(repo):
+    args = {"path": "modulo.py", "cwd": str(repo)}
+    build_edit_preview("git_rollback", args)
+    assert tool_git_rollback(**args)["success"] is True
+    assert (repo / "modulo.py").read_text(encoding="utf-8") == ARQUIVO
+
+
+def test_preview_de_rollback_sem_mudanca_ou_fora_de_repo(repo, tmp_path):
+    subprocess.run(["git", "checkout", "--", "modulo.py"], cwd=repo, check=True)
+    assert build_edit_preview("git_rollback", {"path": "modulo.py", "cwd": str(repo)}) == ""
+    assert build_edit_preview("git_rollback", {"path": "", "cwd": str(repo)}) == ""
+    # Fora de repo o git falha: preview vazio, não exceção.
+    fora = tmp_path / "fora"
+    fora.mkdir()
+    assert build_edit_preview("git_rollback", {"path": "x.py", "cwd": str(fora)}) == ""
+
+
+def test_repl_pergunta_rollback_com_o_diff_do_estrago(repo, capsys, monkeypatch):
+    """O prompt de permissão do REPL mostra em vermelho o que o rollback apaga."""
+    from vincent import cli
+
+    monkeypatch.setattr(cli, "_HAS_INTERACTIVE", False)
+    monkeypatch.setattr("builtins.input", lambda *a: "n")
+    assert cli.make_permission_asker()("git_rollback", {"path": "modulo.py", "cwd": str(repo)}) is False
+    saida = capsys.readouterr().out
+    assert "return 42" in saida and "modulo.py" in saida
 
 
 def test_preview_de_arquivo_sem_quebra_de_linha_final(tmp_path):

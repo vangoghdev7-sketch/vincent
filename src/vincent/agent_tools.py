@@ -286,11 +286,15 @@ def tool_apply_diff(path: str, search_block: Optional[str] = None, replace_block
 # ─── 5b. Preview de edição (diff ANTES de escrever no disco) ──────────────────
 
 EDIT_TOOL_ALIASES = {"apply_diff", "patch", "replace"}
+# Rollback também reescreve o arquivo — e é o único que APAGA trabalho. Sem
+# preview o usuário aprova a perda às cegas, que é justamente o que isto evita.
+ROLLBACK_TOOL_ALIASES = {"git_rollback", "gitrollback", "git_undo"}
 
 
 def is_edit_tool(tool_name: str) -> bool:
     """A ferramenta escreve/altera arquivo? (usado pra decidir se há preview)"""
-    return str(tool_name or "").strip().lower() in EDIT_TOOL_ALIASES
+    name = str(tool_name or "").strip().lower()
+    return name in EDIT_TOOL_ALIASES or name in ROLLBACK_TOOL_ALIASES
 
 
 def build_edit_preview(tool_name: str, arguments: Dict[str, Any]) -> str:
@@ -302,6 +306,15 @@ def build_edit_preview(tool_name: str, arguments: Dict[str, Any]) -> str:
     """
     if not is_edit_tool(tool_name) or not isinstance(arguments, dict):
         return ""
+
+    if str(tool_name).strip().lower() in ROLLBACK_TOOL_ALIASES:
+        # `git diff -R` é literalmente o que o `git checkout --` do rollback vai
+        # escrever no disco: o que está prestes a ser descartado sai em vermelho.
+        path = str(arguments.get("path") or "")
+        if not path:
+            return ""
+        res = _run_git(["diff", "-R", "--", path], cwd=arguments.get("cwd"))
+        return res.get("stdout", "") if res.get("success") else ""
 
     # O modelo já mandou um diff unificado pronto — mostra ele mesmo.
     raw_diff = arguments.get("diff") or arguments.get("diff_content")
