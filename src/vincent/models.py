@@ -63,6 +63,10 @@ def _messages_for_ollama(messages: List[Dict]) -> List[Dict]:
             if images:
                 new_msg["images"] = images
             converted.append(new_msg)
+        elif content is None:
+            new_msg = dict(msg)
+            new_msg["content"] = ""
+            converted.append(new_msg)
         else:
             converted.append(msg)
     return converted
