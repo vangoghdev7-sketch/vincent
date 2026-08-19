@@ -152,8 +152,9 @@ class NeuralSpinner:
         self.message = new_msg
 
     def __enter__(self):
-        self.thread = threading.Thread(target=self._spin, daemon=True)
-        self.thread.start()
+        if self.is_tty:
+            self.thread = threading.Thread(target=self._spin, daemon=True)
+            self.thread.start()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
