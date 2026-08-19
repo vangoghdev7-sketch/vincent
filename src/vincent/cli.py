@@ -383,12 +383,16 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                     except (FileNotFoundError, ValueError) as e:
                         print(f"{ALERT_SCARLET}✗ {e}{CLR_RST}\n")
                         continue
-                    with NeuralSpinner(f"Vincent analisando imagem: '{img_path}'...", color=VIOLET_SWIRL):
-                        reply, used_model, lat = agent.model_manager.execute_inference(
-                            [{"role": "user", "content": content}],
-                            target_model=agent.model,
-                            system_prompt="Você é o Vincent. Analise a imagem enviada e responda de forma técnica e direta em Português."
-                        )
+                    try:
+                        with NeuralSpinner(f"Vincent analisando imagem: '{img_path}'...", color=VIOLET_SWIRL):
+                            reply, used_model, lat = agent.model_manager.execute_inference(
+                                [{"role": "user", "content": content}],
+                                target_model=agent.model,
+                                system_prompt="Você é o Vincent. Analise a imagem enviada e responda de forma técnica e direta em Português."
+                            )
+                    except Exception as e:
+                        print(f"{ALERT_SCARLET}✗ Falha na inferência multimodal: {e}{CLR_RST}\n")
+                        continue
                     render_response_box(
                         reply or "[VINCENT VISION] Sem resposta do modelo.",
                         agent.display_model, lat, mode="Visão Multimodal"
