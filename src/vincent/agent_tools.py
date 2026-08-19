@@ -114,6 +114,8 @@ def tool_read_file(path: str, start_line: Optional[int] = None, end_line: Option
 
 def tool_grep(pattern: str, path: str = ".", is_regex: bool = False, case_insensitive: bool = True) -> Dict[str, Any]:
     """Realiza busca global por texto ou regex em todo o projeto."""
+    if not pattern or not pattern.strip():
+        return {"error": "Padrão de busca vazio."}
     root_path = os.path.abspath(os.path.expanduser(path))
     if not os.path.exists(root_path):
         return {"error": f"Caminho não encontrado: {path}"}
