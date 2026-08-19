@@ -38,9 +38,9 @@ def _style_trace(step: str) -> str:
     """Colore uma linha do trace ao vivo do loop agêntico conforme o tipo de evento
     (pensamento / execução de ferramenta / saída), estilo Claude Code."""
     s = step.lstrip()
-    if step.startswith("🧠"):
+    if s.startswith("🧠"):
         return f"{VIOLET_SWIRL}{step}{CLR_RST}"
-    if step.startswith("⚙️") or step.startswith("⚙"):
+    if s.startswith("⚙️") or s.startswith("⚙"):
         return f"{CHROME_YELLOW}{CLR_BOLD}{step}{CLR_RST}"
     if s.startswith("↳"):
         return f"{SHADOW_GRAY}{step}{CLR_RST}"
