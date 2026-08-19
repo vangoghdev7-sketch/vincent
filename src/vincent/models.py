@@ -386,7 +386,8 @@ class ModelManager:
                     choices = res_data.get("choices") if isinstance(res_data, dict) else None
                     first = choices[0] if choices and isinstance(choices, list) and isinstance(choices[0], dict) else {}
                     msg = first.get("message") if isinstance(first.get("message"), dict) else {}
-                    text = (msg.get("content") or "").strip()
+                    c = msg.get("content")
+                    text = "\n".join(p.get("text", "") for p in c if isinstance(p, dict) and p.get("type") == "text").strip() if isinstance(c, list) else (c.strip() if isinstance(c, str) else "")
                     if text:
                         self._omniroute_circuit.record_result("omniroute", success=True)
                         self._omniroute_cooldown.record_success("omniroute")
