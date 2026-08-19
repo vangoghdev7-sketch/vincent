@@ -146,7 +146,7 @@ class ModelManager:
             req = urllib.request.Request(f"{OLLAMA_URL}/api/tags")
             with urllib.request.urlopen(req, timeout=3) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
-                self.cached_ollama_models = [m.get("name") for m in data.get("models", [])]
+                self.cached_ollama_models = [m.get("name") for m in data.get("models", []) if m.get("name")]
                 ollama_count = len(self.cached_ollama_models)
         except Exception:
             pass
