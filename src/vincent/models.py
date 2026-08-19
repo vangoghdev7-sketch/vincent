@@ -132,10 +132,16 @@ class ModelManager:
             req = urllib.request.Request(f"{OMNIROUTE_URL}/models", headers=omni_headers)
             with urllib.request.urlopen(req, timeout=5) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
+                new_omni = None
                 if isinstance(data, dict) and isinstance(data.get("data"), list):
-                    self.cached_omniroute_models = data["data"]
+                    new_omni = data["data"]
                 elif isinstance(data, list):
-                    self.cached_omniroute_models = data
+                    new_omni = data
+                if new_omni:
+                    # Só substitui o cache se a resposta trouxe modelos de verdade —
+                    # uma resposta 200 com lista vazia (hiccup do gateway) não pode
+                    # apagar um catálogo bom que já tínhamos.
+                    self.cached_omniroute_models = new_omni
                 omni_count = len(self.cached_omniroute_models)
         except Exception:
             pass
