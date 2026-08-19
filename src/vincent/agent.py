@@ -280,7 +280,8 @@ class VincentAgent:
         skills_ctx = skills_context(task)
 
         hw_prefix = f"[{state}]\n" if state else ""
-        turn_messages: List[Dict[str, str]] = [
+        recent_history = self._history[-4:] if len(self._history) >= 2 else []
+        turn_messages: List[Dict[str, str]] = recent_history + [
             {"role": "user", "content": f"{hw_prefix}Tarefa Agênica: {processed_task}\n\nExecute você mesmo as ferramentas necessárias (emita um bloco ```tool_call). NÃO peça para eu rodar comandos."}
         ]
 
