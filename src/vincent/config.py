@@ -135,7 +135,7 @@ FLASH_IMAGES = {
             "path": f"{_BASE}/build_artifacts/"
                     "vincent_dual_bruce_marauder_tembed_autoback_20260511_185157/"
                     "VincentDual-Bruce-Marauder-TEmbedCC1101-AutoBack.bin",
-            "sha256": "9405e7e87d4ac05758dac928706ec202f6ada3913afb1d82645a1bf883f3cdb4",
+            "sha256": "9405e7e87d4ac05758dac928706ec202f6ada3913afb1d82645a1bf883f3cdb",
             "chip":   "esp32s3",
             "offset": "0x0",
             "size_mb": 5.9,
