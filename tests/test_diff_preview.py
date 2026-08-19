@@ -62,6 +62,19 @@ def test_preview_bate_com_o_que_a_ferramenta_aplica(arquivo):
 def test_preview_aceita_diff_unificado_cru_do_modelo(arquivo):
     cru = "--- a/x.py\n+++ b/x.py\n@@ -1 +1 @@\n-velho\n+novo\n"
     assert build_edit_preview("patch", {"path": str(arquivo), "diff": cru}) == cru
+    # 'diff_content' é o nome do parâmetro na própria ferramenta — mesmo preview
+    assert build_edit_preview("patch", {"path": str(arquivo), "diff_content": cru}) == cru
+
+
+def test_diff_content_previsto_e_o_diff_content_aplicado(arquivo):
+    """Preview e execução leem as MESMAS chaves: sem promessa que não vai pro disco."""
+    from vincent.agent_tools import execute_agent_tool
+
+    cru = "--- a/modulo.py\n+++ b/modulo.py\n@@ -1,2 +1,2 @@\n def alfa():\n-    return 1\n+    return 42\n"
+    args = {"path": str(arquivo), "diff_content": cru}
+    assert build_edit_preview("apply_diff", args) == cru
+    res = execute_agent_tool("apply_diff", args)
+    assert "insuficientes" not in str(res.get("error") or "")
 
 
 @pytest.mark.parametrize("nome, args", [

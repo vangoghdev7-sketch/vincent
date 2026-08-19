@@ -665,7 +665,10 @@ def execute_agent_tool(tool_name: str, arguments: Dict[str, Any]) -> Dict[str, A
             path=arguments.get("path", ""),
             search_block=arguments.get("search_block"),
             replace_block=arguments.get("replace_block"),
-            diff_content=arguments.get("diff")
+            # Mesmas chaves que `build_edit_preview` lê: senão o modelo manda
+            # 'diff_content', o usuário vê o preview e a ferramenta responde
+            # "parâmetros insuficientes" — preview prometendo o que não é aplicado.
+            diff_content=arguments.get("diff") or arguments.get("diff_content")
         )
     elif name in ("git_status", "gitstatus"):
         return tool_git_status(cwd=arguments.get("cwd"))
