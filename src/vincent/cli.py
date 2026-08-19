@@ -575,7 +575,8 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     # Antes eram 6 linhas repetindo o que o menu de '/' e o /help já mostram.
     print(f"\n  {COBALT_BLUE}/act <tarefa>{CLR_RST} agentic • {COBALT_BLUE}/models{CLR_RST} catálogo • "
           f"{COBALT_BLUE}/marketplace{CLR_RST} skills • {COBALT_BLUE}/config{CLR_RST} painel • {COBALT_BLUE}/exit{CLR_RST}")
-    print(f"  {SHADOW_GRAY}Digite {CHROME_YELLOW}/{SHADOW_GRAY} pra abrir o menu de comandos, "
+    print(f"  {SHADOW_GRAY}Digite {CHROME_YELLOW}/{SHADOW_GRAY} pro menu de comandos, "
+          f"{CHROME_YELLOW}@{SHADOW_GRAY} pra anexar um arquivo, "
           f"ou {CHROME_YELLOW}/help{SHADOW_GRAY} pro guia completo.{CLR_RST}\n")
 
     term_w = get_terminal_width()
@@ -677,6 +678,9 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 usage = f"{c['cmd']} {c['args']}".strip()
                 extra = f" {SHADOW_GRAY}({', '.join(c['aliases'])}){CLR_RST}" if c.get("aliases") else ""
                 print(f"  {COBALT_BLUE}{usage:<26}{CLR_RST} {SHADOW_GRAY}{c['desc']}{CLR_RST}{extra}")
+        print(f"\n{VIOLET_SWIRL}◈ CONTEXTO{CLR_RST}")
+        print(f"  {COBALT_BLUE}{'@caminho':<26}{CLR_RST} {SHADOW_GRAY}anexa o arquivo (ou a listagem do "
+              f"diretório) à mensagem — '@' abre o autocomplete{CLR_RST}")
         print(f"\n{SHADOW_GRAY}Sem barra vale quando a linha É só o comando: 'models' == '/models' "
               f"(com argumento, vira conversa). Ctrl+P abre esta lista navegável.{CLR_RST}\n")
 
