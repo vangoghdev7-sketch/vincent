@@ -158,6 +158,7 @@ def tool_grep(pattern: str, path: str = ".", is_regex: bool = False, case_insens
         "pattern": pattern,
         "total_matches": len(matches),
         "truncated": len(matches) >= 50,
+        "note": "Busca interrompida após 50 resultados — refine o padrão ou use 'path' para limitar o escopo." if len(matches) >= 50 else None,
         "matches": matches
     }
 
