@@ -60,8 +60,8 @@ class CavemanEngine:
         # 1. Filtros comuns de ruído e cortesia (português e inglês)
         fillers = [
             r"\bpor favor\b", r"\bpor gentileza\b", r"\bgostaria de saber\b",
-            r"\bvoce poderia\b", r"\bme diga\b", r"\bme explique detalhadamente\b",
-            r"\bseria possivel\b", r"\bqueria que voce\b", r"\bvoce sabe me dizer\b",
+            r"\bvoc[eê] poderia\b", r"\bme diga\b", r"\bme explique detalhadamente\b",
+            r"\bseria poss[ií]vel\b", r"\bqueria que voc[eê]\b", r"\bvoc[eê] sabe me dizer\b",
             r"\bpoderia me ajudar a\b", r"\bqueria entender como\b",
             r"\bplease\b", r"\bcould you\b", r"\bwould you please\b",
             r"\bi would like to know\b", r"\bcan you tell me\b"
