@@ -69,12 +69,39 @@ def recent_summaries(limit: int = 5) -> List[str]:
         conn.close()
 
 
+def search_summaries(keyword: str, limit: int = 10) -> List[str]:
+    """Busca resumos que contenham a palavra-chave (case-insensitive).
+
+    Permite ao agente recuperar contexto relevante por tema em vez de
+    depender apenas dos N registros mais recentes — equivalente ao
+    /memory search do Claude Code e ao --search do aider.
+    """
+    if not isinstance(keyword, str) or not keyword.strip():
+        return []
+    if not isinstance(limit, int) or limit <= 0:
+        return []
+    try:
+        conn = _connect()
+    except OSError:
+        return []
+    try:
+        pattern = f"%{keyword.strip()}%"
+        rows = conn.execute(
+            "SELECT timestamp, summary FROM sessions"
+            " WHERE summary LIKE ? COLLATE NOCASE"
+            " ORDER BY id DESC LIMIT ?",
+            (pattern, limit),
+        ).fetchall()
+        return [f"[{ts}] {s}" for ts, s in reversed(rows)]
+    except sqlite3.Error:
+        return []
+    finally:
+        conn.close()
+
+
 def recall_context() -> str:
     """Bloco de texto pronto para injetar no system prompt no boot do CLI."""
-    try:
-        items = recent_summaries()
-    except sqlite3.Error:
-        return ""
+    items = recent_summaries()
     if not items:
         return ""
     return "\n\n## Memória de Sessões Anteriores (Contexto Persistente):\n" + "\n".join(items)
