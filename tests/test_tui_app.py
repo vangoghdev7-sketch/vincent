@@ -438,7 +438,61 @@ async def test_permission_callback_deny_and_always():
         assert app._agent.autoedit is True  # não mexeu
         app._agent.autoedit = False
         assert await ask("a") is True
-        assert app._agent.autoedit is True  # "sempre" liga o autoedit
+        # "sempre" é POR FERRAMENTA: não liga o autoedit global…
+        assert app._agent.autoedit is False
+        assert "apply_diff" in app._perm_always
+        # …e não pergunta mais só pra ESSA ferramenta.
+        assert app._agent.permission_callback("apply_diff", {"path": "a.py"}) is True
+
+
+@pytest.mark.asyncio
+async def test_sempre_nao_libera_as_outras_ferramentas(tmp_path):
+    """Aprovar 'sempre' um apply_diff não pode liberar run_bash na surdina —
+    e a edição já liberada continua mostrando o diff no trace."""
+    alvo = tmp_path / "m.py"
+    alvo.write_text("x = 1\n", encoding="utf-8")
+    args = {"path": str(alvo), "search_block": "x = 1", "replace_block": "x = 2"}
+
+    app = _app()
+    async with app.run_test(size=(120, 40)) as pilot:
+        app._agent.autoedit = False
+        app._perm_always.add("apply_diff")
+
+        box = {}
+        t = threading.Thread(
+            target=lambda: box.update(ok=app._agent.permission_callback("apply_diff", args)),
+            daemon=True,
+        )
+        t.start()
+        for _ in range(50):
+            await pilot.pause()
+            if not t.is_alive():
+                break
+        t.join(timeout=5)
+        assert box.get("ok") is True
+        assert not isinstance(app.screen, PermissionScreen)   # não perguntou
+        await pilot.pause()
+        out = svg_text(app)
+        assert "x = 2" in out                                  # mas mostrou o diff
+
+        # run_bash continua exigindo permissão
+        t2 = threading.Thread(
+            target=lambda: box.update(bash=app._agent.permission_callback("run_bash", {"command": "ls"})),
+            daemon=True,
+        )
+        t2.start()
+        for _ in range(50):
+            await pilot.pause()
+            if isinstance(app.screen, PermissionScreen):
+                break
+        assert isinstance(app.screen, PermissionScreen)
+        await pilot.press("n")
+        for _ in range(50):
+            await pilot.pause()
+            if not t2.is_alive():
+                break
+        t2.join(timeout=5)
+        assert box.get("bash") is False
 
 
 def test_permission_callback_without_running_app_denies():

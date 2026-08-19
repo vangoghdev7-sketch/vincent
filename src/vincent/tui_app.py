@@ -740,7 +740,7 @@ class PermissionScreen(ModalScreen):
             hint.append(" n ", style=f"bold {NIGHT} on {SCARLET}")
             hint.append(" não   ", style=FG_DIM)
             hint.append(" a ", style=f"bold {NIGHT} on {COBALT}")
-            hint.append(" sempre (liga autoedit)", style=FG_DIM)
+            hint.append(" sempre (esta ferramenta)", style=FG_DIM)
             yield Static(hint, id="perm-hint")
 
     def action_yes(self) -> None:
@@ -1153,6 +1153,9 @@ class VincentTUI(App):
         self._spinner_i = 0
         self._spinner_timer = None
         self._auto_hidden: Dict[str, bool] = {}   # painel -> escondido por largura
+        # "sempre" é POR FERRAMENTA (mesma regra do REPL): liberar um apply_diff
+        # não pode liberar run_bash pelo resto da sessão.
+        self._perm_always: set = set()
 
     # ── Layout ────────────────────────────────────────────────────────────────
     def compose(self) -> ComposeResult:
@@ -1281,6 +1284,17 @@ class VincentTUI(App):
         empurra o modal e um `threading.Event` segura o worker até o usuário
         responder. Sem UI viva (ou timeout) → NEGA, que é o lado seguro.
         """
+        if tool_name in self._perm_always:
+            # Liberada ≠ invisível: o agente não emite o preview no trace quando
+            # existe callback de permissão, então o diff sai daqui — senão o
+            # "sempre" transformaria toda edição seguinte em aprovação às cegas.
+            for line in _pending_diff(tool_name, args):
+                try:
+                    self.call_from_thread(self._ui_step, line)
+                except Exception:
+                    break
+            return True
+
         answered = threading.Event()
         answer: List[str] = []
 
@@ -1303,9 +1317,9 @@ class VincentTUI(App):
 
         result = answer[0] if answer else "no"
         if result == "always":
+            self._perm_always.add(tool_name)
             try:
-                self._agent.autoedit = True
-                self.call_from_thread(self._ui_permission_always)
+                self.call_from_thread(self._ui_permission_always, tool_name)
             except Exception:
                 pass
         try:
@@ -1317,8 +1331,9 @@ class VincentTUI(App):
             pass
         return result in ("yes", "always")
 
-    def _ui_permission_always(self) -> None:
-        self._add_message("system", "✎ **autoedit ligado** — não pergunto mais nesta sessão (`/autoedit off` reverte).")
+    def _ui_permission_always(self, tool_name: str = "") -> None:
+        self._add_message("system", f"✓ **`{tool_name}` liberada nesta sessão** — "
+                                    "as outras ferramentas continuam perguntando.")
         self._refresh_status()
 
     def _on_agent_boot_failed(self, msg: str) -> None:
