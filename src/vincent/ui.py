@@ -55,10 +55,10 @@ GRAY_DARK    = "\033[38;5;236m"
 # real (pipe, redirect para arquivo, CI) ou quando NO_COLOR está definida —
 # evita poluir logs/arquivos com sequências de escape ilegíveis.
 if os.environ.get("NO_COLOR") or not getattr(sys.stdout, "isatty", lambda: False)():
-    for _name, _val in list(globals().items()):
-        if isinstance(_val, str) and _val.startswith("\033["):
-            globals()[_name] = ""
-    del _name, _val
+    _ansi_names = [_n for _n, _v in list(globals().items()) if isinstance(_v, str) and _v.startswith("\033[")]
+    for _n in _ansi_names:
+        globals()[_n] = ""
+    del _ansi_names, _n
 
 # ─── Van Gogh Starry Night ASCII Masterpiece Banner ───────────────────────────
 BANNER = f"""
