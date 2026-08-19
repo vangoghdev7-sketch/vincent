@@ -12,7 +12,8 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from vincent.cli import MENTION_MAX_FILES, MENTION_MAX_LINES, expand_mentions
+from vincent.cli import (MENTION_MAX_CHARS, MENTION_MAX_FILES, MENTION_MAX_LINES,
+                         expand_mentions)
 
 
 @pytest.fixture
@@ -42,6 +43,33 @@ def test_arquivo_grande_e_truncado_avisando_quantas_linhas_cairam(projeto):
     assert f"l{MENTION_MAX_LINES}" not in texto        # a primeira cortada não veio
     assert f"57 de {total} linhas cortadas" in texto   # o modelo é avisado
     assert notas == [f"◈ @gigante.txt — {MENTION_MAX_LINES}/{total} linhas (57 cortadas)"]
+
+
+def test_arquivo_minificado_uma_linha_so_respeita_o_teto_de_caracteres(projeto):
+    """Limite de linhas não segura .js minificado — o teto de chars segura."""
+    (projeto / "bundle.js").write_text("x" * (MENTION_MAX_CHARS * 3), encoding="utf-8")
+    texto, notas = expand_mentions("@bundle.js")
+
+    assert len(texto) < MENTION_MAX_CHARS * 1.5
+    assert "caractere(s) cortados" in texto
+    assert notas[0].startswith("◈ @bundle.js — 1 linha(s), 24")   # ~24k cortados
+    assert notas[0].endswith(" caractere(s) cortados")
+
+
+def test_linhas_longas_cortam_e_o_aviso_conta_as_linhas_que_ficaram(projeto):
+    linha = "y" * 500
+    (projeto / "largo.txt").write_text("\n".join([linha] * 100), encoding="utf-8")
+    texto, notas = expand_mentions("@largo.txt")
+
+    assert len(texto) < MENTION_MAX_CHARS + 500
+    assert "de 100 linhas cortadas" in texto
+    assert notas[0].startswith("◈ @largo.txt — ") and "/100 linhas" in notas[0]
+
+
+def test_arquivo_pequeno_nao_ganha_aviso_de_corte(projeto):
+    texto, notas = expand_mentions("@src/ui.py")
+    assert "truncado" not in texto
+    assert "cortados" not in notas[0]
 
 
 def test_mencao_que_nao_existe_e_email_passam_intactos(projeto):

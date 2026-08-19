@@ -374,12 +374,34 @@ def normalize_bare_command(prompt: str) -> str:
 # pode ter ~, /, ponto e hífen; pontuação final da frase fica de fora.
 MENTION_RE = re.compile(r"(?<![\w@/])@([~/\w.\-][\w.\-/]*)")
 MENTION_MAX_LINES = 400        # por arquivo
+MENTION_MAX_CHARS = 12000      # por arquivo, teto que o limite de linhas não pega
 MENTION_MAX_FILES = 10         # por mensagem
 MENTION_DIR_ENTRIES = 60       # ao citar um diretório
 
 # Comandos que carregam tarefa em texto livre — só neles (e no chat) a menção
 # é expandida. '/model @x' ou '/commit fix @v2' continuam literais.
 MENTION_COMMANDS = ("/act", "/agent", "/auto", "/bg")
+
+
+def _cap_chars(body: str, shown: int):
+    """Aplica o teto de caracteres cortando em borda de linha.
+
+    400 linhas não seguram um .js minificado (megabytes numa linha só), e o
+    prompt inteiro ia junto pro modelo. Devolve (corpo, linhas_mantidas,
+    caracteres_cortados).
+    """
+    if len(body) <= MENTION_MAX_CHARS:
+        return body, shown, 0
+    mantidas, usado = [], 0
+    for linha in body.splitlines(keepends=True):
+        if usado + len(linha) > MENTION_MAX_CHARS:
+            break
+        mantidas.append(linha)
+        usado += len(linha)
+    if not mantidas:                       # uma única linha maior que o teto
+        mantidas = [body[:MENTION_MAX_CHARS] + "\n"]
+        usado = MENTION_MAX_CHARS
+    return "".join(mantidas), len(mantidas), len(body) - usado
 
 
 def _read_mention(abs_path: str, rel: str):
@@ -393,13 +415,17 @@ def _read_mention(abs_path: str, rel: str):
         return None, f"✗ @{rel}: arquivo binário, não anexado"
 
     total, shown = int(res["total_lines"]), int(res["end_line"])
+    body, shown, chars_cortados = _cap_chars(res["content"], shown)
     corte = total - shown
     header = f"[arquivo: {rel}] {total} linha(s)"
-    body = res["content"]
     if corte > 0:
         body += (f"\n… truncado: {corte} de {total} linhas cortadas "
                  f"(use read_file em {rel} pra ver o resto)\n")
         nota = f"◈ @{rel} — {shown}/{total} linhas ({corte} cortadas)"
+    elif chars_cortados:
+        body += (f"\n… truncado: linha longa demais, {chars_cortados} caractere(s) "
+                 f"cortados (use read_file em {rel} pra ver o resto)\n")
+        nota = f"◈ @{rel} — {total} linha(s), {chars_cortados} caractere(s) cortados"
     else:
         nota = f"◈ @{rel} — {total} linha(s)"
     return f"{header}\n```\n{body}```", nota
