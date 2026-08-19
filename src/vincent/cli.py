@@ -256,7 +256,11 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
             print(f"{SHADOW_GRAY}─" * min(term_w, 80) + f"{CLR_RST}")
             print(statusline)
 
-            prompt = input(f"{COBALT_BLUE}vincent{CLR_RST} {CHROME_YELLOW}[{agent.display_model}]{CLR_RST} {CLR_BOLD}❯{CLR_RST} ").strip()
+            try:
+                prompt = input(f"{COBALT_BLUE}vincent{CLR_RST} {CHROME_YELLOW}[{agent.display_model}]{CLR_RST} {CLR_BOLD}❯{CLR_RST} ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print(f"\n{COBALT_BLUE}◈ Sessão encerrada. As estrelas continuam brilhando na galeria. Até logo!{CLR_RST}\n")
+                break
             if not prompt:
                 continue
 
