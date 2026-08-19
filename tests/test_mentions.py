@@ -152,6 +152,18 @@ def test_apply_mentions_pinta_erro_de_vermelho(projeto, capsys):
     assert ALERT_SCARLET in capsys.readouterr().out
 
 
+def test_spawn_expande_a_mencao_em_cada_subtarefa(projeto, capsys):
+    """Reprodução fiel do trecho de /spawn em cli.py: split por ';' e SÓ DEPOIS
+    a expansão. Expandir antes mandaria o anexo (que tem ';' no conteúdo) pro
+    último worker só."""
+    task_str = "refatora o @src/ui.py; testa o @src/ui.py"
+    subtasks = [t.strip() for t in task_str.split(";") if t.strip()] or [task_str]
+    subtasks = [apply_mentions(t) for t in subtasks]
+
+    assert len(subtasks) == 2
+    assert all("linha 2" in t for t in subtasks)
+
+
 @pytest.fixture
 def cli_de_uma_tacada(projeto, monkeypatch):
     """Roda `main()` sem rede: captura o texto que chegou no agentic_run."""

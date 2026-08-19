@@ -866,6 +866,10 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                     subtasks = [t.strip() for t in task_str.split(";") if t.strip()] or [task_str]
                     if len(subtasks) == 1 and n > 1:
                         subtasks = [task_str] * n
+                    # '@arquivo' expande DEPOIS do split: o anexo vai no fim do
+                    # texto, e expandir antes jogaria o conteúdo (com ';' dentro)
+                    # só no último worker.
+                    subtasks = [apply_mentions(t) for t in subtasks]
                     batch_id = _spawn_parallel(subtasks)
                     print(f"{VIOLET_SWIRL}◈ Lote #{batch_id} disparado: {len(subtasks)} workers em paralelo.{CLR_RST}")
                     print(f"{SHADOW_GRAY}Continue trabalhando — status de cada worker aparece aqui conforme termina.{CLR_RST}\n")
