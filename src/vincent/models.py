@@ -368,7 +368,10 @@ class ModelManager:
                 timeout_val = 20 if idx == 0 else 10
                 with urllib.request.urlopen(req, timeout=timeout_val) as resp:
                     res_data = json.loads(resp.read().decode("utf-8"))
-                    text = res_data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                    choices = res_data.get("choices") if isinstance(res_data, dict) else None
+                    first = choices[0] if choices and isinstance(choices, list) and isinstance(choices[0], dict) else {}
+                    msg = first.get("message") if isinstance(first.get("message"), dict) else {}
+                    text = (msg.get("content") or "").strip()
                     if text:
                         self._omniroute_circuit.record_result("omniroute", success=True)
                         self._omniroute_cooldown.record_success("omniroute")
