@@ -190,7 +190,7 @@ class VincentAgent:
         user_content = f"{hw_prefix}Pergunta: {processed_prompt}"
         
         if len(self._history) >= 6:
-            self._history = self._history[-5:]
+            self._history = self._history[-4:]  # par completo (user+assistant), evita órfão de role
 
         messages_to_send = self._history + [{"role": "user", "content": user_content}]
 
