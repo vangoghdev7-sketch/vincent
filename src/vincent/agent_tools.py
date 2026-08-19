@@ -23,7 +23,7 @@ from typing import Dict, Any, List, Optional, Tuple
 IGNORE_PATTERNS = {
     ".git", ".venv", "venv", "__pycache__", "node_modules",
     ".pytest_cache", ".mypy_cache", ".eggs", "*.egg-info",
-    "dist", "build", ".claude-flow", ".vincent/cache"
+    "dist", "build", ".claude-flow", ".vincent"
 }
 
 def is_ignored(path: str) -> bool:
