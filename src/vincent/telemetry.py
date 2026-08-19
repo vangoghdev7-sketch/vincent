@@ -90,6 +90,7 @@ class PonytailTelemetry:
 
     def get_summary_cards(self, current_model: str, caveman_stats: dict) -> list[tuple[str, str]]:
         sys_info = self.get_system_stats()
+        caveman_stats = caveman_stats or {}
         saved_tok = caveman_stats.get('total_tokens_saved', 0)
         mode = caveman_stats.get('mode', 'off')
         
