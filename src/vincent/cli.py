@@ -489,6 +489,21 @@ def expand_mentions(prompt: str, root: str = None):
     return (f"{prompt}\n\n--- Conteúdo dos arquivos citados ---\n{anexo}", notas)
 
 
+def apply_mentions(prompt: str) -> str:
+    """Expande '@caminho' e imprime as notas no tema. Devolve o prompt final.
+
+    Vive aqui (e não dentro de agentic_run) porque a expansão é da entrada do
+    usuário: quem chama o loop de novo com texto do modelo não pode reanexar.
+    """
+    if "@" not in (prompt or ""):
+        return prompt
+    prompt, notas = expand_mentions(prompt)
+    for nota in notas:
+        cor = ALERT_SCARLET if nota.startswith(("✗", "⚠")) else CYPRESS_GREEN
+        print(f"{cor}{nota}{CLR_RST}")
+    return prompt
+
+
 def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     # Num terminal curto o banner de 11 linhas empurra o HUD pra fora da tela
     # antes do primeiro prompt — aí ele vira só uma linha de assinatura.
@@ -729,11 +744,8 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
             cmd_word = prompt.split(None, 1)[0].lower()
 
             # '@arquivo' vira contexto de verdade (chat e comandos de tarefa).
-            if "@" in prompt and (not prompt.startswith("/") or cmd_word in MENTION_COMMANDS):
-                prompt, mention_notes = expand_mentions(prompt)
-                for nota in mention_notes:
-                    cor = ALERT_SCARLET if nota.startswith(("✗", "⚠")) else CYPRESS_GREEN
-                    print(f"{cor}{nota}{CLR_RST}")
+            if not prompt.startswith("/") or cmd_word in MENTION_COMMANDS:
+                prompt = apply_mentions(prompt)
 
             # ── Comandos Especiais do REPL ──────────────────────────────────
             if prompt in ("/exit", "/quit", "exit", "quit", ":q"):
@@ -1289,14 +1301,16 @@ def main():
         sys.exit(0)
 
     if args.agent:
+        # Expande antes do spinner: nota impressa por baixo dele sai embaralhada.
+        tarefa = apply_mentions(args.agent)
         spinner = NeuralSpinner(f"Vincent Agentic Loop iniciando para: '{args.agent}'...", color=VIOLET_SWIRL)
         with spinner:
-            res = agent.agentic_run(args.agent, on_step_callback=_spinner_step(spinner))
+            res = agent.agentic_run(tarefa, on_step_callback=_spinner_step(spinner))
         render_response_box(res, agent.display_model, agent.telemetry.last_latency, mode="Agentic Loop (Tools)")
         sys.exit(0)
 
     if args.prompt:
-        question = " ".join(args.prompt)
+        question = apply_mentions(" ".join(args.prompt))
         spinner = NeuralSpinner(f"Processando com [{agent.display_model}]...", color=COBALT_BLUE)
         with spinner:
             reply = agent.agentic_run(question, on_step_callback=_spinner_step(spinner))

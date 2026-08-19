@@ -7,13 +7,14 @@ citados anexado. Nada de REPL, nada de rede.
 
 import os
 import sys
+from unittest.mock import MagicMock
 
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from vincent.cli import (MENTION_MAX_CHARS, MENTION_MAX_FILES, MENTION_MAX_LINES,
-                         expand_mentions)
+                         apply_mentions, expand_mentions)
 
 
 @pytest.fixture
@@ -125,3 +126,59 @@ def test_caminho_absoluto_e_til_funcionam(projeto, monkeypatch):
     monkeypatch.setenv("HOME", str(projeto))
     texto, _ = expand_mentions(f"@{projeto / 'src' / 'ui.py'} e @~/src/ui.py")
     assert texto.count("linha 2") == 2
+
+
+# ─── apply_mentions: o mesmo caminho pro REPL e pros modos de uma tacada só ───
+def test_apply_mentions_anexa_e_imprime_a_nota(projeto, capsys):
+    texto = apply_mentions("olha o @src/ui.py")
+    assert "linha 2" in texto
+    assert "◈ @src/ui.py — 2 linha(s)" in capsys.readouterr().out
+
+
+def test_apply_mentions_sem_arroba_nao_toca_no_texto(projeto, capsys):
+    assert apply_mentions("só uma pergunta") == "só uma pergunta"
+    assert capsys.readouterr().out == ""
+
+
+def test_apply_mentions_aguenta_none_e_vazio(projeto):
+    assert apply_mentions("") == ""
+    assert apply_mentions(None) is None
+
+
+def test_apply_mentions_pinta_erro_de_vermelho(projeto, capsys):
+    (projeto / "foto.png").write_bytes(b"\x89PNG\x00\x00blob")
+    apply_mentions("@foto.png")
+    from vincent.cli import ALERT_SCARLET
+    assert ALERT_SCARLET in capsys.readouterr().out
+
+
+@pytest.fixture
+def cli_de_uma_tacada(projeto, monkeypatch):
+    """Roda `main()` sem rede: captura o texto que chegou no agentic_run."""
+    import vincent.cli as cli
+
+    capturado = {}
+    fake_agent = MagicMock(name="VincentAgent")
+    fake_agent.agentic_run.side_effect = lambda t, **kw: capturado.setdefault("task", t) and ""
+    fake_agent.caveman.mode = "off"
+    monkeypatch.setattr(cli, "VincentAgent", lambda **kw: fake_agent)
+    monkeypatch.setattr(cli, "DeviceRegistry", lambda cb: MagicMock())
+    monkeypatch.setattr(cli, "render_response_box", lambda *a, **kw: None)
+
+    def _run(*argv):
+        monkeypatch.setattr(sys, "argv", ["vincent", *argv])
+        with pytest.raises(SystemExit):
+            cli.main()
+        return capturado.get("task", "")
+
+    return _run
+
+
+def test_modo_agente_de_uma_tacada_expande_a_mencao(cli_de_uma_tacada):
+    """`vincent -a 'refatora @src/ui.py'` — antes ia literal, sem o arquivo."""
+    assert "linha 2" in cli_de_uma_tacada("-a", "refatora o @src/ui.py")
+
+
+def test_pergunta_direta_de_uma_tacada_expande_a_mencao(cli_de_uma_tacada):
+    """`vincent 'explica @src/ui.py'` — mesmo furo, mesmo conserto."""
+    assert "linha 2" in cli_de_uma_tacada("explica", "o", "@src/ui.py")
