@@ -316,8 +316,12 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 if len(parts) > 1:
                     task = parts[1].strip()
                     print(f"\n{VIOLET_SWIRL}◈ Agentic Loop{CLR_RST} {SHADOW_GRAY}— trace ao vivo:{CLR_RST}")
-                    with _StreamCoordinator("processando…", VIOLET_SWIRL) as sc:
-                        res = agent.agentic_run(task, on_step_callback=sc.on_step, stream_callback=sc.on_token)
+                    try:
+                        with _StreamCoordinator("processando…", VIOLET_SWIRL) as sc:
+                            res = agent.agentic_run(task, on_step_callback=sc.on_step, stream_callback=sc.on_token)
+                    except KeyboardInterrupt:
+                        print(f"\n{ALERT_SCARLET}✗ Tarefa interrompida pelo usuário (Ctrl+C). Voltando ao prompt.{CLR_RST}\n")
+                        continue
                     render_response_box(res, agent.display_model, agent.telemetry.last_latency, mode="Agentic Loop (Tools)")
                 else:
                     print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /act <descrição da tarefa de código/investigação>")
