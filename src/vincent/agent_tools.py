@@ -161,7 +161,17 @@ def tool_grep(pattern: str, path: str = ".", is_regex: bool = False, case_insens
 
 def tool_bash(command: str, timeout_sec: int = 600, cwd: Optional[str] = None) -> Dict[str, Any]:
     """Executa comandos de terminal em subprocesso isolado com controle de timeout."""
+    if not command or not command.strip():
+        return {"error": "Comando vazio."}
+    try:
+        timeout_sec = int(timeout_sec)
+    except (TypeError, ValueError):
+        timeout_sec = 600
+    if timeout_sec <= 0:
+        timeout_sec = 600
     work_dir = os.path.abspath(os.path.expanduser(cwd)) if cwd else os.getcwd()
+    if cwd and not os.path.isdir(work_dir):
+        return {"error": f"Diretório de trabalho não encontrado: {cwd}"}
     
     # Bloqueio simples de comandos perigosos.
     # ponytail: denylist por substring, contornável (ex: python -c os.remove).
