@@ -129,9 +129,14 @@ class VincentAgent:
         ) if self._obsidian_vault else ""
         self._memory_context = recall_context() + vault_note
 
-        # Sincronização inicial de catálogo
-        self.model_manager.sync_catalogs()
-        self.model_manager.get_all_models()
+        # Sincronização inicial de catálogo (best-effort — se a rede ou o
+        # serviço de modelos estiver indisponível, o Vincent ainda deve subir
+        # usando o catálogo local/cache em vez de crashar no __init__).
+        try:
+            self.model_manager.sync_catalogs()
+            self.model_manager.get_all_models()
+        except Exception as e:
+            self.emit("error", {"message": f"Falha ao sincronizar catálogo de modelos: {e}"})
         self.model = self.model_manager.resolve(model)
 
     @property
