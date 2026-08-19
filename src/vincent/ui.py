@@ -191,7 +191,7 @@ def render_hud_card(title: str, items: list[tuple[str, str]], color=COBALT_BLUE,
 
     title_block = f"{t_open}{LEMON_YELLOW}{CLR_BOLD}{title}{CLR_RST}{color}{t_close}"
     title_vis_len = len(strip_ansi(title)) + 6
-    remaining_h = max(0, width - title_vis_len - 1)
+    remaining_h = max(0, width - title_vis_len)
 
     print(f"{color}{tl}{title_block}{h * remaining_h}{tr}{CLR_RST}")
     for k, val in items:
