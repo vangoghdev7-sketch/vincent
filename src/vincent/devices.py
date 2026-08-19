@@ -295,9 +295,12 @@ class Device:
                                             {"firmware": fw, "new_id": pid}
                                         ))
                                 reident_buf.clear()
-            except Exception:
+            except Exception as _read_exc:
                 self._alive = False
-                self.on_event(DeviceEvent(self.id, "disconnected", {}))
+                self.on_event(DeviceEvent(
+                    self.id, "disconnected",
+                    {"reason": type(_read_exc).__name__, "detail": str(_read_exc)},
+                ))
                 break
             time.sleep(0.02)
 
