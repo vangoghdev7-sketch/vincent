@@ -149,12 +149,15 @@ def tool_grep(pattern: str, path: str = ".", is_regex: bool = False, case_insens
                                 break
             except Exception:
                 continue
+            if len(matches) >= 50:
+                break
         if len(matches) >= 50:
             break
 
     return {
         "pattern": pattern,
         "total_matches": len(matches),
+        "truncated": len(matches) >= 50,
         "matches": matches
     }
 
