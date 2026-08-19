@@ -33,13 +33,18 @@ def save_summary(summary: str) -> None:
     text = summary.strip()
     if not text:
         return
-    conn = _connect()
+    try:
+        conn = _connect()
+    except OSError:
+        return
     try:
         with conn:
             conn.execute(
                 "INSERT INTO sessions (timestamp, summary) VALUES (?, ?)",
                 (time.strftime("%Y-%m-%d %H:%M:%S"), text[:2000])
             )
+    except sqlite3.Error:
+        pass
     finally:
         conn.close()
 
