@@ -180,6 +180,24 @@ class VincentAgent:
             on_step_callback(f"⚡ escalado para {escalated} (tool-calling — {model_id} é pequeno demais pra chamar ferramenta com confiança)")
         return escalated
 
+    def _auto_heal_check(self, path: str, snapshot: str, on_step: Optional[Callable[[str], None]] = None) -> Dict[str, Any]:
+        """Valida sintaxe de arquivo .py alterado e restaura snapshot se houver erro de sintaxe."""
+        if not path.endswith(".py") or not os.path.isfile(path):
+            return {"healed": False}
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                compile(f.read(), path, "exec")
+            return {"healed": False}
+        except SyntaxError as e:
+            try:
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(snapshot)
+            except Exception:
+                pass
+            if on_step:
+                on_step(f"⚠️ Auto-cura: erro de sintaxe em {path} ({e}). Snapshot restaurado.")
+            return {"healed": True, "error": str(e)}
+
     def ask(self, question: str, model_override: str | None = None) -> str:
         """Execução direta padrão com compressão Caveman e comandos de hardware."""
         target_m = model_override or self.model
