@@ -51,7 +51,7 @@ class CavemanEngine:
         Comprime o prompt do usuário de acordo com a intensidade ativa.
         Retorna (prompt_comprimido, tokens_economizados).
         """
-        if self.mode == "off" or not text.strip():
+        if self.mode == "off" or not isinstance(text, str) or not text.strip():
             return text, 0
 
         original_tokens = self.estimate_tokens(text)
