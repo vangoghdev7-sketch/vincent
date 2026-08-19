@@ -51,13 +51,22 @@ def save_summary(summary: str) -> None:
 
 def recent_summaries(limit: int = 5) -> List[str]:
     """Retorna os últimos resumos salvos, do mais antigo para o mais recente."""
-    conn = _connect()
-    rows = conn.execute(
-        "SELECT timestamp, summary FROM sessions ORDER BY id DESC LIMIT ?",
-        (limit,)
-    ).fetchall()
-    conn.close()
-    return [f"[{ts}] {s}" for ts, s in reversed(rows)]
+    if not isinstance(limit, int) or limit <= 0:
+        return []
+    try:
+        conn = _connect()
+    except OSError:
+        return []
+    try:
+        rows = conn.execute(
+            "SELECT timestamp, summary FROM sessions ORDER BY id DESC LIMIT ?",
+            (limit,)
+        ).fetchall()
+        return [f"[{ts}] {s}" for ts, s in reversed(rows)]
+    except sqlite3.Error:
+        return []
+    finally:
+        conn.close()
 
 
 def recall_context() -> str:
