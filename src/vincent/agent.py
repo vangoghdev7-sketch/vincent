@@ -337,6 +337,8 @@ class VincentAgent:
                     tool_result = execute_agent_tool(tool_name, tool_args)
                 except Exception as e:
                     tool_result = {"success": False, "error": f"Exceção não tratada na ferramenta: {e}"}
+                if not isinstance(tool_result, dict):
+                    tool_result = {"success": True, "output": str(tool_result)} if tool_result is not None else {"success": False, "error": "Nenhum resultado retornado pela ferramenta."}
 
             if pre_patch_snapshot is not None and tool_result.get("success"):
                 tool_result["auto_heal"] = self._auto_heal_check(
