@@ -124,7 +124,10 @@ class ModelManager:
         # 1. OmniRoute
         omni_count = len(self.cached_omniroute_models)
         try:
-            req = urllib.request.Request(f"{OMNIROUTE_URL}/models", headers={"User-Agent": "Vincent-CLI/4.0"})
+            omni_headers = {"User-Agent": "Vincent-CLI/4.0"}
+            if "OMNIROUTE_API_KEY" in os.environ:
+                omni_headers["Authorization"] = f"Bearer {os.environ['OMNIROUTE_API_KEY']}"
+            req = urllib.request.Request(f"{OMNIROUTE_URL}/models", headers=omni_headers)
             with urllib.request.urlopen(req, timeout=5) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 if isinstance(data, dict) and "data" in data:
