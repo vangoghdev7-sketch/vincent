@@ -49,12 +49,16 @@ def _messages_for_ollama(messages: List[Dict]) -> List[Dict]:
         if isinstance(content, list):
             text_parts, images = [], []
             for part in content:
-                if part.get("type") == "text":
-                    text_parts.append(part.get("text", ""))
-                elif part.get("type") == "image_url":
-                    url = part.get("image_url", {}).get("url", "")
-                    if url.startswith("data:") and "," in url:
-                        images.append(url.split(",", 1)[1])
+                if isinstance(part, dict):
+                    if part.get("type") == "text":
+                        text_parts.append(part.get("text", "") or "")
+                    elif part.get("type") == "image_url":
+                        img_val = part.get("image_url", "")
+                        url = img_val.get("url", "") if isinstance(img_val, dict) else (img_val if isinstance(img_val, str) else "")
+                        if url.startswith("data:") and "," in url:
+                            images.append(url.split(",", 1)[1])
+                elif isinstance(part, str):
+                    text_parts.append(part)
             new_msg = {"role": msg.get("role", "user"), "content": "\n".join(text_parts)}
             if images:
                 new_msg["images"] = images
