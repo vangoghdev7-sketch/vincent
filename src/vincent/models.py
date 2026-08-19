@@ -348,8 +348,9 @@ class ModelManager:
                 continue
             try:
                 headers = {"Content-Type": "application/json"}
-                if "OMNIROUTE_API_KEY" in os.environ:
-                    headers["Authorization"] = f"Bearer {os.environ['OMNIROUTE_API_KEY']}"
+                api_key = os.environ.get("OMNIROUTE_API_KEY") or os.environ.get("VINCENT_AUTH_KEY")
+                if api_key:
+                    headers["Authorization"] = f"Bearer {api_key}"
 
                 omni_payload = {
                     "model": model,
