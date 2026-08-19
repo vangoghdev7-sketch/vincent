@@ -18,7 +18,8 @@ from .plugins import PluginManager
 from .models import ModelManager, DEFAULT_MODEL
 from .caveman import CavemanEngine
 from .telemetry import PonytailTelemetry
-from .agent_tools import execute_agent_tool, TOOL_DEFINITIONS
+from .agent_tools import execute_agent_tool, TOOL_DEFINITIONS, build_edit_preview, is_edit_tool
+from .ui import diff_lines
 from .memory import recall_context, save_summary
 from .skills import skills_context
 
@@ -350,6 +351,18 @@ class VincentAgent:
                             pre_patch_snapshot = f.read()
                     except Exception:
                         pre_patch_snapshot = None
+
+            # Preview de diff (estilo Claude Code): mostra o que a edição VAI mudar
+            # ANTES de escrever. Com autoedit off quem renderiza é o prompt de
+            # permissão (a caixa/modal traz o diff junto da pergunta), então aqui
+            # só emitimos quando ninguém vai perguntar — sem diff em duplicata.
+            if on_step_callback and is_edit_tool(tool_name) \
+                    and (self.autoedit or not self.permission_callback):
+                try:
+                    for _dline in diff_lines(build_edit_preview(tool_name, tool_args), title=patch_path):
+                        on_step_callback(_dline)
+                except Exception:
+                    pass  # preview é enfeite: nunca pode derrubar a edição
 
             # Permission prompt (estilo Claude Code): se autoedit=off, pergunta antes de
             # rodar comando/editar/commitar. Só em ferramentas que MODIFICAM o sistema.

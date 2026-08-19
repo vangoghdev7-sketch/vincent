@@ -181,6 +181,87 @@ def strip_ansi(text: str) -> str:
     return re.sub(r'\x1b\[[0-9;?]*[A-Za-z]', '', str(text))
 
 
+# ─── Preview de diff (estilo Claude Code) ─────────────────────────────────────
+# `diff_lines` transforma um diff unificado em linhas prontas pra tela, SEM cor:
+# quem imprime decide a paleta (o REPL usa `colorize_diff_line`, a TUI mapeia os
+# mesmos prefixos pros tokens Textual dela). Formato:
+#     ◆ src/x.py · +2 −1        cabeçalho
+#     @@ -10,6 +10,7 @@         início de trecho
+#     ·    12 │ contexto
+#     -    13 │ linha removida
+#     +    13 │ linha adicionada
+_HUNK_RE = re.compile(r"^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+_MAX_DIFF_COL = 200
+
+
+def _diff_gutter(n: int) -> str:
+    return f"{n:>5}" if n > 0 else "     "
+
+
+def diff_lines(diff_text: str, title: str = "", max_lines: int = 120) -> list[str]:
+    """Diff unificado → linhas com número de linha, contexto e marcador de sinal.
+
+    Devolve [] quando não há nada a mostrar (diff vazio/ilegível), pra quem
+    chama simplesmente não renderizar preview nenhum.
+    """
+    old_no = new_no = 0
+    added = removed = 0
+    body: list[str] = []
+
+    for raw in str(diff_text or "").splitlines():
+        if raw.startswith(("--- ", "+++ ", "diff ", "index ", "\\")):
+            continue
+        hunk = _HUNK_RE.match(raw)
+        if hunk:
+            old_no, new_no = int(hunk.group(1)), int(hunk.group(2))
+            body.append(raw.rstrip())
+            continue
+        content = raw[1:] if raw[:1] in ("+", "-", " ") else raw
+        content = content.replace("\t", "    ")
+        if len(content) > _MAX_DIFF_COL:
+            content = content[:_MAX_DIFF_COL - 1] + "…"
+        if raw.startswith("+"):
+            added += 1
+            body.append(f"+ {_diff_gutter(new_no)} │ {content}")
+            new_no += 1
+        elif raw.startswith("-"):
+            removed += 1
+            body.append(f"- {_diff_gutter(old_no)} │ {content}")
+            old_no += 1
+        else:
+            body.append(f"· {_diff_gutter(new_no)} │ {content}")
+            old_no += 1
+            new_no += 1
+
+    if not body or not (added or removed):
+        return []
+    if len(body) > max_lines:
+        restam = len(body) - max_lines
+        body = body[:max_lines] + [f"·       │ … mais {restam} linha(s) (preview truncado)"]
+
+    head = f"◆ {title or 'edição'} · +{added} −{removed}"
+    return [head] + body
+
+
+def colorize_diff_line(line: str) -> str | None:
+    """Pinta uma linha vinda de `diff_lines` com a paleta Noite Estrelada.
+
+    Devolve None se a linha não for de diff — assim o chamador segue com o
+    estilo normal dele em vez de precisar saber o formato.
+    """
+    if line.startswith("◆ "):
+        return f"{CHROME_YELLOW}{CLR_BOLD}{line}{CLR_RST}"
+    if line.startswith("@@"):
+        return f"{COBALT_BLUE}{line}{CLR_RST}"
+    if line.startswith("+ "):
+        return f"{CYPRESS_GREEN}{line}{CLR_RST}"
+    if line.startswith("- "):
+        return f"{ALERT_SCARLET}{line}{CLR_RST}"
+    if line.startswith("· "):
+        return f"{SHADOW_GRAY}{line}{CLR_RST}"
+    return None
+
+
 def render_hud_card(title: str, items: list[tuple[str, str]], color=COBALT_BLUE, border_style="rounded"):
     """
     Renderiza cartões HUD com bordas arredondadas e adaptação dinâmica para Termux/Desktop.

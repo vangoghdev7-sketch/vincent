@@ -12,6 +12,8 @@ Provides sandboxed execution tools for autonomous multi-turn reasoning and codin
 import os
 import re
 import glob
+import json
+import difflib
 import subprocess
 import fnmatch
 import urllib.request
@@ -279,6 +281,63 @@ def tool_apply_diff(path: str, search_block: Optional[str] = None, replace_block
             return {"error": f"Falha ao executar patch: {str(e)}", "success": False}
 
     return {"error": "Parâmetros insuficientes. Forneça (search_block e replace_block) ou diff_content."}
+
+
+# ─── 5b. Preview de edição (diff ANTES de escrever no disco) ──────────────────
+
+EDIT_TOOL_ALIASES = {"apply_diff", "patch", "replace"}
+
+
+def is_edit_tool(tool_name: str) -> bool:
+    """A ferramenta escreve/altera arquivo? (usado pra decidir se há preview)"""
+    return str(tool_name or "").strip().lower() in EDIT_TOOL_ALIASES
+
+
+def build_edit_preview(tool_name: str, arguments: Dict[str, Any]) -> str:
+    """Diff unificado do que a ferramenta VAI escrever — sem tocar no disco.
+
+    Devolve "" quando não dá pra prever (não é edição, arquivo inexistente,
+    bloco de busca que não casa, diff cru ilegível): nesse caso quem chama
+    simplesmente não mostra preview, em vez de estourar.
+    """
+    if not is_edit_tool(tool_name) or not isinstance(arguments, dict):
+        return ""
+
+    # O modelo já mandou um diff unificado pronto — mostra ele mesmo.
+    raw_diff = arguments.get("diff") or arguments.get("diff_content")
+    if raw_diff:
+        return str(raw_diff)
+
+    search_block = arguments.get("search_block")
+    replace_block = arguments.get("replace_block")
+    if search_block is None or replace_block is None:
+        return ""
+
+    path = str(arguments.get("path") or "")
+    abs_path = os.path.abspath(os.path.expanduser(path)) if path else ""
+    if not abs_path or not os.path.isfile(abs_path):
+        return ""
+
+    try:
+        with open(abs_path, "r", encoding="utf-8") as f:
+            original = f.read()
+    except Exception:
+        return ""
+
+    if str(search_block) not in original:
+        return ""
+    updated = original.replace(str(search_block), str(replace_block), 1)
+    if updated == original:
+        return ""
+
+    # splitlines() sem keepends + lineterm="": arquivo sem quebra de linha final
+    # não gruda duas linhas do diff numa só.
+    name = os.path.basename(abs_path)
+    return "\n".join(difflib.unified_diff(
+        original.splitlines(),
+        updated.splitlines(),
+        fromfile=f"a/{name}", tofile=f"b/{name}", n=3, lineterm=""
+    ))
 
 
 # ─── 6. GitOps Tools (status, diff, commit, rollback) ─────────────────────────

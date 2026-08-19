@@ -376,6 +376,42 @@ async def test_permission_callback_from_worker_thread_says_yes():
 
 
 @pytest.mark.asyncio
+async def test_permission_modal_mostra_diff_da_edicao(tmp_path):
+    """Edição pendente aparece como diff (verde/vermelho + nº de linha) no modal."""
+    alvo = tmp_path / "modulo.py"
+    alvo.write_text("def alfa():\n    return 1\n", encoding="utf-8")
+    args = {"path": str(alvo), "search_block": "    return 1", "replace_block": "    return 42"}
+
+    app = _app()
+    async with app.run_test(size=(120, 40)) as pilot:
+        app.push_screen(PermissionScreen("apply_diff", args))
+        for _ in range(50):
+            await pilot.pause()
+            if isinstance(app.screen, PermissionScreen):
+                break
+        out = svg_text(app)
+        assert "+1 −1" in out
+        assert "return 42" in out and "return 1" in out
+        assert "@@" in out
+        await pilot.press("n")
+
+
+@pytest.mark.asyncio
+async def test_trace_panel_colore_linhas_de_diff():
+    from vincent.tui_app import TracePanel, _DIFF_STYLES
+
+    app = _app()
+    async with app.run_test(size=(120, 40)) as pilot:
+        trace = app.query_one(TracePanel)
+        trace.step("+     6 │     return 42")
+        trace.step("-     6 │     return 1")
+        await pilot.pause()
+        out = svg_text(app)
+        assert "return 42" in out
+        assert set(_DIFF_STYLES) == {"◆ ", "@@", "+ ", "- ", "· "}
+
+
+@pytest.mark.asyncio
 async def test_permission_callback_deny_and_always():
     app = _app()
     async with app.run_test(size=(120, 40)) as pilot:

@@ -32,8 +32,9 @@ from vincent.ui import (
     LEMON_YELLOW, CHROME_YELLOW, STARRY_GOLD, CYPRESS_GREEN, CYPRESS_DARK,
     VIOLET_SWIRL, ALERT_SCARLET, CANVAS_WHITE, SHADOW_GRAY,
     NeuralSpinner, render_hud_card, render_section_header, render_response_box,
-    get_terminal_width
+    get_terminal_width, diff_lines, colorize_diff_line
 )
+from vincent.agent_tools import build_edit_preview, is_edit_tool
 
 # Camadas opcionais: sem elas o REPL continua exatamente como antes (texto puro).
 try:
@@ -54,6 +55,9 @@ except Exception:  # pragma: no cover
 def _style_trace(step: str) -> str:
     """Colore uma linha do trace ao vivo do loop agêntico conforme o tipo de evento
     (pensamento / execução de ferramenta / saída), estilo Claude Code."""
+    colored_diff = colorize_diff_line(step)
+    if colored_diff:
+        return colored_diff
     s = step.lstrip()
     if s.startswith("🧠"):
         return f"{VIOLET_SWIRL}{step}{CLR_RST}"
@@ -438,14 +442,25 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
         preview = preview.replace("\n", " ")[:90]
         if tool_name in always_ok:
             return True
+        # Preview de diff: antes de aprovar uma edição o usuário vê exatamente
+        # o que muda (verde/vermelho, com número de linha e contexto).
+        diff: list = []
+        if is_edit_tool(tool_name):
+            try:
+                diff = diff_lines(build_edit_preview(tool_name, args if isinstance(args, dict) else {}),
+                                  title=str((args or {}).get("path") or "") if isinstance(args, dict) else "")
+            except Exception:
+                diff = []
         if _HAS_INTERACTIVE:
-            answer = interactive.confirm_permission(tool_name, preview)
+            answer = interactive.confirm_permission(tool_name, preview, diff)
             if answer == "always":
                 always_ok.add(tool_name)
                 print(f"{CYPRESS_GREEN}✓ '{tool_name}' liberada nesta sessão "
                       f"{SHADOW_GRAY}(as outras ferramentas continuam perguntando).{CLR_RST}")
                 return True
             return answer == "yes"
+        for line in diff:
+            print(colorize_diff_line(line) or line)
         try:
             ans = input(f"\n{CHROME_YELLOW}  ⚠ Permitir {tool_name}{(' › ' + preview) if preview else ''}? [s/N] {CLR_RST}").strip().lower()
         except (EOFError, KeyboardInterrupt):

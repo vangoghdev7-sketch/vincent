@@ -55,6 +55,14 @@ try:
 except Exception:  # pragma: no cover - só sem prompt_toolkit/instalação parcial
     _score_item = None
 
+try:
+    # Preview de diff no modal de permissão (stdlib puro, sem dependência nova).
+    from vincent.agent_tools import build_edit_preview as _build_edit_preview
+    from vincent.ui import diff_lines as _diff_lines
+except Exception:  # pragma: no cover - instalação parcial
+    _build_edit_preview = None
+    _diff_lines = None
+
 from textual import work
 from textual.app import App, ComposeResult, SystemCommand
 from textual.binding import Binding
@@ -226,6 +234,42 @@ def _rank_model(query: str, model: Dict[str, Any]) -> Optional[float]:
     return _score_item(query, model)
 
 
+# Preview de diff (linhas vindas de `vincent.ui.diff_lines`) mapeado pra paleta
+# da TUI — mesmos prefixos que o REPL colore via `ui.colorize_diff_line`.
+_DIFF_STYLES = {
+    "◆ ": f"b {GOLD}",
+    "@@": CYAN,
+    "+ ": GREEN,
+    "- ": SCARLET,
+    "· ": FG_DIM,
+}
+
+
+def _pending_diff(tool_name: str, args: Any, max_lines: int = 60) -> List[str]:
+    """Diff da edição que está pra ser aplicada (linhas de `ui.diff_lines`).
+
+    [] quando não é edição, quando não dá pra prever a mudança ou quando o
+    núcleo não pôde ser importado — aí o modal cai no preview de argumentos.
+    """
+    if not isinstance(args, dict) or _build_edit_preview is None:
+        return []
+    try:
+        return _diff_lines(_build_edit_preview(tool_name, args),
+                           title=str(args.get("path") or ""), max_lines=max_lines)
+    except Exception:
+        return []
+
+
+def _diff_text(lines: List[str]) -> Text:
+    """Linhas de diff → `rich.Text` colorido (verde/vermelho, contexto apagado)."""
+    out = Text()
+    for i, line in enumerate(lines):
+        if i:
+            out.append("\n")
+        out.append(line, style=_DIFF_STYLES.get(line[:2], FG))
+    return out
+
+
 def _preview_args(args: Any, width: int = 220) -> str:
     """Resumo legível dos argumentos de uma ferramenta (pro modal de permissão)."""
     if isinstance(args, dict):
@@ -302,6 +346,10 @@ class TracePanel(RichLog):
     def step(self, line: str) -> None:
         """Colore a linha de trace conforme o prefixo emitido pelo agente."""
         safe = rich_escape(line)
+        diff_style = _DIFF_STYLES.get(line[:2])
+        if diff_style:
+            self.write(f"[{diff_style}]{safe}[/]")
+            return
         stripped = line.lstrip()
         if stripped.startswith("🧠"):
             self.write(f"[b {VIOLET}]{safe}[/]")
@@ -620,6 +668,7 @@ class PermissionScreen(ModalScreen):
         super().__init__()
         self._tool = str(tool_name)
         self._preview = _preview_args(args)
+        self._diff = _pending_diff(tool_name, args)
 
     def compose(self) -> ComposeResult:
         with Vertical(id="perm-box"):
@@ -631,7 +680,11 @@ class PermissionScreen(ModalScreen):
                 Text("O Vincent quer rodar ", style=FG_DIM) + Text(self._tool, style=f"bold {SCARLET}"),
                 id="perm-tool",
             )
-            if self._preview:
+            # Edição de arquivo: o diff colorido substitui o preview cru dos
+            # argumentos — dá pra ver o que muda antes de aprovar.
+            if self._diff:
+                yield Static(_diff_text(self._diff), id="perm-diff")
+            elif self._preview:
                 yield Static(Text(self._preview, style=f"{FG}"), id="perm-preview")
             hint = Text()
             hint.append(" s ", style=f"bold {NIGHT} on {GREEN}")
@@ -977,7 +1030,7 @@ class VincentTUI(App):
        MODAL DE PERMISSÃO — pequeno, centrado, borda de alerta
        ═══════════════════════════════════════════════════════════════════ */
     #perm-box {
-        width: 76;
+        width: 96;
         max-width: 92%%;
         height: auto;
         background: %(PANEL)s;
@@ -998,6 +1051,16 @@ class VincentTUI(App):
         overflow-y: auto;
         background: %(SURFACE)s;
         border-left: thick %(WARN)s;
+        padding: 0 1;
+        margin: 0 0 1 0;
+    }
+    #perm-diff {
+        height: auto;
+        max-height: 16;
+        overflow-y: auto;
+        overflow-x: hidden;
+        background: %(SURFACE)s;
+        border-left: thick %(ACCENT)s;
         padding: 0 1;
         margin: 0 0 1 0;
     }

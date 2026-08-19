@@ -24,7 +24,7 @@ from .agent_tools import is_ignored
 from .ui import (
     CLR_RST, CLR_BOLD, COBALT_BLUE, CHROME_YELLOW, STARRY_GOLD,
     CYPRESS_GREEN, VIOLET_SWIRL, ALERT_SCARLET, SHADOW_GRAY,
-    CANVAS_WHITE, get_terminal_width,
+    CANVAS_WHITE, get_terminal_width, colorize_diff_line,
 )
 
 # ─── prompt_toolkit é opcional: sem ele o Vincent volta ao modo texto ──────────
@@ -1065,7 +1065,22 @@ def _ask_in_terminal(func: Callable[[], Any]) -> Any:
     return box["v"]
 
 
-def _permission_box(tool_name: str, preview: str) -> str:
+def _print_diff_preview(diff: Optional[List[str]]) -> None:
+    """Imprime o diff colorido (linhas de `ui.diff_lines`) acima da pergunta.
+
+    Fica aqui dentro, e não no chamador, porque essa impressão precisa
+    acontecer com o terminal emprestado pelo `_ask_in_terminal` — imprimir
+    fora corromperia o desenho do prompt_toolkit.
+    """
+    if not diff:
+        return
+    print()
+    for line in diff:
+        print(colorize_diff_line(line) or line)
+
+
+def _permission_box(tool_name: str, preview: str, diff: Optional[List[str]] = None) -> str:
+    _print_diff_preview(diff)
     preview = str(preview or "").replace("\n", " ").strip()
     width = max(40, min(get_terminal_width() - 2, 96))
     inner = width - 4                      # "│ " + conteúdo + " │"
@@ -1101,8 +1116,11 @@ def _permission_box(tool_name: str, preview: str) -> str:
     return "no"
 
 
-def confirm_permission(tool_name: str, preview: str) -> str:
+def confirm_permission(tool_name: str, preview: str, diff: Optional[List[str]] = None) -> str:
     """Devolve 'yes' | 'no' | 'always'. Sem stdin de terminal responde 'no'.
+
+    `diff` são as linhas de `ui.diff_lines` da edição pendente (quando houver):
+    aparecem coloridas logo acima da pergunta, pra ninguém aprovar às cegas.
 
     Exige só o stdin: com `vincent | tee sessao.log` o stdout não é TTY, e
     exigir os dois negava toda ferramenta EM SILÊNCIO — o usuário via a tarefa
@@ -1113,4 +1131,4 @@ def confirm_permission(tool_name: str, preview: str) -> str:
             return "no"
     except Exception:
         return "no"
-    return _ask_in_terminal(lambda: _permission_box(tool_name, preview))
+    return _ask_in_terminal(lambda: _permission_box(tool_name, preview, diff))
