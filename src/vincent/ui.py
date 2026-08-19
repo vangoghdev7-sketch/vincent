@@ -164,7 +164,7 @@ class NeuralSpinner:
 
 def strip_ansi(text: str) -> str:
     """Remove códigos de escape ANSI para cálculo exato de largura de colunas."""
-    return re.sub(r'\x1b\[[0-9;]*m', '', str(text))
+    return re.sub(r'\x1b\[[0-9;?]*[A-Za-z]', '', str(text))
 
 
 def render_hud_card(title: str, items: list[tuple[str, str]], color=COBALT_BLUE, border_style="rounded"):
