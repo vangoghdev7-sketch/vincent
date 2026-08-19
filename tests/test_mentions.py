@@ -96,6 +96,13 @@ def test_diretorio_citado_vira_listagem(projeto):
     assert notas == ["◈ @src/ — 1 entrada(s)"]
 
 
+def test_diretorio_com_barra_final_do_autocomplete_e_o_mesmo_alvo(projeto):
+    """O completer insere '@src/' — antes virava nota '@src//' e anexo dobrado."""
+    texto, notas = expand_mentions("olha @src/ e @src")
+    assert texto.count("[diretório: src]") == 1
+    assert notas == ["◈ @src/ — 1 entrada(s)"]
+
+
 def test_binario_nao_e_anexado(projeto):
     (projeto / "foto.png").write_bytes(b"\x89PNG\x00\x00blob")
     texto, notas = expand_mentions("@foto.png")

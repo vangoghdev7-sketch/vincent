@@ -464,7 +464,9 @@ def expand_mentions(prompt: str, root: str = None):
     root = os.path.abspath(root or os.getcwd())
     blocos, notas, vistos = [], [], set()
     for m in MENTION_RE.finditer(prompt or ""):
-        rel = m.group(1).rstrip(".,;:!?)]}'\"")
+        # A barra final também sai: o autocomplete insere '@src/' pra diretório,
+        # e sem isso a nota virava '@src//' e '@src' entrava duas vezes.
+        rel = m.group(1).rstrip("/.,;:!?)]}'\"")
         if not rel or rel in vistos:
             continue
         alvo = os.path.expanduser(rel)
