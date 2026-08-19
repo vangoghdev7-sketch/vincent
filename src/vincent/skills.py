@@ -60,7 +60,7 @@ def list_skills() -> List[Dict]:
         try:
             with open(skill_file, "r", encoding="utf-8") as f:
                 text = f.read()
-        except OSError:
+        except (OSError, UnicodeDecodeError):
             continue
         meta, _ = _split_frontmatter(text)
         out.append({
