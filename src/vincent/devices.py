@@ -260,6 +260,7 @@ class Device:
             data = json.loads(result["response"])
             result["data"] = data
         except Exception:
+            result["ok"] = False
             result["data"] = None
         return result
 
