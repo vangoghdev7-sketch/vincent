@@ -106,11 +106,42 @@ chmod +x install-termux.sh
 
 ## 🕹️ Guia de Uso
 
+### As três interfaces
+
+O Vincent tem três frentes, e a maioria das reclamações de "interface primitiva" vem de
+não saber que as duas últimas existem:
+
+| Como abrir | O que é | Quando usar |
+|---|---|---|
+| `vincent` | REPL interativo com autocomplete de comandos, picker de modelo navegável e barra de status viva | O dia a dia |
+| `vincent --tui` | TUI de tela cheia (Textual): sidebar, painel de trace agêntico, modais, streaming | Sessão longa, acompanhar o agente trabalhando |
+| `python -m vincent.run --api-port 5001` | GUI web em http://localhost:5001 | Do celular, ou pra mostrar pra alguém |
+
 ### Iniciar o REPL Interativo
 
 ```bash
 vincent
 ```
+
+Ele não é mais um `input()` de linha: digitar `/` abre um menu de comandos com descrição,
+`/model` sem argumento abre um seletor com busca fuzzy entre todas as rotas (nada de lista
+truncada), e o rodapé mostra modelo, effort, caveman e estado dos backends o tempo todo.
+
+**Atalhos de teclado:**
+
+| Tecla | Faz |
+|---|---|
+| `/` | Menu de comandos com autocomplete |
+| `Ctrl+O` | Seletor de modelo (busca fuzzy, ↑↓, PgUp/PgDn, Enter) |
+| `Ctrl+P` | Paleta de comandos |
+| `Ctrl+T` | Pula pra TUI de tela cheia |
+| `Alt+Enter` | Nova linha sem enviar |
+| `Ctrl+L` | Limpa a tela |
+| `Ctrl+C` | Cancela a linha (não sai) |
+| `Ctrl+D` | Sai |
+
+Dentro de qualquer seletor: digite pra filtrar ao vivo, `↑↓`/`Ctrl+P`/`Ctrl+N` navegam,
+`PgUp`/`PgDn` pulam página, `Home`/`End` vão aos extremos, `Enter` escolhe, `Esc` cancela.
 
 ### Executar Prompt Direto no Terminal
 

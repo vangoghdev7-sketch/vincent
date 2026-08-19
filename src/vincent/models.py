@@ -88,6 +88,8 @@ class ModelManager:
         self.cached_ollama_models: List[str] = []
         self.last_sync = 0.0
         self.display_to_real: Dict[str, str] = {}
+        # nome mascarado -> todas as rotas upstream que o servem (failover)
+        self.display_to_routes: Dict[str, List[str]] = {}
         self._omniroute_circuit = CircuitBreaker("api_key")
         self._ollama_circuit = CircuitBreaker("local")
         self._omniroute_cooldown = Cooldown("api_key")
@@ -198,19 +200,39 @@ class ModelManager:
                 "is_local": True
             })
 
-        # Adiciona modelos do OmniRoute (rebrandado — upstream nunca exposto)
+        # Adiciona modelos do OmniRoute (rebrandado — upstream nunca exposto).
+        # Vários upstreams diferentes colapsam no MESMO nome mascarado (ex.:
+        # github/claude-opus-5 e antigravity/claude-opus-5 viram os dois
+        # "vincent/claude-opus-5"). Listar o mesmo nome 6x é ruído puro: o
+        # usuário não consegue distinguir nem escolher. Então agrupamos por
+        # nome mascarado e guardamos TODAS as rotas que o servem, pra dar
+        # failover quando uma delas estiver fora do ar.
+        self.display_to_routes = {}
         for m in self.cached_omniroute_models:
             m_id = m.get("id", "")
+            if not m_id:
+                continue
             disp = self.mask(m_id)
+            rotas = self.display_to_routes.setdefault(disp, [])
+            if m_id not in rotas:
+                rotas.append(m_id)
+
+        for disp, rotas in self.display_to_routes.items():
+            m_id = rotas[0]
             self.display_to_real[disp] = m_id
-            is_free = any(k in m_id.lower() for k in ["free", "tllm", "oc", "ddgw", "felo", "pepper", "auto"])
+            is_free = any(
+                any(k in r.lower() for k in ["free", "tllm", "oc", "ddgw", "felo", "pepper", "auto"])
+                for r in rotas
+            )
             models.append({
                 "id": m_id,
                 "display_id": disp,
-                "name": self.mask(m.get("name", m_id)),
+                "name": self.mask(disp),
                 "provider": "vincent-cloud",
                 "is_free": is_free,
-                "is_local": False
+                "is_local": False,
+                "route_count": len(rotas),
+                "routes": list(rotas),
             })
 
         return models
@@ -258,6 +280,16 @@ class ModelManager:
 
         # Monta cascata de modelos prioritários (resolve ID exibido para ID real upstream)
         cascade: List[str] = [self.resolve(target_model)]
+
+        # Um mesmo nome mascarado costuma ser servido por vários upstreams (o
+        # gateway expõe claude-opus-5 por Copilot, por Antigravity, etc.) e nem
+        # todos respondem: nesta máquina as rotas gh/* devolvem 400 enquanto a
+        # antigravity/* funciona. Enfileirar as irmãs logo depois da preferida
+        # transforma "modelo não suportado" em failover silencioso.
+        for irma in (self.display_to_routes.get(target_model)
+                     or self.display_to_routes.get(self.mask(target_model)) or []):
+            if irma not in cascade:
+                cascade.append(irma)
 
         # Se for local, garante fallback em outros locais (DEFAULT_MODEL primeiro:
         # é o modelo que o onboarding manda instalar via 'ollama pull' e tinha

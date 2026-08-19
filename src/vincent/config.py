@@ -125,9 +125,11 @@ import os
 _BASE = os.path.expanduser(
     "~/Downloads/PROJETO MERCADO LIVRE/admin/hardware-lab"
 )
-if not os.path.isdir(_BASE):
-    import warnings
-    warnings.warn(f"hardware-lab não encontrado em {_BASE!r} — caminhos de FLASH_IMAGES podem estar inválidos")
+# O hardware-lab só importa na hora de gravar firmware. Avisar no import polui a
+# abertura do CLI com um UserWarning de stack trace toda vez — quem for usar
+# FLASH_IMAGES checa a flag e reporta com uma mensagem decente.
+HARDWARE_LAB_AVAILABLE = os.path.isdir(_BASE)
+HARDWARE_LAB_PATH = _BASE
 
 FLASH_IMAGES = {
     "TEMBED": {

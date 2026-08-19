@@ -9,6 +9,7 @@ LlamaFactory Fine-Tuning, Caveman Compression (-65%), and Termux/ADB Universal A
 import argparse
 import os
 import queue
+import shutil
 import sys
 import threading
 import time
@@ -32,6 +33,21 @@ from vincent.ui import (
     NeuralSpinner, render_hud_card, render_section_header, render_response_box,
     get_terminal_width
 )
+
+# Camadas opcionais: sem elas o REPL continua exatamente como antes (texto puro).
+try:
+    from vincent import interactive as interactive
+    _HAS_INTERACTIVE = True
+except Exception:  # pragma: no cover - ambiente sem prompt_toolkit
+    interactive = None
+    _HAS_INTERACTIVE = False
+
+try:
+    from vincent import marketplace as marketplace
+    _HAS_MARKETPLACE = True
+except Exception:  # pragma: no cover
+    marketplace = None
+    _HAS_MARKETPLACE = False
 
 
 def _style_trace(step: str) -> str:
@@ -98,7 +114,42 @@ class _StreamCoordinator:
         sys.stdout.flush()
 
 
-def display_models_catalog(agent: VincentAgent, search_term: str = ""):
+def _has_tty() -> bool:
+    """Terminal de verdade dos dois lados? Sem isso, nada de tela cheia/paginação."""
+    try:
+        return bool(sys.stdin.isatty() and sys.stdout.isatty())
+    except Exception:
+        return False
+
+
+def _print_paged(lines, show_all: bool = False):
+    """Imprime uma lista de linhas em páginas ('-- mais --'). Nada de becos sem
+    saída do tipo '+35 adicionais': ou pagina de verdade, ou cospe tudo."""
+    if show_all or not _has_tty():
+        for line in lines:
+            print(line)
+        return
+    try:
+        page = max(5, shutil.get_terminal_size((80, 24)).lines - 4)
+    except Exception:
+        page = 20
+    for i, line in enumerate(lines):
+        print(line)
+        if (i + 1) % page == 0 and (i + 1) < len(lines):
+            restam = len(lines) - (i + 1)
+            try:
+                ans = input(f"{SHADOW_GRAY}-- mais -- ({restam} linhas) "
+                            f"[Enter=continua · a=tudo · q=sai]{CLR_RST} ").strip().lower()
+            except (EOFError, KeyboardInterrupt):
+                print()
+                return
+            if ans == "q":
+                return
+            if ans == "a":
+                page = len(lines) + 1
+
+
+def display_models_catalog(agent: VincentAgent, search_term: str = "", show_all: bool = False):
     """Exibe o catálogo estruturado e whitelabeled de 1200+ modelos e rotas neurais."""
     all_models = agent.model_manager.get_all_models()
     if not all_models:
@@ -118,58 +169,156 @@ def display_models_catalog(agent: VincentAgent, search_term: str = ""):
     free_models = [m for m in all_models if m.get("is_free") and not m.get("is_local") and not m["id"].startswith("auto")]
     pro_models = [m for m in all_models if not m.get("is_free") and not m.get("is_local") and not m["id"].startswith("auto")]
 
+    lines = []
     if local_models:
-        print(f"\n{CYPRESS_GREEN}◈ PALETA LOCAL OFFLINE ZERO-KEY ({len(local_models)}):{CLR_RST} {SHADOW_GRAY}(Zero Latência / Sem Internet / Sem Chave){CLR_RST}")
+        lines.append(f"\n{CYPRESS_GREEN}◈ PALETA LOCAL OFFLINE ZERO-KEY ({len(local_models)}):{CLR_RST} {SHADOW_GRAY}(Zero Latência / Sem Internet / Sem Chave){CLR_RST}")
         for m in local_models:
-            print(f"  {CYPRESS_GREEN}⚡{CLR_RST} {CLR_BOLD}{m['display_id']:<28}{CLR_RST} {SHADOW_GRAY}→ {m['name']}{CLR_RST}")
+            lines.append(f"  {CYPRESS_GREEN}⚡{CLR_RST} {CLR_BOLD}{m['display_id']:<28}{CLR_RST} {SHADOW_GRAY}→ {m['name']}{CLR_RST}")
 
     if combos:
-        print(f"\n{COBALT_BLUE}◈ COMBOS DE HARMONIA DINÂMICA ({len(combos)}):{CLR_RST}")
-        for m in combos[:12]:
-            print(f"  {COBALT_BLUE}◆{CLR_RST} {m['display_id']:<28} {SHADOW_GRAY}[Failover Automático / Whitelabel]{CLR_RST}")
-        if len(combos) > 12:
-            print(f"  {SHADOW_GRAY}... +{len(combos)-12} combos adicionais (use /search combo){CLR_RST}")
+        lines.append(f"\n{COBALT_BLUE}◈ COMBOS DE HARMONIA DINÂMICA ({len(combos)}):{CLR_RST}")
+        for m in combos:
+            lines.append(f"  {COBALT_BLUE}◆{CLR_RST} {m['display_id']:<28} {SHADOW_GRAY}[Failover Automático / Whitelabel]{CLR_RST}")
 
     if free_models:
-        print(f"\n{STARRY_GOLD}◈ ROTAS PÚBLICAS ZERO-KEY ({len(free_models)}):{CLR_RST}")
-        for m in free_models[:14]:
-            print(f"  {LEMON_YELLOW}🆓{CLR_RST} {m['display_id']:<32} {SHADOW_GRAY}(Atelier Aberto){CLR_RST}")
-        if len(free_models) > 14:
-            print(f"  {SHADOW_GRAY}... +{len(free_models)-14} rotas gratuitas (use /search free){CLR_RST}")
+        lines.append(f"\n{STARRY_GOLD}◈ ROTAS PÚBLICAS ZERO-KEY ({len(free_models)}):{CLR_RST}")
+        for m in free_models:
+            lines.append(f"  {LEMON_YELLOW}🆓{CLR_RST} {m['display_id']:<32} {SHADOW_GRAY}(Atelier Aberto){CLR_RST}")
 
     if pro_models:
-        print(f"\n{VIOLET_SWIRL}◈ ATELIER AVANÇADO / PRO ({len(pro_models)}):{CLR_RST}")
-        for m in pro_models[:12]:
-            print(f"  {VIOLET_SWIRL}▲{CLR_RST} {m['display_id']:<32} {SHADOW_GRAY}(Galeria Pro){CLR_RST}")
-        if len(pro_models) > 12:
-            print(f"  {SHADOW_GRAY}... +{len(pro_models)-12} modelos avançados (use /search pro){CLR_RST}")
+        lines.append(f"\n{VIOLET_SWIRL}◈ ATELIER AVANÇADO / PRO ({len(pro_models)}):{CLR_RST}")
+        for m in pro_models:
+            lines.append(f"  {VIOLET_SWIRL}▲{CLR_RST} {m['display_id']:<32} {SHADOW_GRAY}(Galeria Pro){CLR_RST}")
 
-    print(f"\n{SHADOW_GRAY}Sintonia: /model <id> │ Busca rápida: /search <termo> │ Total: {len(all_models)} modelos{CLR_RST}\n")
+    _print_paged(lines, show_all=show_all)
+    print(f"\n{SHADOW_GRAY}Sintonia: /model <id> (sem id abre o navegador) │ Busca: /search <termo> │ "
+          f"Lista inteira de uma vez: /models all │ Total: {len(all_models)} modelos{CLR_RST}\n")
 
 
+# ── Registro central de comandos ──────────────────────────────────────────────
+# Fonte única da verdade: alimenta o autocomplete, a paleta (Ctrl+P), o /help e
+# os apelidos sem barra. Mexeu no dispatch? Mexe aqui também.
+COMMANDS = [
+    # Agente
+    {"cmd": "/act", "args": "<tarefa>", "group": "Agente", "aliases": ["/agent"],
+     "desc": "Agentic Loop: investiga e altera código com ferramentas"},
+    {"cmd": "/auto", "args": "<objetivo>", "group": "Agente",
+     "desc": "Modo autônomo contínuo — trabalha até terminar (máx 40 passos)"},
+    {"cmd": "/bg", "args": "<tarefa>", "group": "Agente",
+     "desc": "Roda a tarefa em segundo plano, sem travar o REPL"},
+    {"cmd": "/spawn", "args": "<n> <t1>; <t2>", "group": "Agente",
+     "desc": "N workers paralelos de verdade (separe as tarefas por ';')"},
+    {"cmd": "/autoedit", "args": "on|off", "group": "Agente",
+     "desc": "off = pede permissão antes de rodar comando/editar/commitar"},
+    {"cmd": "/effort", "args": "low|medium|high", "group": "Agente",
+     "desc": "Profundidade do raciocínio do modelo"},
+    # Modelos
+    {"cmd": "/models", "args": "[all]", "group": "Modelos",
+     "desc": "Navegador do catálogo inteiro (Enter sintoniza) — 'all' cospe tudo em texto"},
+    {"cmd": "/search", "args": "<termo>", "group": "Modelos",
+     "desc": "Abre o navegador de modelos já filtrado pelo termo"},
+    {"cmd": "/model", "args": "[id]", "group": "Modelos",
+     "desc": "Sintoniza o modelo ativo — sem id abre o picker fuzzy (Ctrl+O)"},
+    {"cmd": "/caveman", "args": "off|lite|full|ultra", "group": "Modelos",
+     "desc": "Compressão extrema de tokens (-65%)"},
+    {"cmd": "/gateway", "args": "", "group": "Modelos",
+     "desc": "Status do gateway OmniRoute (circuito, cooldown, modelos)"},
+    # Skills
+    {"cmd": "/skills", "args": "", "group": "Skills",
+     "desc": "Lista as skills instaladas"},
+    {"cmd": "/skill", "args": "add <git-url>", "group": "Skills",
+     "desc": "Clona um repo de skills pra ~/.vincent/skills"},
+    {"cmd": "/marketplace", "args": "[install <nome|url>]", "group": "Skills",
+     "aliases": ["/market", "/store"],
+     "desc": "Navegador de skills do catálogo — instala com Enter"},
+    {"cmd": "/reload-plugins", "args": "", "group": "Skills",
+     "aliases": ["/reload", "/reload_plugins"],
+     "desc": "Recarrega plugins e skills do disco"},
+    # Estúdio (interface)
+    {"cmd": "/tui", "args": "[workers]", "group": "Estúdio",
+     "desc": "TUI de tela cheia (Ctrl+T) — 'workers' abre o painel ao vivo das tarefas"},
+    {"cmd": "/config", "args": "", "group": "Estúdio",
+     "desc": "Painel visual (setas) de chaves e modelo ativo"},
+    {"cmd": "/help", "args": "", "group": "Estúdio",
+     "desc": "Paleta navegável de comandos (Ctrl+P)"},
+    {"cmd": "/clear", "args": "", "group": "Estúdio", "aliases": ["/cls"],
+     "desc": "Limpa a tela e redesenha o banner"},
+    # Ferramentas
+    {"cmd": "/vision", "args": "<img> [pergunta]", "group": "Ferramentas",
+     "desc": "Analisa uma imagem via modelo multimodal"},
+    {"cmd": "/commit", "args": "<msg>", "group": "Ferramentas",
+     "desc": "Checkpoint git manual (Conventional Commits)"},
+    {"cmd": "/export", "args": "", "group": "Ferramentas",
+     "desc": "Exporta o histórico da sessão como dataset de treino"},
+    {"cmd": "/train", "args": "", "group": "Ferramentas", "aliases": ["/lora"],
+     "desc": "Gera o pipeline de fine-tuning LlamaFactory"},
+    {"cmd": "/stats", "args": "", "group": "Ferramentas",
+     "desc": "Telemetria, hardware e economia de tokens"},
+    # Hardware
+    {"cmd": "/devices", "args": "", "group": "Hardware",
+     "desc": "Varre e inspeciona as placas ESP32/USB conectadas"},
+    {"cmd": "/cmd", "args": "<dev> <comando>", "group": "Hardware",
+     "desc": "Envia comando serial direto pra placa"},
+    # Chaves
+    {"cmd": "/vault", "args": "", "group": "Chaves", "aliases": ["/auth", "/login"],
+     "desc": "Cofre de chaves local (chmod 0600)"},
+    {"cmd": "/key", "args": "[chave]", "group": "Chaves",
+     "desc": "Registra a chave da Galeria Vincent no cofre"},
+    # Sessão
+    {"cmd": "/exit", "args": "", "group": "Sessão", "aliases": ["/quit"],
+     "desc": "Encerra o CLI"},
+]
+
+# Apelidos sem barra ("models" == "/models"), derivados do registro acima.
 BARE_COMMAND_ALIASES = {
-    "models", "search", "model", "act", "agent", "bg", "vision", "commit", "caveman",
-    "vault", "auth", "login", "key", "train", "lora", "export", "devices",
-    "cmd", "stats", "help", "config", "skills", "skill", "spawn", "gateway", "tui",
+    name.split()[0].lstrip("/").lower()
+    for c in COMMANDS
+    for name in [c["cmd"], *c.get("aliases", [])]
 }
 
 
+def normalize_bare_command(prompt: str) -> str:
+    """'models' vira '/models'. Só a linha INTEIRA vale como apelido.
+
+    Derivar os apelidos do registro trouxe palavras comuns de prosa — auto,
+    store, reload. Com a regra por primeira-palavra, "auto conserta o bug do
+    login" virava "/auto ..." e disparava o modo autônomo de 40 passos com
+    ferramentas (e autoedit nasce True, então rodava bash sem perguntar).
+    """
+    bare = prompt.strip()
+    if not bare.startswith("/") and bare.lower() in BARE_COMMAND_ALIASES:
+        return "/" + bare
+    return prompt
+
+
 def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
-    print(BANNER)
-    
+    # Num terminal curto o banner de 11 linhas empurra o HUD pra fora da tela
+    # antes do primeiro prompt — aí ele vira só uma linha de assinatura.
+    if shutil.get_terminal_size((80, 24)).lines >= 30:
+        print(BANNER)
+    else:
+        print(f"\n{COBALT_BLUE}◈ VINCENT CLI{CLR_RST} {SHADOW_GRAY}— Noite Estrelada{CLR_RST}")
+
     auth = VincentAuth()
     trainer = LlamaFactoryOrchestrator()
     devs = registry.scan()
     
     # HUD Telemetria Inicial Starry Night
     omni_count, ollama_count = agent.model_manager.sync_catalogs()
+    # sync_catalogs conta ROTAS cruas; o catálogo do /models conta display_ids
+    # únicos. Mostrar só o primeiro fazia o HUD dizer 482 e o /models dizer 343.
+    try:
+        catalogo_n = len(agent.model_manager.get_all_models() or [])
+    except Exception:
+        catalogo_n = 0
     is_free = agent.model_manager.is_free_tier(agent.model)
     env_summary = PlatformEnvironment.get_device_summary()
     
     hud_items = [
         ("NÚCLEO NEURAL", f"{CYPRESS_GREEN}ATIVO{CLR_RST} ({agent.display_model})"),
         ("TIPO DE ROTA", f"{CYPRESS_GREEN}ZERO-KEY / OFFLINE 🆓{CLR_RST}" if is_free else f"{VIOLET_SWIRL}GALERIA PRO ⚡{CLR_RST}"),
-        ("GALERIA CLOUD", f"{CYPRESS_GREEN}ONLINE{CLR_RST} (:20128) — {omni_count} obras conectadas" if omni_count > 0 else f"{ALERT_SCARLET}OFFLINE{CLR_RST} (:20128) — {omni_count} obras conectadas"),
+        ("GALERIA CLOUD", (f"{CYPRESS_GREEN}ONLINE{CLR_RST}" if omni_count > 0 else f"{ALERT_SCARLET}OFFLINE{CLR_RST}")
+                          + f" (:20128) — {omni_count} rotas → {catalogo_n} obras no /models"),
         ("ATELIER LOCAL", f"{CYPRESS_GREEN}ONLINE{CLR_RST} (:11434) — {ollama_count} modelos quentes" if ollama_count > 0 else f"{ALERT_SCARLET}OFFLINE{CLR_RST} (:11434) — {ollama_count} modelos quentes"),
         ("HARDWARE LAB", f"{len(devs)} Placas Conectadas (TEMBED / ESP32DIV)"),
         ("KEY VAULT (0600)", f"{CYPRESS_GREEN}CHAVES ATIVAS{CLR_RST} ({auth.identity})" if auth.is_authenticated else f"{STARRY_GOLD}MODO ZERO-KEY (/vault){CLR_RST}"),
@@ -177,17 +326,21 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     ]
     render_hud_card("TELEMETRIA NOITE ESTRELADA — VINCENT HUD", hud_items, COBALT_BLUE)
     
-    print(f"\n{SHADOW_GRAY}Comandos essenciais da Galeria:{CLR_RST}")
-    print(f"  {COBALT_BLUE}/act <tarefa>{CLR_RST} (agentic loop) • {COBALT_BLUE}/bg <tarefa>{CLR_RST} (background)  • {COBALT_BLUE}/config{CLR_RST} (painel visual)")
-    print(f"  {COBALT_BLUE}/models{CLR_RST} (catálogo)           • {COBALT_BLUE}/search <termo>{CLR_RST} (buscar)  • {COBALT_BLUE}/caveman on|off{CLR_RST} (tokens)")
-    print(f"  {COBALT_BLUE}/vision <img>{CLR_RST} (multimodal)   • {COBALT_BLUE}/commit <msg>{CLR_RST} (git)       • {COBALT_BLUE}/export{CLR_RST} (dataset)")
-    print(f"  {COBALT_BLUE}/vault /key{CLR_RST} (credenciais)     • {COBALT_BLUE}/train /lora{CLR_RST} (finetune)  • {COBALT_BLUE}/help{CLR_RST} (mais)")
-    print(f"  {COBALT_BLUE}/devices{CLR_RST} (hardware)          • {COBALT_BLUE}/cmd <dev> <cmd>{CLR_RST} (serial)  • {COBALT_BLUE}/stats{CLR_RST} (telemetria) • {COBALT_BLUE}/exit{CLR_RST}\n")
+    # Antes eram 6 linhas repetindo o que o menu de '/' e o /help já mostram.
+    print(f"\n  {COBALT_BLUE}/act <tarefa>{CLR_RST} agentic • {COBALT_BLUE}/models{CLR_RST} catálogo • "
+          f"{COBALT_BLUE}/marketplace{CLR_RST} skills • {COBALT_BLUE}/config{CLR_RST} painel • {COBALT_BLUE}/exit{CLR_RST}")
+    print(f"  {SHADOW_GRAY}Digite {CHROME_YELLOW}/{SHADOW_GRAY} pra abrir o menu de comandos, "
+          f"ou {CHROME_YELLOW}/help{SHADOW_GRAY} pro guia completo.{CLR_RST}\n")
 
     term_w = get_terminal_width()
 
     # Permission prompt (estilo Claude Code): com /autoedit off, o loop agêntico
     # chama isto antes de rodar comando/editar/commitar e espera [s/N].
+    # "sempre" é POR FERRAMENTA: autorizar um read_file inofensivo não pode
+    # liberar run_bash pelo resto da sessão (era isso que agent.autoedit=True
+    # fazia). /autoedit on continua liberando tudo, mas aí foi pedido.
+    always_ok: set = set()
+
     def _ask_permission(tool_name, args):
         preview = ""
         if isinstance(args, dict):
@@ -195,6 +348,16 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
         else:
             preview = str(args or "")
         preview = preview.replace("\n", " ")[:90]
+        if tool_name in always_ok:
+            return True
+        if _HAS_INTERACTIVE:
+            answer = interactive.confirm_permission(tool_name, preview)
+            if answer == "always":
+                always_ok.add(tool_name)
+                print(f"{CYPRESS_GREEN}✓ '{tool_name}' liberada nesta sessão "
+                      f"{SHADOW_GRAY}(as outras ferramentas continuam perguntando).{CLR_RST}")
+                return True
+            return answer == "yes"
         try:
             ans = input(f"\n{CHROME_YELLOW}  ⚠ Permitir {tool_name}{(' › ' + preview) if preview else ''}? [s/N] {CLR_RST}").strip().lower()
         except (EOFError, KeyboardInterrupt):
@@ -255,6 +418,105 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
         t.start()
         return batch_id
 
+    # ── Sessão interativa (prompt_toolkit): histórico, autocomplete, toolbar ──
+    def _status():
+        """Estado ao vivo pra bottom toolbar — chamado a cada redesenho."""
+        lat = agent.telemetry.last_latency
+        tier = "🆓 zero-key" if agent.model_manager.is_free_tier(agent.model) else "⚡ pro"
+        return {
+            "model": agent.display_model,
+            "effort": agent.model_manager.effort,
+            "caveman": agent.caveman.mode,
+            "autoedit": "on" if agent.autoedit else "off",
+            "tier": f"{tier} cloud{'●' if omni_count > 0 else '○'} local{'●' if ollama_count > 0 else '○'}",
+            "latency": f"{lat:.2f}s" if lat and lat > 0 else None,
+        }
+
+    session = None
+    if _HAS_INTERACTIVE:
+        try:
+            session = interactive.build_session(agent, COMMANDS, _status)
+            if session is not None:
+                # Ctrl+T sai da linha com "/tui" — o dispatch abaixo cuida do resto.
+                session.key_bindings.add("c-t")(lambda event: event.app.exit(result="/tui"))
+        except Exception:
+            session = None
+
+    if session is not None:
+        print(f"{SHADOW_GRAY}Atalhos: {CHROME_YELLOW}Ctrl+O{SHADOW_GRAY} modelos · "
+              f"{CHROME_YELLOW}Ctrl+P{SHADOW_GRAY} paleta · "
+              f"{CHROME_YELLOW}Ctrl+T{SHADOW_GRAY} tela cheia ({CHROME_YELLOW}vincent --tui{SHADOW_GRAY}) · "
+              f"{CHROME_YELLOW}@arq{SHADOW_GRAY} completa caminho · "
+              f"{CHROME_YELLOW}Alt+Enter{SHADOW_GRAY} nova linha · {CHROME_YELLOW}Ctrl+D{SHADOW_GRAY} sai.{CLR_RST}\n")
+
+    def _interactive_ready() -> bool:
+        """True quando dá pra abrir picker/paleta (lib + TTY)."""
+        return bool(_HAS_INTERACTIVE and interactive.supports_interactive())
+
+    def _print_help():
+        render_section_header("GUIA DE COMANDOS DA GALERIA VINCENT", "💡", COBALT_BLUE)
+        for group in dict.fromkeys(c["group"] for c in COMMANDS):
+            print(f"\n{VIOLET_SWIRL}◈ {group.upper()}{CLR_RST}")
+            for c in (x for x in COMMANDS if x["group"] == group):
+                usage = f"{c['cmd']} {c['args']}".strip()
+                extra = f" {SHADOW_GRAY}({', '.join(c['aliases'])}){CLR_RST}" if c.get("aliases") else ""
+                print(f"  {COBALT_BLUE}{usage:<26}{CLR_RST} {SHADOW_GRAY}{c['desc']}{CLR_RST}{extra}")
+        print(f"\n{SHADOW_GRAY}Sem barra vale quando a linha É só o comando: 'models' == '/models' "
+              f"(com argumento, vira conversa). Ctrl+P abre esta lista navegável.{CLR_RST}\n")
+
+    def _marketplace(rest: str):
+        """Navegador de skills — picker quando dá, texto quando não dá."""
+        if not _HAS_MARKETPLACE:
+            print(f"{ALERT_SCARLET}✗ Marketplace indisponível nesta instalação.{CLR_RST}\n")
+            return
+        parts = rest.split(maxsplit=1)
+        verb = parts[0].lower() if parts else ""
+        arg = parts[1].strip() if len(parts) > 1 else ""
+
+        def _install(ref: str):
+            with NeuralSpinner(f"Instalando '{ref}'...", color=VIOLET_SWIRL):
+                res = marketplace.install(ref)
+            cor = CYPRESS_GREEN if res["ok"] else ALERT_SCARLET
+            print(f"{cor}{'✓' if res['ok'] else '✗'} {res['msg']}{CLR_RST}\n")
+
+        if verb in ("install", "instalar", "add"):
+            if not arg:
+                print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /marketplace install <nome|git-url>\n")
+            else:
+                _install(arg)
+            return
+
+        term = rest.strip()
+        items = marketplace.search(term)
+        if not items:
+            print(f"{SHADOW_GRAY}Nenhuma skill bate com '{term}'.{CLR_RST}\n")
+            return
+        if not _interactive_ready():
+            print(marketplace.render_text(items))
+            print(f"{SHADOW_GRAY}Instale com /marketplace install <nome|url>.{CLR_RST}\n")
+            return
+
+        chosen = interactive.FuzzyPicker(
+            items,
+            title="MARKETPLACE DE SKILLS",
+            subtitle="Enter instala a skill selecionada",
+            group_key=lambda i: "◈ INSTALADAS" if i.get("installed") else "◈ DISPONÍVEIS",
+            render_row=lambda i, sel: (
+                f"{'●' if i.get('installed') else '○'} {str(i.get('name','')):<18.18} "
+                f"{str(i.get('title','')):<28.28} {str(i.get('desc',''))[:44]}"
+            ),
+            initial_query="",
+        ).run()
+        if not chosen:
+            return
+        if chosen.get("installed"):
+            estado = "ativa" if chosen.get("active") else "instalada (inativa)"
+            print(f"{STARRY_GOLD}◆ '{chosen['name']}' já está {estado}.{CLR_RST}\n")
+            return
+        _install(chosen["name"])
+
+    pending = None  # comando escolhido na paleta, executado na próxima volta
+
     while True:
         try:
             while not bg_results.empty():
@@ -264,30 +526,39 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
         except Exception as e:
             print(f"\n{ALERT_SCARLET}⚠ Erro no processamento de background: {e}{CLR_RST}")
 
-            statusline = agent.telemetry.render_statusline(
-                current_model=agent.display_model,
-                is_free=agent.model_manager.is_free_tier(agent.model),
-                hw_count=len(registry.all()),
-                omniroute_ok=(omni_count > 0),
-                ollama_ok=(ollama_count > 0),
-                caveman_mode=agent.caveman.mode
-            )
-            print(f"{SHADOW_GRAY}─" * min(term_w, 80) + f"{CLR_RST}")
-            print(statusline)
+        try:
+            if pending:
+                prompt, pending = pending, None
+            else:
+                # Com a sessão rica, o statusline vira a bottom toolbar ao vivo —
+                # reimprimir aqui só poluiria a tela a cada volta.
+                if session is None:
+                    statusline = agent.telemetry.render_statusline(
+                        current_model=agent.display_model,
+                        is_free=agent.model_manager.is_free_tier(agent.model),
+                        hw_count=len(registry.all()),
+                        omniroute_ok=(omni_count > 0),
+                        ollama_ok=(ollama_count > 0),
+                        caveman_mode=agent.caveman.mode
+                    )
+                    print(f"{SHADOW_GRAY}─" * min(term_w, 80) + f"{CLR_RST}")
+                    print(statusline)
 
-            try:
-                prompt = input(f"{COBALT_BLUE}vincent{CLR_RST} {CHROME_YELLOW}[{agent.display_model}]{CLR_RST} {CLR_BOLD}❯{CLR_RST} ").strip()
-            except (EOFError, KeyboardInterrupt):
-                print(f"\n{COBALT_BLUE}◈ Sessão encerrada. As estrelas continuam brilhando na galeria. Até logo!{CLR_RST}\n")
-                break
+                try:
+                    if _HAS_INTERACTIVE:
+                        prompt = interactive.read_prompt(session, agent).strip()
+                    else:
+                        prompt = input(f"{COBALT_BLUE}vincent{CLR_RST} {CHROME_YELLOW}[{agent.display_model}]{CLR_RST} {CLR_BOLD}❯{CLR_RST} ").strip()
+                except (EOFError, KeyboardInterrupt):
+                    print(f"\n{COBALT_BLUE}◈ Sessão encerrada. As estrelas continuam brilhando na galeria. Até logo!{CLR_RST}\n")
+                    break
             if not prompt:
                 continue
 
             # Aceita o nome do comando sem a barra (ex: "models" == "/models"),
             # igual já acontecia com exit/clear — agora vale pra todos.
-            first_word = prompt.split(None, 1)[0].lower() if prompt else ""
-            if not prompt.startswith("/") and first_word in BARE_COMMAND_ALIASES:
-                prompt = "/" + prompt
+            prompt = normalize_bare_command(prompt)
+            cmd_word = prompt.split(None, 1)[0].lower()
 
             # ── Comandos Especiais do REPL ──────────────────────────────────
             if prompt in ("/exit", "/quit", "exit", "quit", ":q"):
@@ -300,33 +571,71 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 print(f"\n{COBALT_BLUE}◈ Sessão encerrada. As estrelas continuam brilhando na galeria. Até logo!{CLR_RST}\n")
                 break
 
-            elif prompt in ("/clear", "clear", "cls"):
+            elif prompt in ("/clear", "/cls", "clear", "cls"):
                 os.system("clear" if os.name == "posix" else "cls")
                 print(BANNER)
                 continue
 
-            elif prompt == "/models":
-                display_models_catalog(agent)
-                continue
-
-            elif prompt.startswith("/search"):
+            elif cmd_word in ("/models", "/search"):
                 parts = prompt.split(maxsplit=1)
                 term = parts[1].strip() if len(parts) > 1 else ""
-                display_models_catalog(agent, search_term=term)
+                if cmd_word == "/models" and term.lower() == "all":
+                    display_models_catalog(agent, show_all=True)
+                elif _interactive_ready():
+                    interactive.browse_models(agent, term)
+                else:
+                    display_models_catalog(agent, search_term=term)
                 continue
 
-            elif prompt.startswith("/model"):
+            elif cmd_word == "/model":
                 parts = prompt.split(maxsplit=1)
-                if len(parts) > 1:
-                    new_m = parts[1].strip()
+                new_m = parts[1].strip() if len(parts) > 1 else ""
+
+                def _tune(mid):
                     try:
-                        agent.set_model(new_m)
+                        agent.set_model(mid)
                         print(f"{CYPRESS_GREEN}✓ Modelo ativo alterado para: {agent.display_model}{CLR_RST}\n")
                     except Exception as e:
                         print(f"{ALERT_SCARLET}✗ Falha ao trocar de modelo: {e}{CLR_RST}\n")
+
+                if not new_m:
+                    # Sem argumento: picker fuzzy do catálogo inteiro.
+                    if _interactive_ready():
+                        chosen = interactive.pick_model(agent)
+                        if chosen:
+                            _tune(chosen)
+                    else:
+                        print(f"{CHROME_YELLOW}Modelo atual:{CLR_RST} {agent.display_model}")
+                        print(f"{SHADOW_GRAY}Uso: /model <id_do_modelo> (ex: /model auto/best-coding ou /model qwen3:0.6b){CLR_RST}")
+                    continue
+
+                catalogo = agent.model_manager.get_all_models() or []
+                conhecidos = {m["display_id"] for m in catalogo} | {m["id"] for m in catalogo}
+                termo = new_m.lower()
+                candidatos = [m for m in catalogo
+                              if termo in m["display_id"].lower()
+                              or termo in str(m.get("name", "")).lower()
+                              or termo in str(m.get("provider", "")).lower()]
+                if new_m in conhecidos or not candidatos:
+                    # Bate exato, ou nem parece com nada indexado: respeita o que
+                    # o usuário digitou (pode ser um modelo novo do backend).
+                    _tune(new_m)
+                elif _interactive_ready():
+                    # Parcial: em vez de erro seco, abre o picker JÁ filtrado.
+                    chosen = interactive.pick_model(agent, initial_query=new_m)
+                    if chosen:
+                        _tune(chosen)
+                    else:
+                        print(f"{SHADOW_GRAY}Mantido: {agent.display_model}{CLR_RST}\n")
                 else:
-                    print(f"{CHROME_YELLOW}Modelo atual:{CLR_RST} {agent.display_model}")
-                    print(f"{SHADOW_GRAY}Uso: /model <id_do_modelo> (ex: /model auto/best-coding ou /model qwen3:0.6b){CLR_RST}")
+                    print(f"{CHROME_YELLOW}'{new_m}' não é um id exato. Candidatos ({len(candidatos)}):{CLR_RST}")
+                    _print_paged([f"  {COBALT_BLUE}◆{CLR_RST} {m['display_id']}" for m in candidatos])
+                    print(f"{SHADOW_GRAY}Use /model <id exato>.{CLR_RST}\n")
+                continue
+
+            elif cmd_word in ("/marketplace", "/market", "/store"):
+                parts = prompt.split(maxsplit=1)
+                _marketplace(parts[1].strip() if len(parts) > 1 else "")
                 continue
 
             # ── Agentic Loop com Tool Calling e Auto-cura ───────────────────
@@ -377,10 +686,12 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                     print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /spawn <n> <tarefa1>; <tarefa2>; ... (ou uma tarefa só = N tentativas em paralelo)")
                 continue
 
-            elif prompt.startswith("/skill add"):
-                url = prompt.split(maxsplit=2)[2].strip() if len(prompt.split(maxsplit=2)) > 2 else ""
+            elif cmd_word == "/skill":
+                _p = prompt.split(maxsplit=2)
+                url = _p[2].strip() if len(_p) > 2 and _p[1].lower() in ("add", "install", "instalar") else ""
                 if not url:
-                    print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /skill add <git-url>")
+                    print(f"{VIOLET_SWIRL}Uso:{CLR_RST} /skill add <git-url>  "
+                          f"{SHADOW_GRAY}(catálogo pronto: /marketplace){CLR_RST}")
                 else:
                     from vincent.skills import add_skill_from_git
                     try:
@@ -446,7 +757,22 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 render_hud_card("STATUS DO GATEWAY OMNIROUTE", items, COBALT_BLUE)
                 continue
 
-            elif prompt == "/tui":
+            elif cmd_word == "/tui":
+                parts = prompt.split(maxsplit=1)
+                sub = parts[1].strip().lower() if len(parts) > 1 else ""
+                if sub not in ("workers", "panel", "painel") and _has_tty():
+                    # Tela cheia (Textual) — é o que o Ctrl+T dispara.
+                    try:
+                        from vincent.tui_app import main as _tui_main
+                        _tui_main()
+                    except Exception as e:
+                        print(f"\n{ALERT_SCARLET}✗ TUI de tela cheia indisponível: {e}{CLR_RST}")
+                        print(f"{SHADOW_GRAY}Painel ao vivo das tarefas em background: /tui workers{CLR_RST}\n")
+                    continue
+                if sub not in ("workers", "panel", "painel"):
+                    print(f"{SHADOW_GRAY}Sem terminal interativo — caindo no painel de texto "
+                          f"(a tela cheia precisa de TTY).{CLR_RST}")
+
                 from vincent import tui as _tui
 
                 def _collect_state():
@@ -657,30 +983,22 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                 render_response_box(res, agent.display_model, agent.telemetry.last_latency, mode="Auto-mode Contínuo")
                 continue
 
-            elif prompt == "/help":
-                render_section_header("GUIA DE COMANDOS DA GALERIA VINCENT", "💡", COBALT_BLUE)
-                print(f"  {COBALT_BLUE}/act <tarefa>{CLR_RST}           Agentic Loop: investiga e altera código com ferramentas")
-                print(f"  {COBALT_BLUE}/bg <tarefa>{CLR_RST}           Roda tarefa em segundo plano, sem travar o REPL")
-                print(f"  {COBALT_BLUE}/config{CLR_RST}                Painel visual (setas) de chaves e modelo ativo")
-                print(f"  {COBALT_BLUE}/vision <img> [pergunta]{CLR_RST} Analisa imagem via modelo multimodal")
-                print(f"  {COBALT_BLUE}/commit <msg>{CLR_RST}          Checkpoint git manual (Conventional Commits)")
-                print(f"  {COBALT_BLUE}/models{CLR_RST}               Exibe todas as rotas e modelos de IA indexados")
-                print(f"  {COBALT_BLUE}/search <termo>{CLR_RST}        Filtra modelos por palavra-chave (ex: /search free)")
-                print(f"  {COBALT_BLUE}/model <id>{CLR_RST}            Sintoniza o modelo ativo em tempo real")
-                print(f"  {COBALT_BLUE}/caveman <modo>{CLR_RST}        Ativa compressão extrema de tokens (off, lite, full, ultra)")
-                print(f"  {COBALT_BLUE}/vault | /key{CLR_RST}          Gerencia chaves de API com segurança (chmod 0600)")
-                print(f"  {COBALT_BLUE}/train | /lora{CLR_RST}        Gera pipeline de fine-tuning LlamaFactory")
-                print(f"  {COBALT_BLUE}/export{CLR_RST}                Exporta histórico para dataset de treino")
-                print(f"  {COBALT_BLUE}/skills{CLR_RST}               Lista skills instaladas (SKILL.md carregado sob demanda)")
-                print(f"  {COBALT_BLUE}/skill add <git-url>{CLR_RST}   Clona um repo de skills (ex: obsidian-skills) pra ~/.vincent/skills")
-                print(f"  {COBALT_BLUE}/spawn <n> <tarefas>{CLR_RST}   N workers paralelos (separe por ';' ou repete a mesma tarefa)")
-                print(f"  {COBALT_BLUE}/tui{CLR_RST}                  Painel visual (Rich) — ao vivo se tiver /bg ou /spawn rodando")
-                print(f"  {COBALT_BLUE}/gateway{CLR_RST}              Status do gateway OmniRoute (circuito, cooldown, modelos)")
-                print(f"  {COBALT_BLUE}/devices{CLR_RST}              Varre e inspeciona placas ESP32 conectadas")
-                print(f"  {COBALT_BLUE}/cmd <dev> <cmd>{CLR_RST}       Envia comando serial direto para a placa")
-                print(f"  {COBALT_BLUE}/stats{CLR_RST}                Relatório de telemetria, hardware e economia de tokens")
-                print(f"  {COBALT_BLUE}/clear{CLR_RST}                Limpa a tela e o histórico da sessão")
-                print(f"  {COBALT_BLUE}/exit{CLR_RST}                 Encerra o CLI\n")
+            elif cmd_word == "/help":
+                # Paleta navegável (mesma do Ctrl+P); sem TTY, help agrupado.
+                chosen = interactive.pick_command(COMMANDS) if _interactive_ready() else None
+                if chosen and chosen != "/help":
+                    spec = next((c for c in COMMANDS if c["cmd"] == chosen), None)
+                    # args entre colchetes = opcional: dá pra executar direto.
+                    opcional = not spec or not spec["args"] or spec["args"].startswith("[")
+                    if opcional:
+                        pending = chosen   # executa já na próxima volta
+                    else:
+                        print(f"{COBALT_BLUE}{spec['cmd']} {spec['args']}{CLR_RST} "
+                              f"{SHADOW_GRAY}— {spec['desc']}{CLR_RST}\n")
+                elif chosen == "/help":
+                    _print_help()
+                else:
+                    _print_help()
                 continue
 
             elif prompt.startswith("/"):

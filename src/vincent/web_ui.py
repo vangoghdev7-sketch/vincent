@@ -26,54 +26,10 @@ from flask import Blueprint, Response, jsonify, request, stream_with_context
 
 # NOTA: 'api' é importado LAZY dentro de _require_agent() (não aqui no topo)
 # para evitar import circular — api.py registra este blueprint no fim dele.
+from . import marketplace
 from .skills import list_skills, add_skill_from_git
 
 bp = Blueprint("web_ui", __name__)
-
-
-# ─── Catálogo curado do Marketplace ──────────────────────────────────────────
-# Skills instaláveis conhecidas (formato skills/<nome>/SKILL.md, o mesmo que
-# add_skill_from_git espera). Os repos abaixo são exemplos plausíveis do
-# ecossistema "Agent Skills"; se algum estiver indisponível na hora de instalar,
-# add_skill_from_git retorna o erro do git clone e a SPA mostra a mensagem.
-MARKETPLACE_SKILLS = [
-    {
-        "name": "obsidian-markdown",
-        "description": "Ler e editar notas Markdown do Obsidian: wikilinks [[nota]], embeds ![[nota]] e frontmatter YAML.",
-        "git_url": "https://github.com/obsidianmd/obsidian-skills",
-        "category": "Produtividade",
-    },
-    {
-        "name": "pdf-tools",
-        "description": "Extrair texto, tabelas e metadados de PDFs; dividir, mesclar e converter documentos.",
-        "git_url": "https://github.com/anthropics/skills",
-        "category": "Documentos",
-    },
-    {
-        "name": "web-research",
-        "description": "Pesquisa web estruturada: busca, coleta de fontes e resumo com citações.",
-        "git_url": "https://github.com/vincent-skills/web-research",
-        "category": "Pesquisa",
-    },
-    {
-        "name": "esp32-flasher",
-        "description": "Fluxos de flash e recuperação para placas ESP32 (T-Embed, DIV Kilaz): partições, slots e boot.",
-        "git_url": "https://github.com/vincent-skills/esp32-flasher",
-        "category": "Hardware",
-    },
-    {
-        "name": "git-ops",
-        "description": "Boas práticas de GitOps: revisar diffs, criar checkpoints de commit e reverter mudanças com segurança.",
-        "git_url": "https://github.com/vincent-skills/git-ops",
-        "category": "DevOps",
-    },
-    {
-        "name": "sqlite-analyst",
-        "description": "Consultar e analisar bancos SQLite locais: schema, queries agregadas e relatórios rápidos.",
-        "git_url": "https://github.com/vincent-skills/sqlite-analyst",
-        "category": "Dados",
-    },
-]
 
 
 def _require_agent():
@@ -344,5 +300,17 @@ def install_skill():
 
 
 @bp.get("/api/marketplace")
-def marketplace():
-    return jsonify({"skills": MARKETPLACE_SKILLS, "count": len(MARKETPLACE_SKILLS)})
+def get_marketplace():
+    """Catálogo curado vindo de marketplace.py (fonte única, compartilhada com
+    o CLI). O shape da resposta é o mesmo de antes — a SPA lê name/description/
+    git_url/category; tags[0] é a categoria."""
+    skills_out = [
+        {
+            "name": item["name"],
+            "description": item["desc"],
+            "git_url": item["source"],
+            "category": (item["tags"] or ["skill"])[0],
+        }
+        for item in marketplace.catalog()
+    ]
+    return jsonify({"skills": skills_out, "count": len(skills_out)})

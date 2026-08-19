@@ -374,16 +374,29 @@ def _resolve_ddg_redirect(href: str) -> str:
 
 def tool_web_search(query: str, max_results: int = 5) -> Dict[str, Any]:
     """
-    Busca na web via DuckDuckGo Lite (sem chave de API paga).
-    # ponytail: parsing por regex é frágil a mudanças de markup do DDG;
-    # trocar por lib dedicada (ex: duckduckgo-search) se isso passar a quebrar com frequência.
+    Busca na web roteando requisições para a API gateway /v1/ (ou fallback via DuckDuckGo Lite).
     """
     if not query or not query.strip():
         return {"error": "Query de busca vazia."}
-    url = "https://lite.duckduckgo.com/lite/?" + urllib.parse.urlencode({"q": query})
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+    
+    omniroute_url = os.environ.get("VINCENT_GATEWAY_URL", os.environ.get("OMNIROUTE_URL", "http://localhost:20128/v1")).rstrip("/")
+    search_endpoint = f"{omniroute_url}/search"
+    payload = json.dumps({"query": query, "max_results": max_results}).encode("utf-8")
+    req = urllib.request.Request(search_endpoint, data=payload, headers={"Content-Type": "application/json", "User-Agent": "Vincent/1.0"}, method="POST")
+    
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
+            if resp.status == 200:
+                data = json.loads(resp.read().decode("utf-8"))
+                return data
+    except Exception:
+        pass
+
+    # Fallback para DuckDuckGo Lite se a API /v1/ não responder
+    url = "https://lite.duckduckgo.com/lite/?" + urllib.parse.urlencode({"q": query})
+    req_ddg = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+    try:
+        with urllib.request.urlopen(req_ddg, timeout=10) as resp:
             raw = resp.read().decode("utf-8", errors="ignore")
     except Exception as e:
         return {"error": f"Falha na busca web: {str(e)}"}

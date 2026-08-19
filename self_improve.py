@@ -133,10 +133,31 @@ def brain_http(url, model, prompt):
         return None
 
 
+# Rotas do gateway usadas como cérebro. O painel do OmniRoute expõe o Antigravity
+# (OAuth do Google já ligado pelo dono) e ele responde em ~7s — contra ~50s do 7B
+# local. As rotas gh/* estão devolvendo 400 "model not supported" nesta máquina,
+# então não entram na cascata.
+# Rotas do gateway em ordem de preferência. O tier grátis entra em cooldown por
+# modelo ("All credentials for X are cooling down"), então uma rota só não basta:
+# tentamos as irmãs antes de desistir e cair pro próximo cérebro.
+ANTIGRAVITY_MODELS = [
+    "antigravity/claude-sonnet-4-6",
+    "antigravity/gemini-3.6-flash-high",
+    "auto/best-coding",
+    "auto/coding",
+]
+
+
 def ask_brains(prompt, order):
     for name in order:
         if name == "claude":
             out = brain_claude(prompt)
+        elif name == "antigravity":
+            out = None
+            for rota in ANTIGRAVITY_MODELS:
+                out = brain_http(OMNI_URL, rota, prompt)
+                if out:
+                    break
         elif name == "omniroute":
             out = brain_http(OMNI_URL, "auto", prompt)
         elif name == "local":
