@@ -260,7 +260,8 @@ def tool_apply_diff(path: str, search_block: Optional[str] = None, replace_block
                 ["patch", "--fuzz=0", "-p0", "-o", "-", abs_path],
                 input=diff_content,
                 capture_output=True,
-                text=True
+                text=True,
+                timeout=30
             )
             if proc.returncode != 0:
                 return {"error": f"Patch falhou: {proc.stderr or proc.stdout}", "success": False}
