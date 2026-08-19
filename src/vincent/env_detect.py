@@ -7,7 +7,6 @@ Optimizes memory buffers, layout columns, and serial USB device bindings.
 import os
 import sys
 import shutil
-import platform
 from typing import Dict, Any
 
 class PlatformEnvironment:
