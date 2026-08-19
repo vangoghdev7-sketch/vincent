@@ -412,7 +412,16 @@ class ModelManager:
                     self._omniroute_cooldown.record_failure("omniroute", retry_after_sec=retry_after_sec)
                 else:
                     self._omniroute_circuit.record_result("omniroute", success=False, status_code=code)
-                last_error = f"Vincent Cloud ({self.mask(model)}): {e}"
+                err_detail = str(e)
+                if isinstance(e, urllib.error.HTTPError):
+                    try:
+                        err_body = json.loads(e.read().decode("utf-8", errors="ignore"))
+                        err_msg = err_body.get("error", {}).get("message") if isinstance(err_body, dict) and isinstance(err_body.get("error"), dict) else (err_body.get("error") if isinstance(err_body, dict) else None)
+                        if err_msg:
+                            err_detail = f"{e} - {err_msg}"
+                    except Exception:
+                        pass
+                last_error = f"Vincent Cloud ({self.mask(model)}): {err_detail}"
                 continue
 
         # Se todas as rotas falharem
