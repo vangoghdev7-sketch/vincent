@@ -93,8 +93,6 @@ def make_permission_asker():
         else:
             preview = str(args or "")
         preview = preview.replace("\n", " ")[:90]
-        if tool_name in always_ok:
-            return True
         # Preview de diff: antes de aprovar uma edição o usuário vê exatamente
         # o que muda (verde/vermelho, com número de linha e contexto).
         diff: list = []
@@ -104,6 +102,13 @@ def make_permission_asker():
                                   title=str((args or {}).get("path") or "") if isinstance(args, dict) else "")
             except Exception:
                 diff = []
+        if tool_name in always_ok:
+            # Liberada nesta sessão ≠ invisível: o diff continua saindo, senão o
+            # "sempre" transforma toda edição seguinte em aprovação às cegas —
+            # e o agente não emite o preview no trace quando há callback.
+            for line in diff:
+                print(colorize_diff_line(line) or line)
+            return True
         if _HAS_INTERACTIVE:
             answer = interactive.confirm_permission(tool_name, preview, diff)
             if answer == "always":

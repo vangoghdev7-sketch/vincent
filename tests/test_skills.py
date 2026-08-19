@@ -204,8 +204,11 @@ def test_add_skill_from_git_no_candidates_installs_nothing(monkeypatch):
         return subprocess.CompletedProcess(cmd, 0)  # repo clonado, mas sem SKILL.md em lugar nenhum
     monkeypatch.setattr(skills.subprocess, "run", fake_run)
 
-    installed = skills.add_skill_from_git("https://example.com/empty-repo.git")
-    assert installed == []
+    # Repo sem SKILL.md é erro explicado, não [] silencioso: quem chama
+    # (/skill add, /market, web_ui) já trata ValueError/RuntimeError.
+    with pytest.raises(RuntimeError, match="Nenhuma skill encontrada"):
+        skills.add_skill_from_git("https://example.com/empty-repo.git")
+    assert not os.path.isdir(skills.SKILLS_DIR) or os.listdir(skills.SKILLS_DIR) == []
 
 
 def test_add_skill_from_git_overwrites_existing_dest(monkeypatch):

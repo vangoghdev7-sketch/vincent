@@ -306,6 +306,10 @@ def test_permissao_modo_texto_aceita_sempre(capsys, monkeypatch, arquivo):
     assert "liberada nesta sessão" in limpo
 
     assert ask("apply_diff", args) is True                 # não pergunta de novo
+    liberado = ui.strip_ansi(capsys.readouterr().out)
+    assert "+     2 │     return 42" in liberado           # "sempre" ≠ aprovação às cegas
+    assert "-     2 │     return 1" in liberado
+
     assert ask("run_bash", {"command": "rm -rf /"}) is False    # outra ferramenta: "n"
 
 

@@ -20,7 +20,9 @@ def _task_from_messages(messages) -> str:
     """Extrai o texto da tarefa do primeiro turn_message montado por
     _run_worker_task ('...Tarefa (worker): <task>')."""
     content = messages[0]["content"]
-    m = re.search(r"Tarefa \(worker\): (.*)", content, re.DOTALL)
+    # Sem DOTALL: a instrução que o agente cola depois da tarefa ("Execute você
+    # mesmo as ferramentas…") não faz parte do texto pedido.
+    m = re.search(r"Tarefa \(worker\): (.*)", content)
     return m.group(1) if m else content
 
 
@@ -149,16 +151,12 @@ def test_run_worker_task_empty_inference_reply_returns_fallback_message(agent_fa
     assert result == "[VINCENT WORKER] Limite de passos atingido sem conclusão."
 
 
-def test_run_worker_task_max_turns_exhausted_with_tool_calls_returns_last_raw_reply(agent_factory, monkeypatch):
+def test_run_worker_task_max_turns_exhausted_with_tool_calls_nao_vaza_tool_call(agent_factory, monkeypatch):
     """
-    ACHADO: se o modelo emite tool_call em TODOS os turnos até max_turns
-    (nunca dá uma resposta final "pura"), o loop sai normalmente do `for`
-    com final_response ainda "" — e a mensagem de fallback
-    "[VINCENT WORKER] Limite de passos atingido..." só é usada quando
-    `reply` também está vazio. Na prática, o texto cru do último turno
-    (que ainda contém o bloco ```tool_call``` não interpretado) é
-    devolvido como se fosse a resposta final. Comportamento real
-    documentado aqui, não corrigido (fora de escopo: agent.py).
+    Modelo que emite tool_call em TODOS os turnos até max_turns nunca dá uma
+    resposta final "pura". O último texto cru ainda contém o bloco
+    ```tool_call``` — devolvê-lo como resposta era vazamento; hoje o bloco é
+    removido e sobra o fallback do worker.
     """
     monkeypatch.setattr(agent_mod, "execute_agent_tool", lambda name, args: {"success": True, "result": "ok"})
 
@@ -171,5 +169,5 @@ def test_run_worker_task_max_turns_exhausted_with_tool_calls_returns_last_raw_re
 
     result = agent._run_worker_task("investigar loop infinito", max_turns=2)
 
-    assert result == tool_reply
-    assert result != "[VINCENT WORKER] Limite de passos atingido sem conclusão."
+    assert "tool_call" not in result
+    assert result == "[VINCENT WORKER] Limite de passos atingido sem conclusão."
