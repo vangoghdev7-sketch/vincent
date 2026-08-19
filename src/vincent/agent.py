@@ -172,7 +172,10 @@ class VincentAgent:
             return model_id  # cloud/desconhecido/já grande — não mexe
 
         escalated = ESCALATION_MODEL
-        available = {mm["id"] for mm in self.model_manager.get_all_models()}
+        try:
+            available = {mm["id"] for mm in self.model_manager.get_all_models() if isinstance(mm, dict) and "id" in mm}
+        except Exception:
+            return model_id
         if escalated not in available or escalated == model_id:
             return model_id
 
