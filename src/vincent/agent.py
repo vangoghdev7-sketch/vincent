@@ -461,7 +461,10 @@ class VincentAgent:
 
             tool_name = tool_call.get("tool", "")
             tool_args = tool_call.get("args") or {}
-            tool_result = execute_agent_tool(tool_name, tool_args)
+            try:
+                tool_result = execute_agent_tool(tool_name, tool_args)
+            except Exception as e:
+                tool_result = {"success": False, "error": f"Exceção não tratada na ferramenta: {e}"}
             is_error = bool(tool_result.get("error")) or (tool_result.get("exit_code", 0) != 0)
             prefix = "[AUTO-CURA: ERRO NA FERRAMENTA]" if is_error else "[RESULTADO DA FERRAMENTA]"
             turn_messages.append({"role": "assistant", "content": reply})
