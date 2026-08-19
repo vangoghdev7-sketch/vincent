@@ -28,6 +28,8 @@ def _connect() -> sqlite3.Connection:
 
 def save_summary(summary: str) -> None:
     """Persiste um resumo de sessão/tarefa complexa concluída."""
+    if not isinstance(summary, str):
+        return
     text = summary.strip()
     if not text:
         return
