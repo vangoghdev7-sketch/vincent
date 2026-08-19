@@ -110,3 +110,41 @@ def test_has_key_gives_technical_error_not_guided_message(monkeypatch):
     reply, _model, _dt = mm.execute_inference([{"role": "user", "content": "oi"}], target_model="auto")
     assert "ERRO NEURAL VINCENT" in reply
     assert "Nenhum motor de IA disponível" not in reply
+
+
+def test_sync_catalogs_records_reason_when_gateway_unreachable(monkeypatch):
+    """sync_catalogs não deve engolir o erro em silêncio — /gateway precisa
+    de motivo pra diagnosticar por que caiu pro fallback local (bug real:
+    'outro PC' com omniroute nunca instalado mostrava '0 obras conectadas'
+    sem nenhuma pista do porquê)."""
+    mm = models.ModelManager()
+
+    def fake_urlopen(req, timeout=None):
+        raise urllib.error.URLError("connection refused")
+
+    monkeypatch.setattr(models.urllib.request, "urlopen", fake_urlopen)
+    mm.sync_catalogs()
+
+    assert mm.last_omniroute_error is not None
+    assert "omniroute" in mm.last_omniroute_error.lower()
+    assert mm.gateway_status()["last_error"] == mm.last_omniroute_error
+
+
+def test_sync_catalogs_clears_reason_once_gateway_answers(monkeypatch):
+    mm = models.ModelManager()
+    mm.last_omniroute_error = "erro antigo"
+
+    class FakeResp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return b'{"data": [{"id": "auto/best"}]}'
+
+    monkeypatch.setattr(models.urllib.request, "urlopen", lambda req, timeout=None: FakeResp())
+    mm.sync_catalogs()
+
+    assert mm.last_omniroute_error is None

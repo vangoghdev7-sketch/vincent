@@ -352,6 +352,8 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
                     ("CIRCUITO", status["circuit_state"].upper()),
                     ("COOLDOWN ATIVO", "SIM" if status["cooldown_active"] else "NÃO"),
                 ]
+                if not status["reachable"] and status.get("last_error"):
+                    items.append(("MOTIVO", status["last_error"]))
                 render_hud_card("STATUS DO GATEWAY OMNIROUTE", items, COBALT_BLUE)
                 continue
 

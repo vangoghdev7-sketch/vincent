@@ -78,6 +78,7 @@ class ModelManager:
     def __init__(self):
         self.cached_omniroute_models: List[Dict] = []
         self.cached_ollama_models: List[str] = []
+        self.last_omniroute_error: Optional[str] = None
         self.last_sync = 0.0
         self.display_to_real: Dict[str, str] = {}
         self._omniroute_circuit = CircuitBreaker("api_key")
@@ -132,8 +133,13 @@ class ModelManager:
                 elif isinstance(data, list):
                     self.cached_omniroute_models = data
                 omni_count = len(self.cached_omniroute_models)
-        except Exception:
-            pass
+                self.last_omniroute_error = None
+        except urllib.error.HTTPError as e:
+            self.last_omniroute_error = f"gateway respondeu {e.code} em {OMNIROUTE_URL} — conecte um provider no dashboard (http://localhost:20128) e registre a chave com /key"
+        except urllib.error.URLError as e:
+            self.last_omniroute_error = f"gateway não respondeu em {OMNIROUTE_URL} ({e.reason}) — rode 'omniroute' (npm install -g omniroute)"
+        except Exception as e:
+            self.last_omniroute_error = f"{type(e).__name__}: {e}"
 
         # 2. Ollama Local
         ollama_count = len(self.cached_ollama_models)
@@ -198,6 +204,7 @@ class ModelManager:
             "model_count": len(self.cached_omniroute_models),
             "circuit_state": self._omniroute_circuit.get_state("omniroute"),
             "cooldown_active": not self._omniroute_cooldown.is_available("omniroute"),
+            "last_error": self.last_omniroute_error,
         }
 
     def is_free_tier(self, model_name: str) -> bool:

@@ -371,6 +371,18 @@ T64. **[STATIC/INTERACTIVE]** `/tui` — with no `/bg`/`/spawn` task alive,
     step is about the real wiring in `cli.py` (`bg_tasks` dict feeding
     worker rows), which needs a live REPL to exercise end-to-end.
 
+T65. **[NETWORK]** `/gateway` with the OmniRoute gateway unreachable now
+    also prints a MOTIVO line (`ModelManager.last_omniroute_error`,
+    `test_sync_catalogs_records_reason_when_gateway_unreachable` covers the
+    logic with a mocked `urlopen`) — distinguishes "porta fechada, rode
+    omniroute" (`URLError`) from "gateway respondeu mas sem provider/chave"
+    (`HTTPError`). Live check: stop any local omniroute process, run
+    `/gateway`, confirm MOTIVO names the actual cause instead of just
+    ALCANÇÁVEL = NÃO. Also covers `install.sh`'s new step 5 (bootstraps
+    `npm install -g omniroute` + background start when port 20128 is
+    closed) — needs a machine with `npm` and no prior OmniRoute install to
+    exercise for real; `bash -n install.sh` only proves it parses.
+
 ---
 
 ## K. Resilience / routing layer (module-level, not REPL commands)
@@ -389,7 +401,7 @@ T63. **[STATIC]** `python3 -m pytest tests/ -v` — all three resilience/
 
 ## Summary
 
-- Total steps: 64 (T1–T64; T62 superseded by the `/gateway` startswith fix,
+- Total steps: 65 (T1–T65; T62 superseded by the `/gateway` startswith fix,
   kept as a marker rather than renumbering everything below it).
 - **[STATIC]**: majority — runnable now via `py_compile`, `--help`, mocked
   `pytest`, or REPL paths that error out before reaching a model call.
@@ -398,7 +410,7 @@ T63. **[STATIC]** `python3 -m pytest tests/ -v` — all three resilience/
   modes.
 - **[HARDWARE]**: T6, T43, T44 (positive path only) — need a T-Embed or
   ESP32DIV board over USB.
-- **[NETWORK]**: T3, T4 (negative path), T21, T22, T47, T61 — need a
+- **[NETWORK]**: T3, T4 (negative path), T21, T22, T47, T61, T65 — need a
   reachable OmniRoute gateway / Ollama host / git remote, but not a full
   model completion.
 - **[INTERACTIVE]**: T9, T37, T40, T64 (live-view branch only) — need a

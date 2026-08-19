@@ -75,7 +75,33 @@ else
     echo "  (sem pipx — instalado via pip --user; garanta que ~/.local/bin está no PATH)"
 fi
 
+# ── 5. Bootstrap do gateway OmniRoute (motor cloud gratuito do Vincent) ─
+# Sem isso Vincent cai direto pro modelo local fraco (qwen3:0.6b) sem
+# avisar por quê — bug relatado ao vivo numa instalação nova (2026-08-19).
+# "000" de %{http_code} = porta fechada; qualquer outro código = já tem
+# processo respondendo em :20128 (mesmo sem chave configurada ainda).
+OMNIROUTE_CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 2 http://localhost:20128/v1/models 2>/dev/null || echo 000)"
+if [ "$OMNIROUTE_CODE" != "000" ]; then
+    echo "  ✓ gateway OmniRoute já rodando em :20128"
+elif command -v npm >/dev/null 2>&1; then
+    echo "  instalando gateway OmniRoute (modelos cloud gratuitos)..."
+    mkdir -p "$HOME/.vincent"
+    if npm install -g omniroute >/dev/null 2>&1; then
+        nohup omniroute >"$HOME/.vincent/omniroute.log" 2>&1 &
+        disown 2>/dev/null || true
+        sleep 2
+        echo "  ✓ gateway OmniRoute rodando em background (log: ~/.vincent/omniroute.log)"
+    else
+        echo "  ✗ falha ao instalar omniroute via npm — instale depois com: npm install -g omniroute && omniroute"
+    fi
+else
+    echo "  aviso: 'npm' não encontrado — gateway OmniRoute (modelos cloud gratuitos) não foi instalado."
+    echo "  sem ele, Vincent roda só no modelo local (mais fraco). Depois: npm install -g omniroute && omniroute"
+fi
+
 echo ""
 echo "✓ Vincent CLI instalado."
 echo "  Rode: vincent"
-echo "  Pra configurar chaves de API: vincent --vault  (ou /vault dentro do REPL)"
+echo "  Pra ativar os modelos cloud gratuitos: abra http://localhost:20128, conecte um"
+echo "  provider grátis (Kiro AI ou OpenCode Free) e copie a chave com: vincent → /key <chave>"
+echo "  Pra configurar outras chaves de API: vincent --vault  (ou /vault dentro do REPL)"
