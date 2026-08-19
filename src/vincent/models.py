@@ -244,8 +244,8 @@ class ModelManager:
         if not messages:
             return "[VINCENT] Nenhuma mensagem para enviar — o prompt está vazio.", target_model, 0.0
 
-        # Monta cascata de modelos prioritários
-        cascade: List[str] = [target_model]
+        # Monta cascata de modelos prioritários (resolve ID exibido para ID real upstream)
+        cascade: List[str] = [self.resolve(target_model)]
 
         # Se for local, garante fallback em outros locais
         for local_m in ["qwen2.5:3b-instruct", "qwen2.5-coder:7b", "qwen3:4b", "granite4:tiny-h"]:
