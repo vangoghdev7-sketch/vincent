@@ -123,10 +123,13 @@ class NeuralSpinner:
         mensagem com quebra de linha, e o spinner segue girando na linha de baixo.
         Reinicia o cronômetro a cada evento pra medir cada passo isoladamente."""
         with self._lock:
-            if self.is_tty:
-                sys.stdout.write("\r\033[K")
-            sys.stdout.write(msg + "\n")
-            sys.stdout.flush()
+            try:
+                if self.is_tty:
+                    sys.stdout.write("\r\033[K")
+                sys.stdout.write(msg + "\n")
+                sys.stdout.flush()
+            except (BrokenPipeError, OSError):
+                pass
         self._start = time.time()
 
     def update_message(self, new_msg: str):
