@@ -312,7 +312,10 @@ class VincentAgent:
                         pre_patch_snapshot = None
 
             # Executa ferramenta real no workspace
-            tool_result = execute_agent_tool(tool_name, tool_args)
+            try:
+                tool_result = execute_agent_tool(tool_name, tool_args)
+            except Exception as e:
+                tool_result = {"success": False, "error": f"Exceção não tratada na ferramenta: {e}"}
 
             if pre_patch_snapshot is not None and tool_result.get("success"):
                 tool_result["auto_heal"] = self._auto_heal_check(
