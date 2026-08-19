@@ -10,7 +10,7 @@ GitHub Copilot CLI, OpenCode e Kimi Code.
 
 - [ ] Menções a arquivo com `@`: digitar `@` no prompt abre autocomplete de caminhos do projeto (fuzzy, respeitando .gitignore, mostrando ícone de diretório/arquivo) e, ao enviar, o conteúdo dos arquivos citados entra no contexto da mensagem. É a feature mais usada do Claude Code e do Copilot CLI. Implementar o completer em interactive.py, a expansão em cli.py, e limitar o tamanho injetado (truncar arquivo grande avisando quantas linhas foram cortadas).
 
-- [ ] Preview de diff antes de aplicar edição: quando o loop agêntico for escrever/alterar arquivo (tools de escrita em agent_tools.py), renderizar um diff unificado COLORIDO (verde/vermelho, com número de linha e contexto) e, se `agent.autoedit` estiver off, perguntar aprovar/rejeitar/sempre. Hoje o usuário aprova às cegas, sem ver o que muda — é a diferença mais gritante pro Claude Code.
+- [~] Preview de diff antes de aplicar edição: quando o loop agêntico for escrever/alterar arquivo (tools de escrita em agent_tools.py), renderizar um diff unificado COLORIDO (verde/vermelho, com número de linha e contexto) e, se `agent.autoedit` estiver off, perguntar aprovar/rejeitar/sempre. Hoje o usuário aprova às cegas, sem ver o que muda — é a diferença mais gritante pro Claude Code.  <!-- falhou: claude falhou 2x (rc=1) -->
 
 - [ ] `/undo`: desfazer a última alteração feita pelo agente. Antes de cada tool de escrita, gravar um checkpoint (git stash-like próprio ou cópia em ~/.vincent/undo/) e permitir reverter arquivo por arquivo ou tudo. Mostrar o que seria desfeito antes de confirmar.
 
