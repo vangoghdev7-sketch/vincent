@@ -108,14 +108,21 @@ class NeuralSpinner:
 
                 line = f"{self.color}{swirl}{CLR_RST} {LEMON_YELLOW}{star}{CLR_RST} {CANVAS_WHITE}{msg_display}{CLR_RST} {SHADOW_GRAY}· {elapsed}s{CLR_RST}"
                 with self._lock:
-                    sys.stdout.write("\r\033[K" + line)
-                    sys.stdout.flush()
+                    try:
+                        sys.stdout.write("\r\033[K" + line)
+                        sys.stdout.flush()
+                    except (BrokenPipeError, OSError):
+                        self.stop_event.set()
+                        return
             idx += 1
             time.sleep(0.1)
         if self.is_tty:
             with self._lock:
-                sys.stdout.write("\r\033[K")
-                sys.stdout.flush()
+                try:
+                    sys.stdout.write("\r\033[K")
+                    sys.stdout.flush()
+                except (BrokenPipeError, OSError):
+                    pass
 
     def log(self, msg: str):
         """Imprime uma linha PERSISTENTE (que fica no histórico do terminal)
