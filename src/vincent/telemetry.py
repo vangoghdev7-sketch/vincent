@@ -82,11 +82,20 @@ class PonytailTelemetry:
         # Latência
         lat_badge = f"{COBALT_BLUE}⏱ {self.last_latency:.2f}s{CLR_RST}" if self.last_latency > 0 else f"{SHADOW_GRAY}⏱ --{CLR_RST}"
 
+        # Tokens em tempo real (↑ out / ↓ in)
+        total_tok = self.tokens_in + self.tokens_out
+        if total_tok > 0:
+            tok_str = f"{self.tokens_out}↑ {self.tokens_in}↓"
+            tok_color = ALERT_SCARLET if total_tok > 50000 else (CHROME_YELLOW if total_tok > 20000 else CYPRESS_GREEN)
+            tok_badge = f"{tok_color}⬡ {tok_str}{CLR_RST}"
+        else:
+            tok_badge = f"{SHADOW_GRAY}⬡ 0tok{CLR_RST}"
+
         if is_mobile:
             # Layout enxuto para Termux
-            return f" {model_badge} {SHADOW_GRAY}│{CLR_RST} {hw_badge} {SHADOW_GRAY}│{CLR_RST} {caveman_badge} {SHADOW_GRAY}│{CLR_RST} {lat_badge}"
+            return f" {model_badge} {SHADOW_GRAY}│{CLR_RST} {hw_badge} {SHADOW_GRAY}│{CLR_RST} {caveman_badge} {SHADOW_GRAY}│{CLR_RST} {lat_badge} {SHADOW_GRAY}│{CLR_RST} {tok_badge}"
         else:
-            return f" {model_badge} {SHADOW_GRAY}│{CLR_RST} {hw_badge} {SHADOW_GRAY}│{CLR_RST} {omni_badge} {ollama_badge} {SHADOW_GRAY}│{CLR_RST} {caveman_badge} {SHADOW_GRAY}│{CLR_RST} {lat_badge}"
+            return f" {model_badge} {SHADOW_GRAY}│{CLR_RST} {hw_badge} {SHADOW_GRAY}│{CLR_RST} {omni_badge} {ollama_badge} {SHADOW_GRAY}│{CLR_RST} {caveman_badge} {SHADOW_GRAY}│{CLR_RST} {lat_badge} {SHADOW_GRAY}│{CLR_RST} {tok_badge}"
 
     def get_summary_cards(self, current_model: str, caveman_stats: dict) -> list[tuple[str, str]]:
         sys_info = self.get_system_stats()
