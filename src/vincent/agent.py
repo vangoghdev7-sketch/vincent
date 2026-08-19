@@ -181,11 +181,14 @@ class VincentAgent:
 
         messages_to_send = self._history + [{"role": "user", "content": user_content}]
 
-        reply, used_model, latency = self.model_manager.execute_inference(
-            messages_to_send,
-            target_model=target_m,
-            system_prompt=SYSTEM_CHAT + self.plugins.system_prompt_addon() + self._memory_context + skills_context(question)
-        )
+        try:
+            reply, used_model, latency = self.model_manager.execute_inference(
+                messages_to_send,
+                target_model=target_m,
+                system_prompt=SYSTEM_CHAT + self.plugins.system_prompt_addon() + self._memory_context + skills_context(question)
+            )
+        except Exception as e:
+            return f"[VINCENT] Falha de comunicação com os nós neurais: {e}"
 
         in_toks = CavemanEngine.estimate_tokens(user_content)
         out_toks = CavemanEngine.estimate_tokens(reply or "")
