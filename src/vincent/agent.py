@@ -192,7 +192,7 @@ class VincentAgent:
             with open(path, "r", encoding="utf-8") as f:
                 compile(f.read(), path, "exec")
             return {"healed": False}
-        except SyntaxError as e:
+        except (SyntaxError, UnicodeDecodeError, ValueError) as e:
             try:
                 with open(path, "w", encoding="utf-8") as f:
                     f.write(snapshot)
