@@ -23,11 +23,14 @@ class CavemanEngine:
     }
 
     def __init__(self, mode: str = "off"):
-        self.mode = mode.lower() if mode.lower() in self.INTENSITY_LEVELS else "off"
+        mode_clean = mode.lower() if isinstance(mode, str) else ""
+        self.mode = mode_clean if mode_clean in self.INTENSITY_LEVELS else "off"
         self.total_tokens_saved = 0
         self.compressions_count = 0
 
     def set_mode(self, mode: str) -> bool:
+        if not isinstance(mode, str):
+            return False
         mode_clean = mode.lower().strip()
         if mode_clean in self.INTENSITY_LEVELS:
             self.mode = mode_clean
