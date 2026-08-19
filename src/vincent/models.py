@@ -132,7 +132,7 @@ class ModelManager:
             req = urllib.request.Request(f"{OMNIROUTE_URL}/models", headers=omni_headers)
             with urllib.request.urlopen(req, timeout=5) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
-                if isinstance(data, dict) and "data" in data:
+                if isinstance(data, dict) and isinstance(data.get("data"), list):
                     self.cached_omniroute_models = data["data"]
                 elif isinstance(data, list):
                     self.cached_omniroute_models = data
