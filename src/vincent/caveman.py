@@ -71,10 +71,17 @@ class CavemanEngine:
 
         # 2. Intensidades específicas
         if self.mode == "full":
-            # Modo padrão caveman: elimina artigos desnecessários e floreios
+            # Modo padrão caveman: elimina artigos desnecessários e floreios,
+            # preservando blocos de código (```...```) intactos.
             articles = [r"\bum\b", r"\buma\b", r"\buns\b", r"\bumas\b", r"\bo\b", r"\ba\b", r"\bos\b", r"\bas\b"]
-            for art in articles:
-                compressed = re.sub(art, "", compressed, flags=re.IGNORECASE)
+            parts = re.split(r"(```.*?```)", compressed, flags=re.DOTALL)
+            for i, part in enumerate(parts):
+                if part.startswith("```"):
+                    continue
+                for art in articles:
+                    part = re.sub(art, "", part, flags=re.IGNORECASE)
+                parts[i] = part
+            compressed = "".join(parts)
 
         compressed = re.sub(r"\s+", " ", compressed).strip()
         directive = self.MODE_DESCRIPTIONS.get(self.mode, "")
