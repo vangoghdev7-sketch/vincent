@@ -32,12 +32,14 @@ def save_summary(summary: str) -> None:
     if not text:
         return
     conn = _connect()
-    with conn:
-        conn.execute(
-            "INSERT INTO sessions (timestamp, summary) VALUES (?, ?)",
-            (time.strftime("%Y-%m-%d %H:%M:%S"), text[:2000])
-        )
-    conn.close()
+    try:
+        with conn:
+            conn.execute(
+                "INSERT INTO sessions (timestamp, summary) VALUES (?, ?)",
+                (time.strftime("%Y-%m-%d %H:%M:%S"), text[:2000])
+            )
+    finally:
+        conn.close()
 
 
 def recent_summaries(limit: int = 5) -> List[str]:
