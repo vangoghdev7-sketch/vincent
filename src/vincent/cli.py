@@ -68,6 +68,79 @@ def _style_trace(step: str) -> str:
     return f"{CANVAS_WHITE}{step}{CLR_RST}"
 
 
+def make_permission_asker():
+    """Cria o `permission_callback` do REPL (estilo Claude Code): com /autoedit
+    off, o loop agêntico chama isto antes de rodar comando/editar/commitar.
+
+    Em edição de arquivo o diff colorido vem ANTES da pergunta — ninguém
+    aprova às cegas. "sempre" é POR FERRAMENTA: autorizar um read_file
+    inofensivo não pode liberar run_bash pelo resto da sessão (era isso que
+    agent.autoedit=True fazia). /autoedit on continua liberando tudo, mas aí
+    foi pedido.
+    """
+    always_ok: set = set()
+
+    def _liberar_sempre(tool_name: str) -> bool:
+        always_ok.add(tool_name)
+        print(f"{CYPRESS_GREEN}✓ '{tool_name}' liberada nesta sessão "
+              f"{SHADOW_GRAY}(as outras ferramentas continuam perguntando).{CLR_RST}")
+        return True
+
+    def _ask_permission(tool_name, args):
+        preview = ""
+        if isinstance(args, dict):
+            preview = str(args.get("command") or args.get("path") or args.get("filepath") or args.get("code") or args.get("url") or args.get("message") or (next(iter(args.values())) if args else ""))
+        else:
+            preview = str(args or "")
+        preview = preview.replace("\n", " ")[:90]
+        if tool_name in always_ok:
+            return True
+        # Preview de diff: antes de aprovar uma edição o usuário vê exatamente
+        # o que muda (verde/vermelho, com número de linha e contexto).
+        diff: list = []
+        if is_edit_tool(tool_name):
+            try:
+                diff = diff_lines(build_edit_preview(tool_name, args if isinstance(args, dict) else {}),
+                                  title=str((args or {}).get("path") or "") if isinstance(args, dict) else "")
+            except Exception:
+                diff = []
+        if _HAS_INTERACTIVE:
+            answer = interactive.confirm_permission(tool_name, preview, diff)
+            if answer == "always":
+                return _liberar_sempre(tool_name)
+            return answer == "yes"
+        for line in diff:
+            print(colorize_diff_line(line) or line)
+        try:
+            ans = input(f"\n{CHROME_YELLOW}  ⚠ Permitir {tool_name}{(' › ' + preview) if preview else ''}? "
+                        f"{SHADOW_GRAY}[s = sim / N = não / a = sempre]{CHROME_YELLOW} {CLR_RST}").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return False
+        # Sem prompt_toolkit o "sempre" também tem que existir, senão o modo
+        # texto puro obriga a responder a cada edição.
+        if ans in ("a", "always", "sempre"):
+            return _liberar_sempre(tool_name)
+        return ans in ("s", "sim", "y", "yes")
+
+    return _ask_permission
+
+
+def _spinner_step(spinner):
+    """Callback de passo pros modos one-shot (`--agent` / prompt direto).
+
+    Passo comum vira mensagem do spinner (transitória), mas linha de diff vai
+    pro log PERSISTENTE: um preview de edição que pisca e some não serve pra
+    nada — é justamente o que o usuário precisa ler antes da escrita."""
+    def _on_step(step: str) -> None:
+        colored = colorize_diff_line(step)
+        if colored:
+            spinner.log(colored)
+        else:
+            spinner.update_message(f"Vincent: {step}")
+    return _on_step
+
+
 class _StreamCoordinator:
     """
     Coordena o NeuralSpinner (fase de 'pensando' / trace de ferramentas) com o
@@ -426,48 +499,7 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
 
     term_w = get_terminal_width()
 
-    # Permission prompt (estilo Claude Code): com /autoedit off, o loop agêntico
-    # chama isto antes de rodar comando/editar/commitar e espera [s/N].
-    # "sempre" é POR FERRAMENTA: autorizar um read_file inofensivo não pode
-    # liberar run_bash pelo resto da sessão (era isso que agent.autoedit=True
-    # fazia). /autoedit on continua liberando tudo, mas aí foi pedido.
-    always_ok: set = set()
-
-    def _ask_permission(tool_name, args):
-        preview = ""
-        if isinstance(args, dict):
-            preview = str(args.get("command") or args.get("path") or args.get("filepath") or args.get("code") or args.get("url") or args.get("message") or (next(iter(args.values())) if args else ""))
-        else:
-            preview = str(args or "")
-        preview = preview.replace("\n", " ")[:90]
-        if tool_name in always_ok:
-            return True
-        # Preview de diff: antes de aprovar uma edição o usuário vê exatamente
-        # o que muda (verde/vermelho, com número de linha e contexto).
-        diff: list = []
-        if is_edit_tool(tool_name):
-            try:
-                diff = diff_lines(build_edit_preview(tool_name, args if isinstance(args, dict) else {}),
-                                  title=str((args or {}).get("path") or "") if isinstance(args, dict) else "")
-            except Exception:
-                diff = []
-        if _HAS_INTERACTIVE:
-            answer = interactive.confirm_permission(tool_name, preview, diff)
-            if answer == "always":
-                always_ok.add(tool_name)
-                print(f"{CYPRESS_GREEN}✓ '{tool_name}' liberada nesta sessão "
-                      f"{SHADOW_GRAY}(as outras ferramentas continuam perguntando).{CLR_RST}")
-                return True
-            return answer == "yes"
-        for line in diff:
-            print(colorize_diff_line(line) or line)
-        try:
-            ans = input(f"\n{CHROME_YELLOW}  ⚠ Permitir {tool_name}{(' › ' + preview) if preview else ''}? [s/N] {CLR_RST}").strip().lower()
-        except (EOFError, KeyboardInterrupt):
-            print()
-            return False
-        return ans in ("s", "sim", "y", "yes")
-    agent.permission_callback = _ask_permission
+    agent.permission_callback = make_permission_asker()
 
     # Spawn de tarefas em background (thread + queue, stdlib puro). São
     # I/O-bound (chamadas de rede pro Ollama/OmniRoute), então threading já
@@ -1226,7 +1258,7 @@ def main():
     if args.agent:
         spinner = NeuralSpinner(f"Vincent Agentic Loop iniciando para: '{args.agent}'...", color=VIOLET_SWIRL)
         with spinner:
-            res = agent.agentic_run(args.agent, on_step_callback=lambda step: spinner.update_message(f"Vincent: {step}"))
+            res = agent.agentic_run(args.agent, on_step_callback=_spinner_step(spinner))
         render_response_box(res, agent.display_model, agent.telemetry.last_latency, mode="Agentic Loop (Tools)")
         sys.exit(0)
 
@@ -1234,7 +1266,7 @@ def main():
         question = " ".join(args.prompt)
         spinner = NeuralSpinner(f"Processando com [{agent.display_model}]...", color=COBALT_BLUE)
         with spinner:
-            reply = agent.agentic_run(question, on_step_callback=lambda step: spinner.update_message(f"Vincent: {step}"))
+            reply = agent.agentic_run(question, on_step_callback=_spinner_step(spinner))
         mode_label = f"Caveman ({agent.caveman.mode})" if agent.caveman.mode != "off" else "Standard"
         render_response_box(reply, agent.display_model, agent.telemetry.last_latency, mode=mode_label, tokens_saved=agent.caveman.total_tokens_saved)
         sys.exit(0)

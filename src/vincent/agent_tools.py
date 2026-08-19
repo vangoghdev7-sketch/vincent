@@ -324,7 +324,9 @@ def build_edit_preview(tool_name: str, arguments: Dict[str, Any]) -> str:
     except Exception:
         return ""
 
-    if str(search_block) not in original:
+    # Mesma regra do `tool_apply_diff`: bloco ausente ou ambíguo não vira edição.
+    # Sem isto o preview mostraria uma mudança que a ferramenta vai recusar.
+    if original.count(str(search_block)) != 1:
         return ""
     updated = original.replace(str(search_block), str(replace_block), 1)
     if updated == original:

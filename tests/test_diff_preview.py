@@ -270,3 +270,81 @@ def test_confirm_permission_repassa_o_diff(monkeypatch):
     monkeypatch.setattr(interactive, "_permission_box", _falso_box)
     assert interactive.confirm_permission("apply_diff", "x.py", ["◆ x.py · +1 −0"]) == "yes"
     assert visto["diff"] == ["◆ x.py · +1 −0"]
+
+
+def test_preview_vazio_quando_o_bloco_e_ambiguo(tmp_path):
+    """Bloco repetido: a ferramenta recusa a edição, então não pode haver preview
+    prometendo uma mudança que nunca vai pro disco."""
+    p = tmp_path / "dup.py"
+    p.write_text("x = 1\ny = 0\nx = 1\n", encoding="utf-8")
+    args = {"path": str(p), "search_block": "x = 1", "replace_block": "x = 2"}
+
+    assert build_edit_preview("apply_diff", args) == ""
+    assert tool_apply_diff(**args)["success"] is False
+    assert p.read_text(encoding="utf-8") == "x = 1\ny = 0\nx = 1\n"
+
+
+# ── Modo texto puro (sem prompt_toolkit) e one-shot ───────────────────────────
+
+def test_permissao_modo_texto_aceita_sempre(capsys, monkeypatch, arquivo):
+    """Sem prompt_toolkit o 'sempre' também existe — e o diff sai colorido antes."""
+    from vincent import cli
+
+    monkeypatch.setattr(cli, "_HAS_INTERACTIVE", False)
+    respostas = iter(["a", "n"])
+    monkeypatch.setattr("builtins.input", lambda *a, **k: next(respostas))
+
+    ask = cli.make_permission_asker()
+    args = {"path": str(arquivo), "search_block": "    return 1", "replace_block": "    return 42"}
+
+    assert ask("apply_diff", args) is True                 # "a" = sempre
+    out = capsys.readouterr().out
+    limpo = ui.strip_ansi(out)
+    assert "+     2 │     return 42" in limpo              # viu o diff antes de aprovar
+    assert "-     2 │     return 1" in limpo
+    assert ui.CYPRESS_GREEN in out and ui.ALERT_SCARLET in out
+    assert "liberada nesta sessão" in limpo
+
+    assert ask("apply_diff", args) is True                 # não pergunta de novo
+    assert ask("run_bash", {"command": "rm -rf /"}) is False    # outra ferramenta: "n"
+
+
+def test_permissao_modo_texto_nega_por_padrao(capsys, monkeypatch, arquivo):
+    from vincent import cli
+    monkeypatch.setattr(cli, "_HAS_INTERACTIVE", False)
+    pergunta = []
+    monkeypatch.setattr("builtins.input", lambda prompt="": (pergunta.append(prompt), "")[1])
+    assert cli.make_permission_asker()("apply_diff", {"path": str(arquivo)}) is False
+    assert "s = sim / N = não / a = sempre" in ui.strip_ansi(pergunta[0])
+
+
+def test_permissao_modo_texto_nega_sem_stdin(monkeypatch, arquivo):
+    """Ctrl-D / pipe fechado no meio da pergunta = negar, não estourar."""
+    from vincent import cli
+    monkeypatch.setattr(cli, "_HAS_INTERACTIVE", False)
+    def _boom(*a, **k):
+        raise EOFError
+    monkeypatch.setattr("builtins.input", _boom)
+    assert cli.make_permission_asker()("apply_diff", {"path": str(arquivo)}) is False
+
+
+def test_spinner_step_persiste_diff_e_atualiza_o_resto():
+    """One-shot (`vincent --agent`): diff vai pro log persistente, resto pro spinner."""
+    from vincent.cli import _spinner_step
+
+    class _Spy:
+        def __init__(self):
+            self.logs, self.msgs = [], []
+        def log(self, m): self.logs.append(m)
+        def update_message(self, m): self.msgs.append(m)
+
+    spy = _Spy()
+    on_step = _spinner_step(spy)
+    on_step("🧠 Passo 1/8 — pensando…")
+    on_step("◆ x.py · +1 −1")
+    on_step("+     1 │ novo")
+    on_step("   ↳ ok")
+
+    assert len(spy.logs) == 2 and all(ui.CLR_RST in l for l in spy.logs)
+    assert ui.CYPRESS_GREEN in spy.logs[1]
+    assert spy.msgs == ["Vincent: 🧠 Passo 1/8 — pensando…", "Vincent:    ↳ ok"]
