@@ -83,6 +83,8 @@ class PluginManager:
 
     def toggle(self, plugin_name: str) -> Optional[bool]:
         """Ativa ou desativa um plugin específico."""
+        if not plugin_name:
+            return None
         name = plugin_name.lower().strip()
         if name not in self.skills:
             return None
