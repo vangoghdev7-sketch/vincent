@@ -151,6 +151,7 @@ class ModelManager:
         except Exception:
             pass
 
+        self.last_sync = time.time()
         self._save_cache()
         return omni_count, ollama_count
 
