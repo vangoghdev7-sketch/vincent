@@ -71,7 +71,9 @@ def main():
     agent = None
     if not args.no_agent:
         agent = VincentAgent(registry, emit_fn=lambda ev, d: socketio.emit(ev, d))
-        if not args.once:
+        # start()/_cycle()/_client eram do loop autônomo de devices (design antigo);
+        # o VincentAgent enxuto atual não tem — protege pra não crashar o servidor web.
+        if not args.once and hasattr(agent, "start"):
             agent.start(interval=args.interval)
 
     # API server
@@ -87,7 +89,7 @@ def main():
 
     # Modo --once
     if args.once:
-        if agent and agent._client:
+        if agent and getattr(agent, "_client", None) and hasattr(agent, "_cycle"):
             print("[AGENT] rodando ciclo único...", flush=True)
             agent._cycle()
         print("[DONE] ciclo único concluído.", flush=True)

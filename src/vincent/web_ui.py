@@ -1,0 +1,191 @@
+"""
+Vincent Web UI — Blueprint com as rotas NOVAS que alimentam a SPA moderna
+(static/app.html): seletor de modelos, chat/modo-agente, Caveman e o
+marketplace de skills.
+
+Não substitui nada de api.py — apenas ADICIONA endpoints. O blueprint reusa o
+MESMO agente/registry global que run.py injeta via api.setup(), lendo
+`api._agent` / `api._registry` em tempo de request (não no import — no momento
+do import o agente ainda não foi criado).
+
+Rotas:
+  GET  /api/models            → catálogo consolidado + modelo ativo
+  POST /api/model    {id}     → troca o modelo ativo
+  POST /api/agent/act {task}  → agentic_run (tool-calling autônomo; pode ser lento)
+  POST /api/caveman  {mode}   → liga/desliga a compressão Caveman
+  GET  /api/skills            → skills instaladas em ~/.vincent/skills
+  POST /api/skills/install {git_url} → instala skills de um repo git
+  GET  /api/marketplace       → catálogo curado de skills instaláveis
+"""
+
+from flask import Blueprint, jsonify, request
+
+# NOTA: 'api' é importado LAZY dentro de _require_agent() (não aqui no topo)
+# para evitar import circular — api.py registra este blueprint no fim dele.
+from .skills import list_skills, add_skill_from_git
+
+bp = Blueprint("web_ui", __name__)
+
+
+# ─── Catálogo curado do Marketplace ──────────────────────────────────────────
+# Skills instaláveis conhecidas (formato skills/<nome>/SKILL.md, o mesmo que
+# add_skill_from_git espera). Os repos abaixo são exemplos plausíveis do
+# ecossistema "Agent Skills"; se algum estiver indisponível na hora de instalar,
+# add_skill_from_git retorna o erro do git clone e a SPA mostra a mensagem.
+MARKETPLACE_SKILLS = [
+    {
+        "name": "obsidian-markdown",
+        "description": "Ler e editar notas Markdown do Obsidian: wikilinks [[nota]], embeds ![[nota]] e frontmatter YAML.",
+        "git_url": "https://github.com/obsidianmd/obsidian-skills",
+        "category": "Produtividade",
+    },
+    {
+        "name": "pdf-tools",
+        "description": "Extrair texto, tabelas e metadados de PDFs; dividir, mesclar e converter documentos.",
+        "git_url": "https://github.com/anthropics/skills",
+        "category": "Documentos",
+    },
+    {
+        "name": "web-research",
+        "description": "Pesquisa web estruturada: busca, coleta de fontes e resumo com citações.",
+        "git_url": "https://github.com/vincent-skills/web-research",
+        "category": "Pesquisa",
+    },
+    {
+        "name": "esp32-flasher",
+        "description": "Fluxos de flash e recuperação para placas ESP32 (T-Embed, DIV Kilaz): partições, slots e boot.",
+        "git_url": "https://github.com/vincent-skills/esp32-flasher",
+        "category": "Hardware",
+    },
+    {
+        "name": "git-ops",
+        "description": "Boas práticas de GitOps: revisar diffs, criar checkpoints de commit e reverter mudanças com segurança.",
+        "git_url": "https://github.com/vincent-skills/git-ops",
+        "category": "DevOps",
+    },
+    {
+        "name": "sqlite-analyst",
+        "description": "Consultar e analisar bancos SQLite locais: schema, queries agregadas e relatórios rápidos.",
+        "git_url": "https://github.com/vincent-skills/sqlite-analyst",
+        "category": "Dados",
+    },
+]
+
+
+def _require_agent():
+    """Retorna o agente global de api.py, ou (None, resposta_503) se não subiu."""
+    from . import api  # lazy: evita import circular (api.py registra este bp no fim)
+    agent = getattr(api, "_agent", None)
+    if agent is None:
+        return None, (jsonify({"error": "agente não iniciado"}), 503)
+    return agent, None
+
+
+# ─── Modelos ─────────────────────────────────────────────────────────────────
+
+@bp.get("/api/models")
+def list_models():
+    agent, err = _require_agent()
+    if err:
+        return err
+    try:
+        models = agent.model_manager.get_all_models()
+    except Exception as e:
+        models = []
+        return jsonify({"error": f"falha ao listar modelos: {e}", "models": [], "active": None}), 200
+    active_real = agent.model
+    return jsonify({
+        "models": models,
+        "active": active_real,
+        "active_display": agent.display_model,
+    })
+
+
+@bp.post("/api/model")
+def set_model():
+    agent, err = _require_agent()
+    if err:
+        return err
+    body = request.get_json(silent=True) or {}
+    model_id = (body.get("id") or "").strip()
+    if not model_id:
+        return jsonify({"error": "campo 'id' obrigatório"}), 400
+    agent.set_model(model_id)
+    return jsonify({
+        "active": agent.model,
+        "active_display": agent.display_model,
+    })
+
+
+# ─── Modo Agente (agentic loop) ──────────────────────────────────────────────
+
+@bp.post("/api/agent/act")
+def agent_act():
+    agent, err = _require_agent()
+    if err:
+        return err
+    body = request.get_json(silent=True) or {}
+    task = (body.get("task") or "").strip()
+    if not task:
+        return jsonify({"error": "campo 'task' obrigatório"}), 400
+    try:
+        answer = agent.agentic_run(task)
+    except Exception as e:
+        return jsonify({"error": f"falha no modo agente: {e}"}), 500
+    return jsonify({"answer": answer})
+
+
+# ─── Caveman ─────────────────────────────────────────────────────────────────
+
+@bp.post("/api/caveman")
+def set_caveman():
+    agent, err = _require_agent()
+    if err:
+        return err
+    body = request.get_json(silent=True) or {}
+    mode = (body.get("mode") or "").strip()
+    if not mode:
+        return jsonify({"error": "campo 'mode' obrigatório"}), 400
+    ok = agent.set_caveman_mode(mode)
+    if not ok:
+        return jsonify({
+            "error": f"modo inválido: {mode}",
+            "valid_modes": agent.caveman.INTENSITY_LEVELS,
+        }), 400
+    return jsonify({"mode": agent.caveman.mode})
+
+
+# ─── Skills ──────────────────────────────────────────────────────────────────
+
+@bp.get("/api/skills")
+def get_skills():
+    try:
+        skills = list_skills()
+    except Exception as e:
+        return jsonify({"error": f"falha ao listar skills: {e}", "skills": []}), 200
+    return jsonify({"skills": skills, "count": len(skills)})
+
+
+@bp.post("/api/skills/install")
+def install_skill():
+    body = request.get_json(silent=True) or {}
+    git_url = (body.get("git_url") or "").strip()
+    if not git_url:
+        return jsonify({"error": "campo 'git_url' obrigatório"}), 400
+    try:
+        installed = add_skill_from_git(git_url)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    if not installed:
+        return jsonify({
+            "installed": [],
+            "warning": "nenhuma skill encontrada no repositório (esperado skills/<nome>/SKILL.md ou SKILL.md na raiz).",
+        }), 200
+    return jsonify({"installed": installed, "count": len(installed)})
+
+
+@bp.get("/api/marketplace")
+def marketplace():
+    return jsonify({"skills": MARKETPLACE_SKILLS, "count": len(MARKETPLACE_SKILLS)})

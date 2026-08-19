@@ -2,465 +2,652 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VincentOS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vincent — Console</title>
 <style>
 :root{
-  --bg:#060610;--s:#0e0e1a;--s2:#16162a;--s3:#1c1c30;
-  --ac:#7c3aed;--ac2:#06b6d4;--ac3:#8b5cf6;
-  --gr:#10b981;--re:#ef4444;--ye:#f59e0b;--or:#f97316;
-  --tx:#e2e8f0;--tx2:#94a3b8;--tx3:#64748b;
-  --br:#1e1e38;
+  /* Paleta "noite estrelada": azul cobalto, dourado, violeta */
+  --bg:#070912;            /* céu noturno */
+  --bg2:#0b0f1e;
+  --panel:#0f142a;         /* painéis */
+  --panel2:#141a35;
+  --panel3:#1b2247;
+  --border:#232c52;
+  --cobalt:#2b4cff;        /* azul cobalto */
+  --cobalt-soft:#4f6bff;
+  --violet:#8b5cf6;        /* violeta */
+  --violet-soft:#a78bfa;
+  --gold:#f5c451;          /* dourado */
+  --gold-soft:#ffd982;
+  --ok:#34d399;
+  --err:#f87171;
+  --warn:#fbbf24;
+  --tx:#e8ecf8;
+  --tx2:#9aa4c8;
+  --tx3:#6b769e;
+  --glow:0 0 24px rgba(43,76,255,.25);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden}
+html,body{height:100%}
 body{
-  background:var(--bg);color:var(--tx);
-  font-family:'SF Mono','Fira Code',ui-monospace,monospace;
+  background:
+    radial-gradient(1200px 700px at 12% -10%, rgba(43,76,255,.18), transparent 60%),
+    radial-gradient(900px 600px at 100% 0%, rgba(139,92,246,.14), transparent 55%),
+    radial-gradient(700px 700px at 85% 110%, rgba(245,196,81,.06), transparent 60%),
+    var(--bg);
+  color:var(--tx);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  display:flex;min-height:100%;overflow:hidden;
+}
+/* starfield */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 70% 60%, #cdd6ff, transparent),
+    radial-gradient(1px 1px at 40% 80%, #fff, transparent),
+    radial-gradient(1px 1px at 85% 20%, #ffe9b0, transparent),
+    radial-gradient(1px 1px at 55% 15%, #fff, transparent),
+    radial-gradient(1px 1px at 10% 70%, #bcd0ff, transparent),
+    radial-gradient(1px 1px at 90% 85%, #fff, transparent);
+  background-repeat:no-repeat;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--panel3);border-radius:9px}
+::-webkit-scrollbar-thumb:hover{background:var(--cobalt)}
+
+/* ─── Sidebar ─────────────────────────────────────────────── */
+.sidebar{
+  width:230px;flex-shrink:0;z-index:2;
+  background:linear-gradient(180deg,rgba(15,20,42,.92),rgba(11,15,30,.92));
+  border-right:1px solid var(--border);
   display:flex;flex-direction:column;
+  backdrop-filter:blur(8px);
 }
-/* ── Header ── */
-.hdr{
-  padding:env(safe-area-inset-top) 0 0;
-  background:var(--s);
-  border-bottom:1px solid var(--br);
-  flex-shrink:0;
+.brand{padding:20px 18px 16px;display:flex;align-items:center;gap:11px}
+.brand .star{
+  width:34px;height:34px;border-radius:10px;flex-shrink:0;
+  background:conic-gradient(from 210deg,var(--cobalt),var(--violet),var(--gold),var(--cobalt));
+  box-shadow:var(--glow);display:flex;align-items:center;justify-content:center;
+  font-size:18px;
 }
-.hdr-inner{
-  padding:12px 16px 8px;
-  display:flex;align-items:center;justify-content:space-between;
+.brand .name{font-size:19px;font-weight:800;letter-spacing:1.5px}
+.brand .name b{background:linear-gradient(120deg,var(--cobalt-soft),var(--violet-soft),var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.brand .sub{font-size:10px;color:var(--tx3);letter-spacing:2px;text-transform:uppercase}
+
+.nav{display:flex;flex-direction:column;gap:4px;padding:8px 12px;flex:1}
+.nav button{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 13px;border-radius:11px;color:var(--tx2);
+  font-size:14px;font-weight:600;text-align:left;transition:.15s;position:relative;
 }
-.logo{
-  font-size:22px;font-weight:900;letter-spacing:5px;
-  background:linear-gradient(135deg,var(--ac),var(--ac2));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+.nav button .ic{font-size:17px;width:20px;text-align:center}
+.nav button:hover{background:var(--panel2);color:var(--tx)}
+.nav button.active{
+  background:linear-gradient(90deg,rgba(43,76,255,.22),rgba(139,92,246,.12));
+  color:#fff;box-shadow:inset 0 0 0 1px rgba(79,107,255,.35);
 }
-.hdr-right{display:flex;gap:10px;align-items:center}
-.dev-chip{
-  display:flex;align-items:center;gap:5px;
-  padding:4px 8px;border-radius:20px;
-  background:var(--s2);border:1px solid var(--br);
-  font-size:10px;color:var(--tx2);
+.nav button.active::before{
+  content:"";position:absolute;left:-12px;top:50%;transform:translateY(-50%);
+  width:4px;height:22px;border-radius:0 4px 4px 0;
+  background:linear-gradient(var(--cobalt),var(--violet));
 }
-.dot{width:8px;height:8px;border-radius:50%;background:var(--re);flex-shrink:0}
-.dot.on{background:var(--gr);box-shadow:0 0 0 0 rgba(16,185,129,.5);animation:pulse 2.5s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.4)}70%{box-shadow:0 0 0 5px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
-/* ── Tabs ── */
-.tabs{
-  display:flex;gap:2px;padding:0 8px 8px;background:var(--s);
+.side-foot{padding:12px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3)}
+.side-foot .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--tx3);vertical-align:middle}
+.side-foot .dot.ok{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.side-foot .dot.err{background:var(--err);box-shadow:0 0 8px var(--err)}
+
+/* ─── Main ────────────────────────────────────────────────── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;z-index:1;position:relative}
+.topbar{
+  height:60px;flex-shrink:0;display:flex;align-items:center;gap:14px;
+  padding:0 20px;border-bottom:1px solid var(--border);
+  background:rgba(11,15,30,.6);backdrop-filter:blur(8px);
 }
-.tb{
-  flex:1;padding:7px 2px;text-align:center;
-  font-size:10px;letter-spacing:.5px;text-transform:uppercase;
-  color:var(--tx3);border-radius:7px;cursor:pointer;
-  transition:all .15s;user-select:none;
+.topbar .hamb{display:none;font-size:22px;color:var(--tx2)}
+.topbar h1{font-size:16px;font-weight:700;letter-spacing:.3px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* model pill in topbar */
+.modelpill{
+  display:flex;align-items:center;gap:9px;padding:7px 12px;border-radius:999px;
+  background:var(--panel2);border:1px solid var(--border);font-size:12px;max-width:340px;
 }
-.tb.ac{background:var(--ac);color:#fff;box-shadow:0 2px 8px rgba(124,58,237,.4)}
-/* ── Content ── */
-.cnt{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 12px calc(12px + env(safe-area-inset-bottom));scroll-behavior:smooth}
-.pn{display:none}
-.pn.ac{display:flex;flex-direction:column;gap:10px}
-/* ── Cards ── */
+.modelpill .lab{color:var(--tx3);font-size:10px;text-transform:uppercase;letter-spacing:1px}
+.modelpill select{
+  background:transparent;border:none;color:var(--gold-soft);font-weight:700;font-size:12.5px;
+  max-width:230px;outline:none;
+}
+.modelpill select option{background:var(--panel);color:var(--tx)}
+
+.page{flex:1;overflow-y:auto;position:relative}
+.view{display:none;height:100%}
+.view.active{display:flex;flex-direction:column}
+.pad{padding:22px;max-width:1000px;width:100%;margin:0 auto}
+
+/* ─── Chat ────────────────────────────────────────────────── */
+#view-chat.active{display:flex;flex-direction:column;height:100%}
+.chat-scroll{flex:1;overflow-y:auto;padding:24px 20px 8px}
+.chat-inner{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.msg{display:flex;gap:12px;animation:rise .25s ease}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg .av{
+  width:34px;height:34px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;
+}
+.msg.user .av{background:linear-gradient(135deg,var(--gold),#e0a83a);color:#241a00}
+.msg.bot .av{background:linear-gradient(135deg,var(--cobalt),var(--violet));color:#fff;box-shadow:var(--glow)}
+.msg .bubble{
+  padding:12px 15px;border-radius:14px;font-size:14.5px;line-height:1.6;
+  max-width:calc(100% - 50px);word-wrap:break-word;overflow-wrap:anywhere;
+}
+.msg.user .bubble{background:var(--panel3);border:1px solid var(--border);border-top-left-radius:4px}
+.msg.bot .bubble{background:var(--panel);border:1px solid var(--border);border-top-left-radius:4px}
+.msg .bubble pre{
+  background:var(--bg2);border:1px solid var(--border);border-radius:9px;
+  padding:11px;margin:8px 0;overflow-x:auto;font-family:ui-monospace,"Fira Code",monospace;font-size:12.5px;color:#cfe1ff;
+}
+.msg .bubble code:not(pre code){background:var(--panel3);padding:1px 6px;border-radius:5px;font-family:ui-monospace,monospace;font-size:12.5px;color:var(--gold-soft)}
+.msg .role{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.msg .bubble.err{border-color:var(--err);color:var(--err)}
+.hello{
+  text-align:center;color:var(--tx3);margin:auto;padding:40px 20px;
+}
+.hello .big{font-size:26px;font-weight:800;margin-bottom:10px;background:linear-gradient(120deg,var(--cobalt-soft),var(--violet-soft),var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hello .chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:18px;max-width:560px}
+.hello .chips button{padding:9px 14px;border-radius:11px;background:var(--panel2);border:1px solid var(--border);font-size:13px;color:var(--tx2)}
+.hello .chips button:hover{border-color:var(--cobalt);color:var(--tx)}
+
+.typing{display:flex;gap:5px;padding:6px 2px}
+.typing i{width:8px;height:8px;border-radius:50%;background:var(--cobalt-soft);animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s;background:var(--violet-soft)}
+.typing i:nth-child(3){animation-delay:.4s;background:var(--gold)}
+@keyframes blink{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+
+.composer{flex-shrink:0;padding:14px 20px 18px;border-top:1px solid var(--border);background:rgba(11,15,30,.55);backdrop-filter:blur(8px)}
+.composer-inner{max-width:860px;margin:0 auto}
+.compbar{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.toggle{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--tx2);user-select:none;cursor:pointer}
+.switch{width:42px;height:23px;border-radius:999px;background:var(--panel3);border:1px solid var(--border);position:relative;transition:.2s;flex-shrink:0}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:var(--tx3);transition:.2s}
+.toggle input{display:none}
+.toggle input:checked + .switch{background:linear-gradient(90deg,var(--cobalt),var(--violet));border-color:var(--cobalt-soft)}
+.toggle input:checked + .switch::after{left:21px;background:#fff}
+.mode-hint{font-size:11.5px;color:var(--tx3)}
+.mode-hint b{color:var(--violet-soft)}
+.cav-wrap{display:flex;align-items:center;gap:7px;margin-left:auto}
+.cav-wrap label{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px}
+.cav-wrap select{background:var(--panel2);border:1px solid var(--border);color:var(--tx2);border-radius:8px;padding:5px 8px;font-size:12px;outline:none}
+.cav-wrap select option{background:var(--panel)}
+.inputrow{display:flex;gap:10px;align-items:flex-end}
+.inputrow textarea{
+  flex:1;resize:none;background:var(--panel);border:1px solid var(--border);border-radius:14px;
+  color:var(--tx);padding:13px 15px;font-size:14.5px;line-height:1.5;max-height:180px;min-height:50px;outline:none;transition:.15s;
+}
+.inputrow textarea:focus{border-color:var(--cobalt);box-shadow:0 0 0 3px rgba(43,76,255,.16)}
+.sendbtn{
+  width:50px;height:50px;flex-shrink:0;border-radius:14px;
+  background:linear-gradient(135deg,var(--cobalt),var(--violet));color:#fff;
+  font-size:20px;display:flex;align-items:center;justify-content:center;transition:.15s;box-shadow:var(--glow);
+}
+.sendbtn:hover{filter:brightness(1.12)}
+.sendbtn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+
+/* ─── Cards / grid (marketplace, status) ──────────────────── */
+.section-title{font-size:20px;font-weight:800;margin-bottom:4px;letter-spacing:.3px}
+.section-sub{color:var(--tx3);font-size:13px;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
 .card{
-  background:var(--s);border:1px solid var(--br);border-radius:14px;
-  padding:14px;overflow:hidden;
+  background:linear-gradient(160deg,var(--panel2),var(--panel));
+  border:1px solid var(--border);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px;transition:.18s;
 }
-.card-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--tx3);margin-bottom:10px}
-/* ── Device card ── */
-.dh{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.dico{
-  width:38px;height:38px;border-radius:10px;
-  background:linear-gradient(135deg,var(--ac),var(--ac2));
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;flex-shrink:0;
-}
-.dinfo h3{font-size:13px;font-weight:700}
-.dinfo small{font-size:10px;color:var(--tx3)}
-.dbadge{
-  margin-left:auto;padding:3px 9px;border-radius:20px;
-  font-size:9px;font-weight:700;letter-spacing:.5px;flex-shrink:0;
-}
-.dbadge.on{background:rgba(16,185,129,.15);color:var(--gr);border:1px solid rgba(16,185,129,.2)}
-.dbadge.off{background:rgba(239,68,68,.15);color:var(--re);border:1px solid rgba(239,68,68,.2)}
-.hwtags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
-.hw{padding:2px 7px;border-radius:20px;font-size:9px;background:var(--s2);color:var(--tx3);border:1px solid var(--br)}
-/* ── Quick buttons ── */
-.qgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:10px}
-.qb{
-  padding:8px 4px;font-size:10px;text-align:center;
-  background:var(--s2);border:1px solid var(--br);border-radius:8px;
-  cursor:pointer;color:var(--tx2);transition:all .1s;user-select:none;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.qb:active{background:var(--ac);border-color:var(--ac);color:#fff;transform:scale(.97)}
-/* ── Terminal ── */
-.term{
-  background:#000;border-radius:8px;padding:8px;
-  font-size:11px;height:100px;overflow-y:auto;
-  color:#4ade80;line-height:1.5;white-space:pre-wrap;word-break:break-all;
-  scroll-behavior:smooth;
-}
-.term .pr{color:var(--ac2)}
-.term .er{color:var(--re)}
-/* ── Input row ── */
-.irow{display:flex;gap:6px;margin-top:8px}
-.inp{
-  flex:1;background:var(--s2);border:1px solid var(--br);border-radius:8px;
-  padding:9px 10px;color:var(--tx);font-family:inherit;font-size:12px;
-  outline:none;transition:border-color .15s;
-}
-.inp:focus{border-color:var(--ac)}
+.card:hover{border-color:var(--cobalt);transform:translateY(-2px);box-shadow:0 12px 30px -12px rgba(43,76,255,.4)}
+.card .ct{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card h3{font-size:15.5px;font-weight:700}
+.badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap}
+.badge.cat{background:rgba(139,92,246,.16);color:var(--violet-soft);border:1px solid rgba(139,92,246,.35)}
+.badge.gold{background:rgba(245,196,81,.14);color:var(--gold-soft);border:1px solid rgba(245,196,81,.35)}
+.badge.ok{background:rgba(52,211,153,.14);color:var(--ok);border:1px solid rgba(52,211,153,.35)}
+.card p{font-size:13px;color:var(--tx2);line-height:1.55;flex:1}
+.card .git{font-size:11px;color:var(--tx3);font-family:ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btn{
-  padding:9px 14px;background:var(--ac);border:none;border-radius:8px;
-  color:#fff;font-size:14px;cursor:pointer;flex-shrink:0;
-  transition:opacity .15s;
+  padding:9px 14px;border-radius:10px;font-size:13px;font-weight:700;transition:.15s;
+  background:linear-gradient(135deg,var(--cobalt),var(--violet));color:#fff;align-self:flex-start;
 }
-.btn:active{opacity:.7}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-/* ── Chat ── */
-.msgs{display:flex;flex-direction:column;gap:8px;min-height:160px}
-.msg{max-width:88%;padding:9px 12px;border-radius:12px;font-size:12px;line-height:1.55;word-break:break-word}
-.msg.u{align-self:flex-end;background:var(--ac);color:#fff;border-bottom-right-radius:3px}
-.msg.a{align-self:flex-start;background:var(--s2);border:1px solid var(--br);border-bottom-left-radius:3px}
-.msg.sy{
-  align-self:center;background:rgba(6,182,212,.08);
-  border:1px solid rgba(6,182,212,.2);color:var(--ac2);
-  font-size:10px;max-width:96%;text-align:center;padding:8px 12px;
+.btn:hover{filter:brightness(1.12)}
+.btn:disabled{opacity:.55;cursor:not-allowed;filter:none}
+.btn.ghost{background:var(--panel3);border:1px solid var(--border);color:var(--tx)}
+.btn.ghost:hover{border-color:var(--cobalt);filter:none}
+.btn.wide{align-self:stretch;text-align:center}
+
+.installbar{
+  display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap;
+  background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;
 }
-.chat-foot{
-  display:flex;gap:6px;padding-top:8px;
-  background:var(--bg);border-top:1px solid var(--br);margin-top:8px;
-  position:sticky;bottom:0;
+.installbar input{
+  flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  color:var(--tx);padding:11px 13px;font-size:13.5px;outline:none;font-family:ui-monospace,monospace;
 }
-/* ── Spinner ── */
-.sp{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-/* ── Flash ── */
-.flash-item{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:9px 0;border-bottom:1px solid var(--br);gap:8px;
+.installbar input:focus{border-color:var(--cobalt)}
+
+.subhead{font-size:13px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:1.2px;margin:26px 0 14px;display:flex;align-items:center;gap:10px}
+.subhead::after{content:"";flex:1;height:1px;background:var(--border)}
+
+.empty{color:var(--tx3);font-size:13px;padding:24px;text-align:center;background:var(--panel);border:1px dashed var(--border);border-radius:14px}
+
+/* status rows */
+.statgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:22px}
+.stat{background:linear-gradient(160deg,var(--panel2),var(--panel));border:1px solid var(--border);border-radius:14px;padding:16px}
+.stat .k{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px}
+.stat .v{font-size:24px;font-weight:800;margin-top:6px}
+.stat .v.ok{color:var(--ok)}
+.stat .v.err{color:var(--err)}
+.stat .v.gold{color:var(--gold-soft)}
+
+/* toast */
+.toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(120px);
+  background:var(--panel3);border:1px solid var(--border);color:var(--tx);
+  padding:12px 20px;border-radius:12px;font-size:13.5px;z-index:50;box-shadow:0 14px 40px rgba(0,0,0,.5);
+  transition:transform .3s cubic-bezier(.2,1.2,.3,1);max-width:90vw;
 }
-.flash-item:last-child{border:none}
-.finfo h4{font-size:12px;font-weight:600}
-.finfo p{font-size:10px;color:var(--tx3);margin-top:2px}
-.avail{padding:3px 8px;border-radius:20px;font-size:9px;font-weight:700;flex-shrink:0}
-.avail.y{background:rgba(16,185,129,.15);color:var(--gr);border:1px solid rgba(16,185,129,.2)}
-.avail.n{background:rgba(239,68,68,.15);color:var(--re);border:1px solid rgba(239,68,68,.2)}
-/* ── Empty ── */
-.empty{text-align:center;padding:40px 20px;color:var(--tx3);font-size:12px}
-/* ── Scrollbar ── */
-::-webkit-scrollbar{width:3px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--br);border-radius:2px}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:var(--ok)}
+.toast.err{border-color:var(--err)}
+.toast.info{border-color:var(--cobalt)}
+
+.scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:3}
+
+@media(max-width:820px){
+  .sidebar{position:fixed;inset:0 auto 0 0;transform:translateX(-100%);transition:.25s;box-shadow:0 0 60px rgba(0,0,0,.6)}
+  .sidebar.open{transform:none}
+  .scrim.show{display:block}
+  .topbar .hamb{display:block}
+  .modelpill{max-width:190px}
+  .modelpill select{max-width:120px}
+  .modelpill .lab{display:none}
+}
+@media(max-width:520px){
+  .pad{padding:16px}
+  .cav-wrap{margin-left:0;width:100%}
+}
 </style>
 </head>
 <body>
 
-<div class="hdr">
-  <div class="hdr-inner">
-    <span class="logo">VINCENT</span>
-    <div class="hdr-right" id="devChips">
-      <span style="font-size:10px;color:var(--tx3)">conectando…</span>
+<!-- ─── Sidebar ─── -->
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="star">✦</div>
+    <div>
+      <div class="name"><b>VINCENT</b></div>
+      <div class="sub">Console</div>
     </div>
   </div>
-  <div class="tabs">
-    <div class="tb ac" onclick="sw('devices')">📟 Devices</div>
-    <div class="tb" onclick="sw('claude')">🤖 Claude</div>
-    <div class="tb" onclick="sw('flash')">⚡ Flash</div>
+  <nav class="nav">
+    <button data-view="chat" class="active"><span class="ic">💬</span> Chat</button>
+    <button data-view="market"><span class="ic">🧩</span> Marketplace</button>
+    <button data-view="status"><span class="ic">📊</span> Status</button>
+  </nav>
+  <div class="side-foot">
+    <span class="dot" id="health-dot"></span><span id="health-label">verificando…</span>
   </div>
-</div>
+</aside>
+<div class="scrim" id="scrim"></div>
 
-<div class="cnt" id="cnt">
-
-  <!-- DEVICES -->
-  <div class="pn ac" id="pn-devices">
-    <div class="empty" id="devEmpty">buscando dispositivos…</div>
-  </div>
-
-  <!-- CLAUDE -->
-  <div class="pn" id="pn-claude">
-    <div class="card">
-      <div class="msgs" id="chatMsgs">
-        <div class="msg sy">Claude está monitorando T-Embed + ESP32DIV autonomamente.<br>Pergunte qualquer coisa sobre o sistema.</div>
-      </div>
-      <div class="chat-foot">
-        <input class="inp" id="qi" placeholder="Pergunte ao Claude…" autocomplete="off" />
-        <button class="btn" id="qbtn" onclick="askClaude()">→</button>
-      </div>
+<!-- ─── Main ─── -->
+<div class="main">
+  <div class="topbar">
+    <button class="hamb" id="hamb">☰</button>
+    <h1 id="page-title">Chat</h1>
+    <div class="modelpill" title="Modelo neural ativo">
+      <span class="lab">Modelo</span>
+      <select id="model-select"><option>carregando…</option></select>
     </div>
   </div>
 
-  <!-- FLASH -->
-  <div class="pn" id="pn-flash">
-    <div class="empty" id="flashEmpty">carregando…</div>
-  </div>
+  <div class="page">
 
-</div>
-
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
-<script>
-// ── State ─────────────────────────────────────────────────────────────────────
-const devs = {};
-const termLogs = {};
-
-// Quick commands per device
-const QUICK = {
-  TEMBED: [
-    {l:'WiFi On',  c:'wifi on'},
-    {l:'WiFi Off', c:'wifi off'},
-    {l:'Settings', c:'settings'},
-    {l:'Files',    c:'ls'},
-    {l:'WebUI',    c:'webui'},
-    {l:'IR Rx',    c:'ir rx 5'},
-  ],
-  ESP32DIV: [
-    {l:'WiFi On',  c:'wifi on'},
-    {l:'Settings', c:'settings'},
-    {l:'Files',    c:'ls'},
-    {l:'Status',   c:'dual status'},
-    {l:'Marauder', c:'dual marauder', warn:true},
-    {l:'Bruce',    c:'dual bruce'},
-  ],
-};
-const ICONS = {TEMBED:'📡', ESP32DIV:'🔬'};
-
-// ── Tabs ──────────────────────────────────────────────────────────────────────
-function sw(tab) {
-  const tabs = ['devices','claude','flash'];
-  document.querySelectorAll('.tb').forEach((t,i) => t.classList.toggle('ac', tabs[i]===tab));
-  document.querySelectorAll('.pn').forEach(p => p.classList.remove('ac'));
-  document.getElementById('pn-'+tab).classList.add('ac');
-  if (tab === 'flash') loadFlash();
-}
-
-// ── Device cards ──────────────────────────────────────────────────────────────
-function renderDevs() {
-  const list = Object.values(devs);
-  const chips = list.map(d => `
-    <div class="dev-chip">
-      <div class="dot ${d.online?'on':''}"></div>
-      <span>${d.id}</span>
-    </div>`).join('');
-  document.getElementById('devChips').innerHTML = chips || '<span style="font-size:10px;color:var(--tx3)">sem devices</span>';
-
-  const pn = document.getElementById('pn-devices');
-  const empty = document.getElementById('devEmpty');
-  if (!list.length) { empty.style.display='block'; return; }
-  empty.style.display = 'none';
-
-  // Remove old cards
-  pn.querySelectorAll('.dcard').forEach(c => c.remove());
-
-  list.forEach(d => {
-    let el = document.getElementById('dc-'+d.id);
-    if (el) el.remove();
-
-    const cmds = QUICK[d.id] || [];
-    const card = document.createElement('div');
-    card.className = 'card dcard';
-    card.id = 'dc-'+d.id;
-    card.innerHTML = `
-      <div class="dh">
-        <div class="dico">${ICONS[d.id]||'⚡'}</div>
-        <div class="dinfo">
-          <h3>${esc(d.label||d.id)}</h3>
-          <small>${esc(d.port||'')} · ${esc(d.firmware||'?')}</small>
-        </div>
-        <span class="dbadge ${d.online?'on':'off'}">${d.online?'ONLINE':'OFFLINE'}</span>
-      </div>
-      <div class="hwtags">${(d.hardware||[]).map(h=>`<span class="hw">${h}</span>`).join('')}</div>
-      <div class="qgrid">${cmds.map(c=>`<div class="qb" onclick="qcmd('${d.id}','${c.c}',${c.warn||false})">${c.l}</div>`).join('')}</div>
-      <div class="term" id="term-${d.id}"><span style="color:var(--tx3)">aguardando…</span></div>
-      <div class="irow">
-        <input class="inp" id="inp-${d.id}" placeholder="${d.id} › " autocomplete="off"
-               onkeydown="if(event.key==='Enter')fromInput('${d.id}')" />
-        <button class="btn" onclick="fromInput('${d.id}')">▶</button>
-      </div>`;
-    pn.appendChild(card);
-  });
-}
-
-function termWrite(id, html) {
-  if (!termLogs[id]) termLogs[id] = [];
-  termLogs[id].push(html);
-  const el = document.getElementById('term-'+id);
-  if (!el) return;
-  // Clear placeholder
-  if (el.querySelector('span')) el.innerHTML = '';
-  const d = document.createElement('div');
-  d.innerHTML = html;
-  el.appendChild(d);
-  el.scrollTop = el.scrollHeight;
-  while (el.childElementCount > 40) el.removeChild(el.firstChild);
-}
-
-async function qcmd(id, cmd, warn=false) {
-  if (warn && !confirm(`Enviar: ${cmd}?`)) return;
-  sendCmd(id, cmd);
-}
-
-function fromInput(id) {
-  const inp = document.getElementById('inp-'+id);
-  const cmd = inp.value.trim(); if (!cmd) return;
-  inp.value = '';
-  sendCmd(id, cmd);
-}
-
-async function sendCmd(id, cmd) {
-  termWrite(id, `<span class="pr">›</span> ${esc(cmd)}`);
-  try {
-    const r = await fetch(`/api/devices/${id}/command`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({cmd, wait:7.0})
-    });
-    const d = await r.json();
-    if (d.blocked) {
-      termWrite(id, `<span class="er">BLOQUEADO: ${esc(d.response)}</span>`);
-    } else {
-      const lines = (d.response||'').split('\n').filter(l=>l.trim());
-      if (!lines.length) termWrite(id, `<span style="color:var(--tx3)">(sem resposta)</span>`);
-      else lines.forEach(l => termWrite(id, `<span style="color:#86efac">${esc(l)}</span>`));
-    }
-  } catch(e) {
-    termWrite(id, `<span class="er">erro: ${esc(e.message)}</span>`);
-  }
-}
-
-// ── Claude chat ───────────────────────────────────────────────────────────────
-function addMsg(role, txt) {
-  const c = document.getElementById('chatMsgs');
-  const d = document.createElement('div');
-  d.className = 'msg '+role;
-  d.innerHTML = esc(txt).replace(/\n/g,'<br>');
-  c.appendChild(d);
-  c.parentElement.scrollTop = c.parentElement.scrollHeight;
-  return d;
-}
-
-async function askClaude() {
-  const inp = document.getElementById('qi');
-  const btn = document.getElementById('qbtn');
-  const q = inp.value.trim(); if (!q) return;
-  inp.value = '';
-  addMsg('u', q);
-  btn.innerHTML = '<span class="sp"></span>'; btn.disabled = true;
-  const th = addMsg('a', '…');
-  try {
-    const r = await fetch('/api/agent/ask', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({question:q})
-    });
-    const d = await r.json();
-    th.innerHTML = esc(d.answer||d.error||'?').replace(/\n/g,'<br>');
-  } catch(e) {
-    th.innerHTML = `<span class="er">${esc(e.message)}</span>`;
-  }
-  btn.innerHTML = '→'; btn.disabled = false;
-}
-
-document.getElementById('qi').addEventListener('keydown', e => {
-  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); askClaude(); }
-});
-
-// ── Flash ─────────────────────────────────────────────────────────────────────
-async function loadFlash() {
-  const pn = document.getElementById('pn-flash');
-  const empty = document.getElementById('flashEmpty');
-  try {
-    const r = await fetch('/api/flash/status');
-    const data = await r.json();
-    empty.remove();
-    pn.querySelectorAll('.card').forEach(c=>c.remove());
-
-    for (const [devId, imgs] of Object.entries(data)) {
-      const card = document.createElement('div');
-      card.className = 'card';
-      let inner = `<div class="card-title">${esc(devId)}</div>`;
-      for (const [name, info] of Object.entries(imgs)) {
-        const slots = Object.entries(info.slots||{}).map(([k,v])=>`${k}:${v}`).join(' · ');
-        inner += `
-        <div class="flash-item">
-          <div class="finfo">
-            <h4>${esc(name)}</h4>
-            <p>${esc(info.note || slots)}</p>
+    <!-- CHAT -->
+    <section id="view-chat" class="view active">
+      <div class="chat-scroll" id="chat-scroll">
+        <div class="chat-inner" id="chat-inner">
+          <div class="hello" id="hello">
+            <div class="big">Boa noite ✦</div>
+            <div>Pergunte, mande investigar código ou ative o <b style="color:var(--violet-soft)">modo agente</b> para eu executar ferramentas sozinho.</div>
+            <div class="chips">
+              <button>Como funciona a compressão Caveman?</button>
+              <button>Liste os arquivos deste projeto</button>
+              <button>Explique o Agentic Loop do Vincent</button>
+            </div>
           </div>
-          <span class="avail ${info.available?'y':'n'}">${info.available?'PRONTO':'FALTA'}</span>
-        </div>`;
-      }
-      card.innerHTML = inner;
-      pn.appendChild(card);
+        </div>
+      </div>
+      <div class="composer">
+        <div class="composer-inner">
+          <div class="compbar">
+            <label class="toggle" title="No modo agente o Vincent executa ferramentas (bash, leitura de arquivos, git…) por conta própria.">
+              <input type="checkbox" id="agent-toggle">
+              <span class="switch"></span>
+              <span>Modo agente</span>
+            </label>
+            <span class="mode-hint" id="mode-hint">chat direto — resposta rápida</span>
+            <div class="cav-wrap" title="Caveman: comprime tokens mantendo a precisão técnica.">
+              <label>Caveman</label>
+              <select id="caveman-select">
+                <option value="off">off</option>
+                <option value="lite">lite</option>
+                <option value="full">full</option>
+                <option value="ultra">ultra</option>
+              </select>
+            </div>
+          </div>
+          <div class="inputrow">
+            <textarea id="input" rows="1" placeholder="Fale com o Vincent…"></textarea>
+            <button class="sendbtn" id="send" title="Enviar">➤</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MARKETPLACE -->
+    <section id="view-market" class="view">
+      <div class="pad">
+        <div class="section-title">🧩 Marketplace de Skills</div>
+        <div class="section-sub">Instale skills (formato SKILL.md) direto de um repositório git. Só arquivos são copiados — nada do repo é executado.</div>
+
+        <div class="installbar">
+          <input id="git-url" placeholder="https://github.com/usuario/repo-de-skills" spellcheck="false">
+          <button class="btn" id="install-git">Instalar de URL</button>
+        </div>
+
+        <div class="subhead">Catálogo curado</div>
+        <div class="grid" id="market-grid">
+          <div class="empty">carregando catálogo…</div>
+        </div>
+
+        <div class="subhead">Instaladas <span id="installed-count" style="color:var(--tx3);font-weight:600"></span></div>
+        <div class="grid" id="installed-grid">
+          <div class="empty">carregando…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATUS -->
+    <section id="view-status" class="view">
+      <div class="pad">
+        <div class="section-title">📊 Status do Sistema</div>
+        <div class="section-sub">Saúde do daemon Vincent, agente neural e catálogo de modelos.</div>
+        <div class="statgrid" id="stat-grid">
+          <div class="stat"><div class="k">Status</div><div class="v" id="st-status">…</div></div>
+          <div class="stat"><div class="k">Agente</div><div class="v" id="st-agent">…</div></div>
+          <div class="stat"><div class="k">Dispositivos</div><div class="v" id="st-devices">…</div></div>
+          <div class="stat"><div class="k">Modelos</div><div class="v gold" id="st-models">…</div></div>
+        </div>
+        <div class="subhead">Modelo ativo</div>
+        <div class="card" style="max-width:520px">
+          <div class="ct"><h3 id="st-active-model">—</h3><span class="badge gold" id="st-active-badge">neural</span></div>
+          <p id="st-active-desc">O modelo em uso agora para chat e modo agente. Troque no seletor do topo.</p>
+        </div>
+        <div style="margin-top:20px">
+          <button class="btn ghost" id="refresh-status">↻ Atualizar</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const API = ""; // mesma origem
+
+/* ── util ── */
+function toast(msg, kind="info", ms=3200){
+  const t=$("#toast"); t.textContent=msg; t.className="toast "+kind;
+  requestAnimationFrame(()=>t.classList.add("show"));
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),ms);
+}
+async function api(path, opts){
+  const r = await fetch(API+path, opts);
+  let data=null; try{ data = await r.json(); }catch(_){}
+  return { ok:r.ok, status:r.status, data:data||{} };
+}
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+// Render leve de markdown: fenced code, inline code, negrito, quebras.
+function mdToHtml(text){
+  const blocks=[];
+  let t=esc(text).replace(/```([\s\S]*?)```/g,(_,c)=>{blocks.push(c);return " "+(blocks.length-1)+" ";});
+  t=t.replace(/`([^`\n]+)`/g,'<code>$1</code>')
+     .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+     .replace(/\n/g,'<br>');
+  t=t.replace(/ (\d+) /g,(_,i)=>'<pre>'+blocks[+i].replace(/^\n/,'')+'</pre>');
+  return t;
+}
+
+/* ── navegação ── */
+const TITLES={chat:"Chat",market:"Marketplace",status:"Status"};
+function go(view){
+  $$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
+  $$(".view").forEach(v=>v.classList.remove("active"));
+  $("#view-"+view).classList.add("active");
+  $("#page-title").textContent=TITLES[view]||"Vincent";
+  closeSidebar();
+  if(view==="market") loadMarket();
+  if(view==="status") loadStatus();
+}
+$$(".nav button").forEach(b=>b.onclick=()=>go(b.dataset.view));
+
+/* sidebar mobile */
+function openSidebar(){$("#sidebar").classList.add("open");$("#scrim").classList.add("show");}
+function closeSidebar(){$("#sidebar").classList.remove("open");$("#scrim").classList.remove("show");}
+$("#hamb").onclick=openSidebar; $("#scrim").onclick=closeSidebar;
+
+/* ── Chat ── */
+const inputEl=$("#input"), chatInner=$("#chat-inner"), chatScroll=$("#chat-scroll");
+let busy=false;
+
+inputEl.addEventListener("input",()=>{ inputEl.style.height="auto"; inputEl.style.height=Math.min(inputEl.scrollHeight,180)+"px"; });
+inputEl.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();} });
+$("#send").onclick=send;
+$$("#hello .chips button").forEach(b=>b.onclick=()=>{ inputEl.value=b.textContent; send(); });
+
+$("#agent-toggle").addEventListener("change",e=>{
+  $("#mode-hint").innerHTML = e.target.checked
+    ? 'modo agente — <b>executa ferramentas</b> (pode demorar)'
+    : 'chat direto — resposta rápida';
+});
+
+function addMsg(role, html){
+  const hello=$("#hello"); if(hello) hello.remove();
+  const wrap=document.createElement("div");
+  wrap.className="msg "+(role==="user"?"user":"bot");
+  const av=role==="user"?"V":"✦";
+  wrap.innerHTML=`<div class="av">${av}</div><div style="flex:1;min-width:0"><div class="role">${role==="user"?"você":"vincent"}</div><div class="bubble">${html}</div></div>`;
+  chatInner.appendChild(wrap);
+  chatScroll.scrollTop=chatScroll.scrollHeight;
+  return wrap;
+}
+function addThinking(){
+  const hello=$("#hello"); if(hello) hello.remove();
+  const wrap=document.createElement("div");
+  wrap.className="msg bot"; wrap.id="thinking";
+  wrap.innerHTML=`<div class="av">✦</div><div><div class="role">vincent</div><div class="bubble"><div class="typing"><i></i><i></i><i></i></div></div></div>`;
+  chatInner.appendChild(wrap); chatScroll.scrollTop=chatScroll.scrollHeight;
+}
+function rmThinking(){ const t=$("#thinking"); if(t) t.remove(); }
+
+async function send(){
+  const text=inputEl.value.trim();
+  if(!text||busy) return;
+  busy=true; $("#send").disabled=true;
+  addMsg("user", mdToHtml(text));
+  inputEl.value=""; inputEl.style.height="auto";
+  addThinking();
+
+  const agentMode=$("#agent-toggle").checked;
+  const path = agentMode ? "/api/agent/act" : "/api/agent/ask";
+  const payload = agentMode ? {task:text} : {question:text};
+
+  try{
+    const {ok,data}=await api(path,{
+      method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)
+    });
+    rmThinking();
+    if(ok && data.answer!=null){
+      addMsg("bot", mdToHtml(data.answer));
+    }else{
+      const m=addMsg("bot", esc(data.error||"Falha ao obter resposta."));
+      m.querySelector(".bubble").classList.add("err");
     }
-
-    const infoCard = document.createElement('div');
-    infoCard.className = 'card';
-    infoCard.innerHTML = `
-      <div class="card-title">Como flashar</div>
-      <div style="font-size:11px;color:var(--tx3);line-height:1.7">
-        No terminal do computador:<br>
-        <span style="color:var(--ac2)">bash ~/vincent_flash.sh esp32div</span><br>
-        <span style="color:var(--ac2)">bash ~/vincent_flash.sh tembed</span><br>
-        <span style="color:var(--ac2)">bash ~/vincent_flash.sh both</span>
-      </div>`;
-    pn.appendChild(infoCard);
-  } catch(e) {
-    if (empty) empty.textContent = 'erro: '+e.message;
+  }catch(e){
+    rmThinking();
+    const m=addMsg("bot","Erro de rede: "+esc(e.message));
+    m.querySelector(".bubble").classList.add("err");
+  }finally{
+    busy=false; $("#send").disabled=false; inputEl.focus();
   }
 }
 
-// ── WebSocket ─────────────────────────────────────────────────────────────────
-const socket = io({transports:['websocket','polling']});
-
-socket.on('connect', () => {
-  console.log('WS conectado');
-  loadDevs();
+/* ── Caveman ── */
+$("#caveman-select").addEventListener("change",async e=>{
+  const mode=e.target.value;
+  const {ok,data}=await api("/api/caveman",{
+    method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode})
+  });
+  if(ok) toast("Caveman: "+(data.mode||mode), "ok");
+  else toast(data.error||"falha ao trocar Caveman","err");
 });
-socket.on('disconnect', () => {
-  document.getElementById('devChips').innerHTML = '<span style="font-size:10px;color:var(--re)">desconectado</span>';
-});
 
-socket.on('device_update', ev => {
-  if (ev.kind === 'all_devices') {
-    (ev.payload||[]).forEach(d => { devs[d.id] = d; });
-    renderDevs();
-  } else if (ev.kind === 'connected') {
-    devs[ev.device_id] = ev.payload;
-    renderDevs();
-  } else if (ev.kind === 'disconnected') {
-    if (devs[ev.device_id]) { devs[ev.device_id].online = false; renderDevs(); }
-  } else if (ev.kind === 'command_result') {
-    // Ignore — handled by sendCmd
-  } else if (ev.kind === 'data') {
-    // Serial data — show in terminal lightly
+/* ── Modelos ── */
+async function loadModels(){
+  const sel=$("#model-select");
+  const {ok,data}=await api("/api/models");
+  if(!ok || !Array.isArray(data.models) || !data.models.length){
+    sel.innerHTML=`<option>indisponível</option>`; return;
   }
+  const active=data.active;
+  // ordena: locais primeiro
+  const models=data.models.slice().sort((a,b)=> (b.is_local?1:0)-(a.is_local?1:0));
+  sel.innerHTML="";
+  for(const m of models){
+    const o=document.createElement("option");
+    o.value=m.id;
+    const tag=m.is_local?"🖥 ":(m.is_free?"✧ ":"☁ ");
+    o.textContent=tag+(m.display_id||m.id);
+    if(m.id===active) o.selected=true;
+    sel.appendChild(o);
+  }
+  window.__models=models; window.__activeModel=active;
+}
+$("#model-select").addEventListener("change",async e=>{
+  const id=e.target.value;
+  const {ok,data}=await api("/api/model",{
+    method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id})
+  });
+  if(ok){ window.__activeModel=data.active; toast("Modelo ativo: "+(data.active_display||data.active),"ok"); }
+  else toast(data.error||"falha ao trocar modelo","err");
 });
 
-socket.on('agent_analysis', ev => {
-  if (!ev.text) return;
-  const c = document.getElementById('chatMsgs');
-  const d = document.createElement('div');
-  d.className = 'msg sy';
-  d.innerHTML = '<b>AUTO CYCLE</b><br>' + esc(ev.text.slice(0,400)).replace(/\n/g,'<br>');
-  c.appendChild(d);
-  c.parentElement.scrollTop = c.parentElement.scrollHeight;
-});
+/* ── Marketplace ── */
+let marketLoaded=false;
+async function loadMarket(force){
+  if(marketLoaded && !force) { loadInstalled(); return; }
+  const grid=$("#market-grid");
+  const {ok,data}=await api("/api/marketplace");
+  if(!ok || !Array.isArray(data.skills)){ grid.innerHTML=`<div class="empty">catálogo indisponível</div>`; return; }
+  grid.innerHTML="";
+  for(const s of data.skills){
+    const c=document.createElement("div"); c.className="card";
+    c.innerHTML=`
+      <div class="ct"><h3>${esc(s.name)}</h3><span class="badge cat">${esc(s.category||"skill")}</span></div>
+      <p>${esc(s.description||"")}</p>
+      <div class="git" title="${esc(s.git_url)}">${esc(s.git_url)}</div>
+      <button class="btn wide">Instalar</button>`;
+    const btn=c.querySelector("button");
+    btn.onclick=()=>installFrom(s.git_url, btn, s.name);
+    grid.appendChild(c);
+  }
+  marketLoaded=true;
+  loadInstalled();
+}
+async function loadInstalled(){
+  const grid=$("#installed-grid"), cnt=$("#installed-count");
+  const {ok,data}=await api("/api/skills");
+  const skills=(ok && Array.isArray(data.skills))?data.skills:[];
+  cnt.textContent = skills.length?`(${skills.length})`:"";
+  if(!skills.length){ grid.innerHTML=`<div class="empty">Nenhuma skill instalada ainda. Instale uma do catálogo acima ou por URL.</div>`; return; }
+  grid.innerHTML="";
+  for(const s of skills){
+    const c=document.createElement("div"); c.className="card";
+    c.innerHTML=`
+      <div class="ct"><h3>${esc(s.name)}</h3><span class="badge ok">instalada</span></div>
+      <p>${esc(s.description||s.when_to_use||"—")}</p>`;
+    grid.appendChild(c);
+  }
+}
+async function installFrom(url, btn, label){
+  if(!url){ toast("URL vazia","err"); return; }
+  const old = btn?btn.textContent:""; if(btn){ btn.disabled=true; btn.textContent="Instalando…"; }
+  const {ok,data}=await api("/api/skills/install",{
+    method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({git_url:url})
+  });
+  if(btn){ btn.disabled=false; btn.textContent=old; }
+  if(ok && data.installed && data.installed.length){
+    toast("Instalada: "+data.installed.join(", "),"ok");
+    loadInstalled();
+  }else if(ok && data.warning){
+    toast(data.warning,"info",4500);
+  }else{
+    toast((label?label+": ":"")+(data.error||"falha na instalação"),"err",4500);
+  }
+}
+$("#install-git").onclick=()=>{
+  const url=$("#git-url").value.trim();
+  if(!url){ toast("Cole a URL de um repositório git","info"); return; }
+  installFrom(url, $("#install-git"));
+};
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-async function loadDevs() {
-  try {
-    const r = await fetch('/api/devices');
-    const list = await r.json();
-    list.forEach(d => { devs[d.id] = d; });
-    renderDevs();
-  } catch(e) {
-    document.getElementById('devEmpty').textContent = 'erro ao conectar: '+e.message;
+/* ── Status / Health ── */
+async function loadStatus(){
+  const {ok,data}=await api("/api/health");
+  if(ok){
+    $("#st-status").textContent=data.status||"—"; $("#st-status").className="v "+(data.status==="ok"?"ok":"err");
+    $("#st-agent").textContent=data.agent?"online":"offline"; $("#st-agent").className="v "+(data.agent?"ok":"err");
+    $("#st-devices").textContent=data.devices!=null?data.devices:"—";
+  }
+  const m=await api("/api/models");
+  if(m.ok && Array.isArray(m.data.models)){
+    $("#st-models").textContent=m.data.models.length;
+    const act=(m.data.active_display||m.data.active||"—");
+    $("#st-active-model").textContent=act;
+  }
+}
+$("#refresh-status").onclick=()=>{ loadStatus(); toast("Atualizado","info",1400); };
+
+/* ── Health poll (sidebar) ── */
+async function pollHealth(){
+  const dot=$("#health-dot"), lab=$("#health-label");
+  const {ok,data}=await api("/api/health");
+  if(ok && data.status==="ok"){
+    dot.className="dot ok";
+    lab.textContent = data.agent ? "agente online" : "daemon ok · sem agente";
+  }else{
+    dot.className="dot err"; lab.textContent="offline";
   }
 }
 
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-loadDevs();
+/* ── boot ── */
+(async function(){
+  await loadModels();
+  pollHealth();
+  setInterval(pollHealth, 15000);
+})();
 </script>
 </body>
 </html>

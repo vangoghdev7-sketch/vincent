@@ -157,3 +157,7 @@ def on_ws_command(data):
         return
     result = _registry.send(dev_id, cmd, wait)
     socketio.emit("command_result", {"device_id": dev_id, **result})
+
+# ─── Web UI Blueprint (GUI moderna + marketplace de skills) ──────────────────
+from .web_ui import bp as web_ui_bp  # noqa: E402
+app.register_blueprint(web_ui_bp)
