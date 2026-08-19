@@ -213,12 +213,16 @@ class Device:
                 except queue.Empty: break
 
             # Enter vazio para garantir prompt limpo (Bruce não interpreta Ctrl+C via serial)
-            self.ser.write(b"\r\n")
-            time.sleep(0.15)
-            self.ser.reset_input_buffer()
+            try:
+                self.ser.write(b"\r\n")
+                time.sleep(0.15)
+                self.ser.reset_input_buffer()
 
-            # Envia o comando
-            self.ser.write((cmd + "\r\n").encode())
+                # Envia o comando
+                self.ser.write((cmd + "\r\n").encode())
+            except Exception as e:
+                self._alive = False
+                return {"ok": False, "cmd": cmd, "response": f"erro de comunicação serial: {e}", "blocked": False}
 
             # Coleta resposta
             lines: list[str] = []
