@@ -64,9 +64,25 @@ class PlatformEnvironment:
         return paths
 
     @staticmethod
+    def _detect_color_support() -> str:
+        """Detecta suporte a cores do terminal: 'truecolor', '256', 'basic' ou 'none'."""
+        if not hasattr(sys.stdout, "isatty") or not sys.stdout.isatty():
+            return "none"
+        colorterm = os.environ.get("COLORTERM", "").lower()
+        if colorterm in ("truecolor", "24bit"):
+            return "truecolor"
+        term = os.environ.get("TERM", "")
+        if "256color" in term or os.environ.get("TERM_PROGRAM") in ("iTerm.app", "vscode"):
+            return "256"
+        if term not in ("", "dumb"):
+            return "basic"
+        return "none"
+
+    @staticmethod
     def get_device_summary() -> Dict[str, Any]:
         cols, rows = PlatformEnvironment.get_terminal_dimensions()
         is_mob = PlatformEnvironment.is_mobile()
+        color = PlatformEnvironment._detect_color_support()
         return {
             "os": PlatformEnvironment.get_os_type(),
             "is_mobile": is_mob,
@@ -75,7 +91,9 @@ class PlatformEnvironment:
             "layout_mode": "compact-mobile" if (is_mob or cols < 60) else "full-desktop",
             "memory_constrained": is_mob,
             "max_history_turns": 4 if is_mob else 10,
-            "spinner_density": "light" if is_mob else "dense"
+            "spinner_density": "light" if is_mob else "dense",
+            "color_support": color,
+            "use_color": color != "none",
         }
 
 try:
