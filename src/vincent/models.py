@@ -241,6 +241,9 @@ class ModelManager:
         import time
         t0 = time.time()
 
+        if not messages:
+            return "[VINCENT] Nenhuma mensagem para enviar — o prompt está vazio.", target_model, 0.0
+
         # Monta cascata de modelos prioritários
         cascade: List[str] = [target_model]
 
