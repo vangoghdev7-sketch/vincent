@@ -542,6 +542,19 @@ def test_mencoes_ignoram_lixo_e_respeitam_o_gitignore(projeto):
         assert "segredo.log" in caminhos
 
 
+@pytest.mark.skipif(not shutil.which("git"), reason="precisa de git")
+def test_caminho_com_acento_vem_inteiro_do_git(projeto):
+    """git ls-files escapa acento entre aspas — o completer inseria caminho morto."""
+    (projeto / "src" / "coração.py").write_text("x", encoding="utf-8")
+    subprocess.run(["git", "init", "-q"], cwd=projeto, check=True)
+    ia._mention_cache.clear()
+    assert "src/coração.py" in [e["path"] for e in ia.project_files()]
+
+    from vincent.cli import expand_mentions
+    texto, notas = expand_mentions("olha o @src/coração.py")
+    assert "[arquivo: src/coração.py]" in texto and notas == ["◈ @src/coração.py — 1 linha(s)"]
+
+
 def test_ranking_de_mencao_faz_AND_e_prefere_caminho_curto(projeto):
     (projeto / "build").mkdir()
     (projeto / "build" / "ui.py").write_text("x", encoding="utf-8")

@@ -666,17 +666,21 @@ def _git_files(root: str) -> Optional[List[str]]:
 
     Deixa o git aplicar as regras de ignore (inclusive .gitignore aninhado e o
     global) em vez de reimplementar o matcher. None = aqui não tem git.
+
+    Vai de '-z' porque a saída normal do git escapa acento ('cora\\303\\247ão')
+    entre aspas — o completer inseria um caminho que não existe em disco.
     """
     try:
         out = subprocess.run(
-            ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
-            cwd=root, capture_output=True, text=True, timeout=5,
+            ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+            cwd=root, capture_output=True, timeout=5,
         )
     except Exception:
         return None
     if out.returncode != 0:
         return None
-    return [ln for ln in out.stdout.splitlines() if ln.strip()]
+    saida = out.stdout.decode("utf-8", "replace")
+    return [p for p in saida.split("\0") if p.strip()]
 
 
 def _walk_files(root: str) -> List[str]:
