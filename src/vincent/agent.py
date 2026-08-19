@@ -395,14 +395,17 @@ class VincentAgent:
                 "content": ("PARE de usar ferramentas. Com base em tudo que você executou e observou acima, "
                             "escreva AGORA a resposta final ao usuário, em português, clara e direta. NÃO emita tool_call."),
             }]
-            synth_reply, _, lat2 = self.model_manager.execute_inference(
-                synth_msgs, target_model=target_m,
-                system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context + skills_ctx,
-                stream_callback=_guarded_stream()
-            )
-            total_latency += lat2
-            final_response = self._strip_tool_call(synth_reply) or \
-                "[VINCENT] Executei os passos acima, mas não consegui fechar uma resposta final clara. Veja o trace."
+            try:
+                synth_reply, _, lat2 = self.model_manager.execute_inference(
+                    synth_msgs, target_model=target_m,
+                    system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context + skills_ctx,
+                    stream_callback=_guarded_stream()
+                )
+                total_latency += lat2
+                final_response = self._strip_tool_call(synth_reply) or \
+                    "[VINCENT] Executei os passos acima, mas não consegui fechar uma resposta final clara. Veja o trace."
+            except Exception as e:
+                final_response = f"[VINCENT] Falha de comunicação na síntese final: {e}"
 
         in_toks = CavemanEngine.estimate_tokens(processed_task)
         out_toks = CavemanEngine.estimate_tokens(final_response or "")
