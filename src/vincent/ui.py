@@ -112,7 +112,8 @@ class NeuralSpinner:
                 # Cronômetro ao vivo — deixa claro que está trabalhando, não travado
                 elapsed = int(time.time() - self._start)
                 max_len = max(10, get_terminal_width() - 15)
-                msg_display = self.message if len(self.message) <= max_len else self.message[:max_len - 3] + "..."
+                safe_message = " ".join(self.message.split())
+                msg_display = safe_message if len(safe_message) <= max_len else safe_message[:max_len - 3] + "..."
 
                 line = f"{self.color}{swirl}{CLR_RST} {LEMON_YELLOW}{star}{CLR_RST} {CANVAS_WHITE}{msg_display}{CLR_RST} {SHADOW_GRAY}· {elapsed}s{CLR_RST}"
                 with self._lock:
