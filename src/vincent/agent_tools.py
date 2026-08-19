@@ -12,6 +12,7 @@ Provides sandboxed execution tools for autonomous multi-turn reasoning and codin
 import os
 import re
 import glob
+import shutil
 import subprocess
 import fnmatch
 import tempfile
@@ -473,6 +474,43 @@ def tool_computer_action(
     return {"ok": True, "action": action}
 
 
+def tool_social_post(
+    content: str,
+    integrations: str,
+    publish: bool = False,
+    media: Optional[str] = None,
+    scheduled_at: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Agenda/publica post via Postiz CLI (`postiz posts:create`, npm install -g postiz).
+    Por padrão cria como RASCUNHO — só publica de verdade com publish=True (mesma lição
+    do computer_action: nunca executa ação pública/irreversível sem confirmação explícita)."""
+    if not shutil.which("postiz"):
+        return {"error": "Postiz CLI não encontrado. Instale com: npm install -g postiz && postiz auth:login"}
+    if not content or not content.strip():
+        return {"error": "Conteúdo do post vazio."}
+    if not integrations or not integrations.strip():
+        return {"error": "Nenhuma integração informada. Rode 'postiz integrations:list' pra ver os IDs."}
+
+    cmd = ["postiz", "posts:create", "-c", content, "-i", integrations]
+    if media:
+        cmd += ["-m", media]
+    if scheduled_at:
+        cmd += ["-s", scheduled_at]
+    if not publish:
+        cmd += ["-t", "draft"]
+
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    except subprocess.TimeoutExpired:
+        return {"error": "postiz CLI excedeu o tempo limite de 30s."}
+    except Exception as exc:
+        return {"error": f"Falha ao executar postiz CLI: {exc}"}
+
+    if proc.returncode != 0:
+        return {"error": (proc.stderr or proc.stdout).strip()[:2000] or "postiz CLI retornou erro.", "exit_code": proc.returncode}
+    return {"ok": True, "draft": not publish, "stdout": proc.stdout.strip()[:2000]}
+
+
 # ─── Esquemas de Ferramentas (JSON Schema / Tool Definitions) ─────────────────
 
 TOOL_DEFINITIONS = [
@@ -628,6 +666,21 @@ TOOL_DEFINITIONS = [
             },
             "required": ["action"]
         }
+    },
+    {
+        "name": "social_post",
+        "description": "Agenda ou publica post em rede social via Postiz CLI (28+ plataformas). Cria como RASCUNHO por padrão — só publica de fato com publish=true, e isso exige confirmação explícita do usuário no pedido.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "content": {"type": "string", "description": "Texto do post"},
+                "integrations": {"type": "string", "description": "IDs de integração separados por vírgula (ver 'postiz integrations:list')"},
+                "publish": {"type": "boolean", "description": "true = publica de verdade; false (padrão) = só cria rascunho pra revisão humana"},
+                "media": {"type": "string", "description": "Caminhos de imagem/vídeo separados por vírgula (opcional)"},
+                "scheduled_at": {"type": "string", "description": "Data/hora ISO 8601 pra agendar (opcional, padrão: agora)"}
+            },
+            "required": ["content", "integrations"]
+        }
     }
 ]
 
@@ -696,6 +749,14 @@ def execute_agent_tool(tool_name: str, arguments: Dict[str, Any]) -> Dict[str, A
             text=arguments.get("text"),
             button=arguments.get("button", "left"),
             amount=arguments.get("amount", 0)
+        )
+    elif name in ("social_post", "post_social", "postiz"):
+        return tool_social_post(
+            content=arguments.get("content", ""),
+            integrations=arguments.get("integrations", ""),
+            publish=arguments.get("publish", False),
+            media=arguments.get("media"),
+            scheduled_at=arguments.get("scheduled_at")
         )
     else:
         return {"error": f"Ferramenta desconhecida: {tool_name}"}
