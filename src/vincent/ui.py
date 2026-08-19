@@ -51,6 +51,15 @@ GRAY_LIGHT   = CANVAS_WHITE
 GRAY_MUTED   = SHADOW_GRAY
 GRAY_DARK    = "\033[38;5;236m"
 
+# Desativa automaticamente todas as cores ANSI quando a saída não é um terminal
+# real (pipe, redirect para arquivo, CI) ou quando NO_COLOR está definida —
+# evita poluir logs/arquivos com sequências de escape ilegíveis.
+if os.environ.get("NO_COLOR") or not sys.stdout.isatty():
+    for _name, _val in list(globals().items()):
+        if isinstance(_val, str) and _val.startswith("\033["):
+            globals()[_name] = ""
+    del _name, _val
+
 # ─── Van Gogh Starry Night ASCII Masterpiece Banner ───────────────────────────
 BANNER = f"""
 {COBALT_BLUE}   ★    .   ☆  *   .   ★    .   *   ☆  .   ★    .   *   ☆  .   ★{CLR_RST}
