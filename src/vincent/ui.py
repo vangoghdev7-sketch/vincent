@@ -230,7 +230,7 @@ def render_response_box(reply: str, model: str, latency: float, mode: str = "Sta
     top_bar = f"{CYPRESS_GREEN}╭─[ {LEMON_YELLOW}{CLR_BOLD}{header_title}{CLR_RST}{CYPRESS_GREEN} ]" + "─" * max(2, term_width - len(header_title) - 7) + f"╮{CLR_RST}"
     print(top_bar)
     
-    lines = (reply or "").strip().splitlines() or ["(Resposta vazia)"]
+    lines = str(reply if reply is not None else "").strip().splitlines() or ["(Resposta vazia)"]
     in_code_block = False
     
     for line in lines:
