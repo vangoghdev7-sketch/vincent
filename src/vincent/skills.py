@@ -165,6 +165,23 @@ def add_skill_from_git(git_url: str) -> List[str]:
             )
 
         for name, src in candidates:
+            skill_md = os.path.join(src, "SKILL.md")
+            # Valida frontmatter antes de instalar: skill sem name/description
+            # nunca dispara no match_skills e seria instalada silenciosamente.
+            try:
+                with open(skill_md, "r", encoding="utf-8") as _f:
+                    _meta, _ = _split_frontmatter(_f.read())
+            except (OSError, UnicodeDecodeError) as exc:
+                raise RuntimeError(
+                    f"Skill '{name}': não foi possível ler SKILL.md — {exc}"
+                )
+            missing = [f for f in ("name", "description") if not _meta.get(f)]
+            if missing:
+                raise RuntimeError(
+                    f"Skill '{name}': SKILL.md está faltando os campos obrigatórios "
+                    f"no frontmatter: {missing}. "
+                    f"Adicione-os entre os delimitadores '---' no topo do arquivo."
+                )
             dest = os.path.join(SKILLS_DIR, name)
             if os.path.isdir(dest):
                 shutil.rmtree(dest)
