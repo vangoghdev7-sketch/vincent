@@ -66,8 +66,11 @@ BANNER = f"""
 """
 
 def get_terminal_width(default: int = 80) -> int:
-    cols, _ = PlatformEnvironment.get_terminal_dimensions()
-    return cols
+    try:
+        cols, _ = PlatformEnvironment.get_terminal_dimensions()
+        return cols
+    except Exception:
+        return shutil.get_terminal_size((default, 24)).columns
 
 
 class NeuralSpinner:
