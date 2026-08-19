@@ -382,6 +382,7 @@ MENTION_MAX_LINES = 400        # por arquivo
 MENTION_MAX_CHARS = 12000      # por arquivo, teto que o limite de linhas não pega
 MENTION_MAX_FILES = 10         # por mensagem
 MENTION_DIR_ENTRIES = 60       # ao citar um diretório
+MENTION_MAX_BYTES = 2 * 1024 * 1024   # acima disso o arquivo não é lido inteiro
 
 # Comandos que carregam tarefa em texto livre — só neles (e no chat) a menção
 # é expandida. '/model @x' ou '/commit fix @v2' continuam literais.
@@ -409,9 +410,41 @@ def _cap_chars(body: str, shown: int):
     return "".join(mantidas), len(mantidas), len(body) - usado
 
 
+def _read_mention_head(abs_path: str, rel: str, tamanho: int):
+    """Cabeça de um arquivo grande demais pra ler inteiro.
+
+    tool_read_file faz readlines() do arquivo todo antes de fatiar — citar um
+    log de 2 GB ou um .gguf congelava o REPL (e só DEPOIS descobria que era
+    binário). Aqui só os primeiros bytes saem do disco.
+    """
+    try:
+        with open(abs_path, "rb") as fh:
+            head = fh.read(MENTION_MAX_CHARS * 4).decode("utf-8", "replace")
+    except OSError as exc:
+        return None, f"✗ @{rel}: {exc.strerror or exc}"
+    if "\x00" in head:
+        return None, f"✗ @{rel}: arquivo binário, não anexado"
+
+    linhas = head.splitlines(keepends=True)[:MENTION_MAX_LINES]
+    numeradas = "".join(f"{i:4d} | {ln}" for i, ln in enumerate(linhas, start=1))
+    body, shown, _ = _cap_chars(numeradas, len(linhas))
+    mb = tamanho / (1024 * 1024)
+    body += (f"\n… truncado: arquivo de {mb:.1f} MB, só as primeiras {shown} "
+             f"linha(s) entraram (use read_file em {rel} pra ver o resto)\n")
+    return (f"[arquivo: {rel}] {mb:.1f} MB\n```\n{body}```",
+            f"◈ @{rel} — {shown} linha(s) de um arquivo de {mb:.1f} MB")
+
+
 def _read_mention(abs_path: str, rel: str):
     """(bloco_pro_modelo, nota_pro_usuário) de UM arquivo citado."""
     from vincent.agent_tools import tool_read_file
+
+    try:
+        tamanho = os.path.getsize(abs_path)
+    except OSError as exc:
+        return None, f"✗ @{rel}: {exc.strerror or exc}"
+    if tamanho > MENTION_MAX_BYTES:
+        return _read_mention_head(abs_path, rel, tamanho)
 
     res = tool_read_file(abs_path, 1, MENTION_MAX_LINES)
     if res.get("error"):

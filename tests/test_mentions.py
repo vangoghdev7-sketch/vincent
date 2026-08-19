@@ -111,6 +111,35 @@ def test_binario_nao_e_anexado(projeto):
     assert notas == ["✗ @foto.png: arquivo binário, não anexado"]
 
 
+def test_arquivo_gigante_entra_pela_cabeca_sem_ler_o_disco_inteiro(projeto, monkeypatch):
+    """Log de GBs: readlines() do arquivo todo travava o REPL antes de truncar."""
+    import vincent.agent_tools as at
+    import vincent.cli as cli
+
+    (projeto / "huge.log").write_text("\n".join(f"linha {i}" for i in range(500)),
+                                      encoding="utf-8")
+    monkeypatch.setattr(cli, "MENTION_MAX_BYTES", 200)
+    monkeypatch.setattr(at, "tool_read_file",
+                        lambda *a, **kw: pytest.fail("leu o arquivo inteiro"))
+
+    texto, notas = expand_mentions("@huge.log")
+    assert "linha 0" in texto
+    assert "linha 499" not in texto
+    assert "MB, só as primeiras" in texto
+    assert notas[0].startswith("◈ @huge.log — ") and notas[0].endswith(" MB")
+
+
+def test_binario_gigante_e_recusado_sem_carregar_na_memoria(projeto, monkeypatch):
+    import vincent.cli as cli
+
+    (projeto / "modelo.gguf").write_bytes(b"GGUF\x00" + b"\xff" * 4000)
+    monkeypatch.setattr(cli, "MENTION_MAX_BYTES", 200)
+
+    texto, notas = expand_mentions("@modelo.gguf")
+    assert "Conteúdo dos arquivos citados" not in texto
+    assert notas == ["✗ @modelo.gguf: arquivo binário, não anexado"]
+
+
 def test_limite_de_arquivos_por_mensagem(projeto):
     nomes = []
     for i in range(MENTION_MAX_FILES + 2):
