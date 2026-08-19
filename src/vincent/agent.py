@@ -258,12 +258,16 @@ class VincentAgent:
             if on_step_callback:
                 on_step_callback(f"🧠 Passo {turn + 1}/{max_turns} — pensando…")
 
-            reply, used_model, lat = self.model_manager.execute_inference(
-                turn_messages,
-                target_model=target_m,
-                system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context + skills_ctx,
-                stream_callback=_guarded_stream()
-            )
+            try:
+                reply, used_model, lat = self.model_manager.execute_inference(
+                    turn_messages,
+                    target_model=target_m,
+                    system_prompt=SYSTEM_BASE + self.plugins.system_prompt_addon() + self._memory_context + skills_ctx,
+                    stream_callback=_guarded_stream()
+                )
+            except Exception as e:
+                final_response = f"[VINCENT] Falha de comunicação com os nós neurais: {e}"
+                break
             total_latency += lat
 
             if not reply:
