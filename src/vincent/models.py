@@ -436,6 +436,8 @@ class ModelManager:
                                 pass
                         return text, model, dt
                 self._omniroute_circuit.record_result("omniroute", success=False, status_code=503)
+                last_error = f"Vincent Cloud ({self.mask(model)}): resposta vazia (2xx sem conteúdo)"
+                continue
             except Exception as e:
                 code = e.code if isinstance(e, urllib.error.HTTPError) else 503
                 if code == 429:
