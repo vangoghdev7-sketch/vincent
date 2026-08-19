@@ -311,19 +311,21 @@ class ModelManager:
                                     chunk = json.loads(line)
                                 except Exception:
                                     continue
-                                piece = chunk.get("message", {}).get("content", "")
+                                msg_obj = chunk.get("message") if isinstance(chunk, dict) else None
+                                piece = msg_obj.get("content", "") if isinstance(msg_obj, dict) else ""
                                 if piece:
                                     parts.append(piece)
                                     try:
                                         stream_callback(piece)
                                     except Exception:
                                         pass  # callback do usuário não pode derrubar a inferência
-                                if chunk.get("done"):
+                                if isinstance(chunk, dict) and chunk.get("done"):
                                     break
                             text = "".join(parts).strip()
                         else:
                             res_data = json.loads(resp.read().decode("utf-8"))
-                            text = res_data.get("message", {}).get("content", "").strip()
+                            msg_obj = res_data.get("message") if isinstance(res_data, dict) else None
+                            text = (msg_obj.get("content", "") if isinstance(msg_obj, dict) else "").strip()
                         if text:
                             self._ollama_circuit.record_result("ollama", success=True)
                             dt = time.time() - t0
