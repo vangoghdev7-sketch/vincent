@@ -448,7 +448,7 @@ class VincentAgent:
                 break
 
             tool_name = tool_call.get("tool", "")
-            tool_args = tool_call.get("args", {})
+            tool_args = tool_call.get("args") or {}
             tool_result = execute_agent_tool(tool_name, tool_args)
             is_error = bool(tool_result.get("error")) or (tool_result.get("exit_code", 0) != 0)
             prefix = "[AUTO-CURA: ERRO NA FERRAMENTA]" if is_error else "[RESULTADO DA FERRAMENTA]"
