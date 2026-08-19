@@ -259,8 +259,10 @@ class ModelManager:
         # Monta cascata de modelos prioritários (resolve ID exibido para ID real upstream)
         cascade: List[str] = [self.resolve(target_model)]
 
-        # Se for local, garante fallback em outros locais
-        for local_m in ["qwen2.5:3b-instruct", "qwen2.5-coder:7b", "qwen3:4b", "granite4:tiny-h"]:
+        # Se for local, garante fallback em outros locais (DEFAULT_MODEL primeiro:
+        # é o modelo que o onboarding manda instalar via 'ollama pull' e tinha
+        # ficado de fora da lista, nunca sendo tentado como fallback).
+        for local_m in [DEFAULT_MODEL, "qwen2.5:3b-instruct", "qwen2.5-coder:7b", "qwen3:4b", "granite4:tiny-h"]:
             if local_m in self.cached_ollama_models and local_m not in cascade:
                 cascade.append(local_m)
 
