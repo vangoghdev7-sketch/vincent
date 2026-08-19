@@ -102,8 +102,10 @@ class ModelManager:
             try:
                 with open(CACHE_PATH, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    self.cached_omniroute_models = data.get("omniroute", [])
-                    self.cached_ollama_models = data.get("ollama", [])
+                    omni = data.get("omniroute", [])
+                    ollama = data.get("ollama", [])
+                    self.cached_omniroute_models = omni if isinstance(omni, list) else []
+                    self.cached_ollama_models = ollama if isinstance(ollama, list) else []
             except Exception:
                 pass
 
