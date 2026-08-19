@@ -129,10 +129,15 @@ def add_skill_from_git(git_url: str) -> List[str]:
     os.makedirs(SKILLS_DIR, exist_ok=True)
     installed = []
     with tempfile.TemporaryDirectory(prefix="vincent-skill-") as tmp:
-        proc = subprocess.run(
-            ["git", "clone", "--depth", "1", git_url, tmp],
-            capture_output=True, text=True, timeout=60
-        )
+        try:
+            proc = subprocess.run(
+                ["git", "clone", "--depth", "1", git_url, tmp],
+                capture_output=True, text=True, timeout=60
+            )
+        except FileNotFoundError:
+            raise RuntimeError("git não encontrado no PATH.")
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("git clone excedeu o tempo limite (60s).")
         if proc.returncode != 0:
             raise RuntimeError(f"git clone falhou: {proc.stderr.strip()[:300]}")
 
