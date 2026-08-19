@@ -320,6 +320,11 @@ class ModelManager:
                     code = e.code if isinstance(e, urllib.error.HTTPError) else 503
                     self._ollama_circuit.record_result("ollama", success=False, status_code=code)
                     last_error = f"Vincent Local ({model}): {e}"
+                    if stream_callback is not None:
+                        try:
+                            stream_callback(f"\n\n[Vincent] \u26a0 {model} falhou ({e}) \u2014 tentando pr\u00f3ximo modelo da cascata...\n\n")
+                        except Exception:
+                            pass  # callback do usu\u00e1rio n\u00e3o pode derrubar o failover
                     continue
 
             # 2. Tentativa via OmniRoute Gateway
