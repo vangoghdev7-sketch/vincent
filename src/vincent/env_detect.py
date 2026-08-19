@@ -78,4 +78,16 @@ class PlatformEnvironment:
             "spinner_density": "light" if is_mob else "dense"
         }
 
-ENV_PROFILE = PlatformEnvironment.get_device_summary()
+try:
+    ENV_PROFILE = PlatformEnvironment.get_device_summary()
+except Exception:
+    ENV_PROFILE = {
+        "os": sys.platform,
+        "is_mobile": False,
+        "columns": 80,
+        "rows": 24,
+        "layout_mode": "full-desktop",
+        "memory_constrained": False,
+        "max_history_turns": 10,
+        "spinner_density": "dense"
+    }
