@@ -7,6 +7,8 @@ de escrita em ~/.vincent (build_session só é exercitado no caminho sem TTY).
 """
 
 import os
+import shutil
+import subprocess
 import sys
 from contextlib import contextmanager
 
@@ -496,12 +498,63 @@ def test_footer_do_picker_preserva_a_saida_e_a_rolagem():
     assert texto.index("▲") < texto.index("Esc")     # ...e não colada no fim da ajuda
 
 
-def test_completer_completa_caminhos_com_arroba(tmp_path, monkeypatch):
-    (tmp_path / "vincentzinho.py").write_text("x", encoding="utf-8")
+@pytest.fixture
+def projeto(tmp_path, monkeypatch):
+    """Projeto de mentira no cwd, com o índice de menções zerado."""
+    (tmp_path / "src" / "vincent").mkdir(parents=True)
+    (tmp_path / "src" / "vincent" / "ui.py").write_text("x", encoding="utf-8")
+    (tmp_path / "src" / "vincent" / "cli.py").write_text("x", encoding="utf-8")
+    (tmp_path / "__pycache__").mkdir()
+    (tmp_path / "__pycache__" / "ui.pyc").write_text("x", encoding="utf-8")
+    (tmp_path / "segredo.log").write_text("x", encoding="utf-8")
+    (tmp_path / ".gitignore").write_text("segredo.log\n", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
-    comps = _complete("olha o @vincentz")
-    assert [c.text for c in comps] == ["inho.py"]    # completa o que falta digitar
-    assert "vincentzinho.py" in "".join(str(t) for c in comps for _, t in c.display)
+    ia._mention_cache.clear()
+    yield tmp_path
+    ia._mention_cache.clear()
+
+
+def test_completer_completa_caminhos_com_arroba(projeto):
+    comps = _complete("olha o @vincent/ui")
+    assert comps[0].text == "@src/vincent/ui.py"      # insere a menção inteira
+    assert comps[0].start_position == -len("@vincent/ui")
+    assert "📄" in "".join(str(t) for _, t in comps[0].display)
+
+
+def test_arroba_pelado_lista_o_projeto_com_icone_de_diretorio(projeto):
+    comps = _complete("@")
+    textos = [c.text for c in comps]
+    assert "@src/" in textos and "@src/vincent/ui.py" in textos
+    dirs = {c.text: "".join(str(t) for _, t in c.display) for c in comps}
+    assert "📁" in dirs["@src/"]
+    assert [c.display_meta_text for c in comps if c.text == "@src/"] == ["diretório"]
+
+
+def test_mencoes_ignoram_lixo_e_respeitam_o_gitignore(projeto):
+    caminhos = [e["path"] for e in ia.project_files()]
+    assert "src/vincent/ui.py" in caminhos
+    assert not any("__pycache__" in p for p in caminhos)   # IGNORE_PATTERNS
+    if shutil.which("git"):
+        subprocess.run(["git", "init", "-q"], cwd=projeto, check=True)
+        ia._mention_cache.clear()
+        assert "segredo.log" not in [e["path"] for e in ia.project_files()]
+    else:                                                   # sem git: fallback
+        assert "segredo.log" in caminhos
+
+
+def test_ranking_de_mencao_faz_AND_e_prefere_caminho_curto(projeto):
+    (projeto / "build").mkdir()
+    (projeto / "build" / "ui.py").write_text("x", encoding="utf-8")
+    ia._mention_cache.clear()
+    assert ia.rank_mentions("vincent ui")[0]["path"] == "src/vincent/ui.py"
+    assert ia.rank_mentions("naoexistezzz") == []
+
+
+def test_indice_de_arquivos_e_cacheado(projeto, monkeypatch):
+    ia.project_files()
+    monkeypatch.setattr(ia, "_git_files", lambda root: (_ for _ in ()).throw(AssertionError("rescan")))
+    monkeypatch.setattr(ia, "_walk_files", lambda root: (_ for _ in ()).throw(AssertionError("rescan")))
+    assert ia.project_files()                       # veio do cache, não reescaneou
 
 
 def test_completer_nao_corta_o_catalogo_em_200():

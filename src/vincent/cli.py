@@ -9,6 +9,7 @@ LlamaFactory Fine-Tuning, Caveman Compression (-65%), and Termux/ADB Universal A
 import argparse
 import os
 import queue
+import re
 import shutil
 import sys
 import threading
@@ -291,6 +292,93 @@ def normalize_bare_command(prompt: str) -> str:
     return prompt
 
 
+# ─── Menções a arquivo (@caminho) ─────────────────────────────────────────────
+# Não bate depois de letra/dígito: "fulano@gmail.com" não é menção. O caminho
+# pode ter ~, /, ponto e hífen; pontuação final da frase fica de fora.
+MENTION_RE = re.compile(r"(?<![\w@/])@([~/\w.\-][\w.\-/]*)")
+MENTION_MAX_LINES = 400        # por arquivo
+MENTION_MAX_FILES = 10         # por mensagem
+MENTION_DIR_ENTRIES = 60       # ao citar um diretório
+
+# Comandos que carregam tarefa em texto livre — só neles (e no chat) a menção
+# é expandida. '/model @x' ou '/commit fix @v2' continuam literais.
+MENTION_COMMANDS = ("/act", "/agent", "/auto", "/bg")
+
+
+def _read_mention(abs_path: str, rel: str):
+    """(bloco_pro_modelo, nota_pro_usuário) de UM arquivo citado."""
+    from vincent.agent_tools import tool_read_file
+
+    res = tool_read_file(abs_path, 1, MENTION_MAX_LINES)
+    if res.get("error"):
+        return None, f"✗ @{rel}: {res['error']}"
+    if "\x00" in res.get("raw_content", ""):
+        return None, f"✗ @{rel}: arquivo binário, não anexado"
+
+    total, shown = int(res["total_lines"]), int(res["end_line"])
+    corte = total - shown
+    header = f"[arquivo: {rel}] {total} linha(s)"
+    body = res["content"]
+    if corte > 0:
+        body += (f"\n… truncado: {corte} de {total} linhas cortadas "
+                 f"(use read_file em {rel} pra ver o resto)\n")
+        nota = f"◈ @{rel} — {shown}/{total} linhas ({corte} cortadas)"
+    else:
+        nota = f"◈ @{rel} — {total} linha(s)"
+    return f"{header}\n```\n{body}```", nota
+
+
+def _read_mention_dir(abs_path: str, rel: str):
+    from vincent.agent_tools import tool_list_dir
+
+    res = tool_list_dir(abs_path, max_depth=1)
+    if res.get("error"):
+        return None, f"✗ @{rel}: {res['error']}"
+    entries = res.get("entries", [])
+    linhas = [("📁 " if e.get("type") == "dir" else "📄 ") + str(e.get("path"))
+              for e in entries[:MENTION_DIR_ENTRIES]]
+    sobra = len(entries) - len(linhas)
+    if sobra > 0:
+        linhas.append(f"… e mais {sobra} entrada(s)")
+    corpo = "\n".join(linhas) or "(vazio)"
+    return (f"[diretório: {rel}] {len(entries)} entrada(s)\n```\n{corpo}\n```",
+            f"◈ @{rel}/ — {len(entries)} entrada(s)")
+
+
+def expand_mentions(prompt: str, root: str = None):
+    """Anexa ao prompt o conteúdo dos arquivos citados com '@caminho'.
+
+    Devolve (prompt_expandido, notas). O texto original fica intacto — o
+    conteúdo entra num bloco no fim, truncado por arquivo (avisando quantas
+    linhas foram cortadas) e limitado a MENTION_MAX_FILES arquivos. Menção que
+    não existe em disco é deixada em paz (pode ser só uma arroba na frase).
+    """
+    root = os.path.abspath(root or os.getcwd())
+    blocos, notas, vistos = [], [], set()
+    for m in MENTION_RE.finditer(prompt or ""):
+        rel = m.group(1).rstrip(".,;:!?)]}'\"")
+        if not rel or rel in vistos:
+            continue
+        alvo = os.path.expanduser(rel)
+        alvo = alvo if os.path.isabs(alvo) else os.path.join(root, alvo)
+        if not os.path.exists(alvo):
+            continue
+        vistos.add(rel)
+        if len(vistos) > MENTION_MAX_FILES:
+            notas.append(f"⚠ @{rel} ignorado — limite de {MENTION_MAX_FILES} anexos por mensagem")
+            continue
+        bloco, nota = (_read_mention_dir(alvo, rel) if os.path.isdir(alvo)
+                       else _read_mention(alvo, rel))
+        if bloco:
+            blocos.append(bloco)
+        notas.append(nota)
+
+    if not blocos:
+        return prompt, notas
+    anexo = "\n\n".join(blocos)
+    return (f"{prompt}\n\n--- Conteúdo dos arquivos citados ---\n{anexo}", notas)
+
+
 def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
     # Num terminal curto o banner de 11 linhas empurra o HUD pra fora da tela
     # antes do primeiro prompt — aí ele vira só uma linha de assinatura.
@@ -559,6 +647,13 @@ def interactive_repl(agent: VincentAgent, registry: DeviceRegistry):
             # igual já acontecia com exit/clear — agora vale pra todos.
             prompt = normalize_bare_command(prompt)
             cmd_word = prompt.split(None, 1)[0].lower()
+
+            # '@arquivo' vira contexto de verdade (chat e comandos de tarefa).
+            if "@" in prompt and (not prompt.startswith("/") or cmd_word in MENTION_COMMANDS):
+                prompt, mention_notes = expand_mentions(prompt)
+                for nota in mention_notes:
+                    cor = ALERT_SCARLET if nota.startswith(("✗", "⚠")) else CYPRESS_GREEN
+                    print(f"{cor}{nota}{CLR_RST}")
 
             # ── Comandos Especiais do REPL ──────────────────────────────────
             if prompt in ("/exit", "/quit", "exit", "quit", ":q"):

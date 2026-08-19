@@ -14,11 +14,13 @@ from __future__ import annotations
 
 import os
 import shutil
+import subprocess
 import sys
 import threading
 import time
 from typing import Any, Callable, Dict, List, Optional
 
+from .agent_tools import is_ignored
 from .ui import (
     CLR_RST, CLR_BOLD, COBALT_BLUE, CHROME_YELLOW, STARRY_GOLD,
     CYPRESS_GREEN, VIOLET_SWIRL, ALERT_SCARLET, SHADOW_GRAY,
@@ -653,6 +655,101 @@ def pick_command(commands: List[Dict], initial_query: str = "") -> Optional[str]
     return chosen.get("cmd") if chosen else None
 
 
+# ─── Menções a arquivo com '@' ────────────────────────────────────────────────
+_MENTION_TTL = 5.0            # o índice de arquivos é refeito a cada 5s
+_MENTION_MAX_ENTRIES = 4000   # teto do scan (monorepo não pode travar a tecla)
+_mention_cache: Dict[str, Any] = {}
+
+
+def _git_files(root: str) -> Optional[List[str]]:
+    """Rastreados + não rastreados, já filtrados pelo .gitignore.
+
+    Deixa o git aplicar as regras de ignore (inclusive .gitignore aninhado e o
+    global) em vez de reimplementar o matcher. None = aqui não tem git.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+            cwd=root, capture_output=True, text=True, timeout=5,
+        )
+    except Exception:
+        return None
+    if out.returncode != 0:
+        return None
+    return [ln for ln in out.stdout.splitlines() if ln.strip()]
+
+
+def _walk_files(root: str) -> List[str]:
+    """Sem git: varredura crua usando o IGNORE_PATTERNS do agent_tools."""
+    files: List[str] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if not is_ignored(d)]
+        for name in filenames:
+            if is_ignored(name):
+                continue
+            rel = os.path.relpath(os.path.join(dirpath, name), root)
+            files.append(rel.replace(os.sep, "/"))
+            if len(files) >= _MENTION_MAX_ENTRIES:
+                return files
+    return files
+
+
+def project_files(root: Optional[str] = None) -> List[Dict]:
+    """Índice do projeto: [{'path': 'src/vincent/ui.py', 'is_dir': False}, …].
+
+    Diretórios entram derivados dos caminhos (o git só lista arquivos) e a
+    ordem sem busca é do raso pro fundo — quem digita '@' quer ver a raiz.
+    """
+    root = os.path.abspath(root or os.getcwd())
+    now = time.monotonic()
+    hit = _mention_cache.get(root)
+    if hit and now - hit[0] < _MENTION_TTL:
+        return hit[1]
+
+    try:
+        files = _git_files(root)
+        if files is None:
+            files = _walk_files(root)
+    except Exception:
+        files = []
+    files = sorted(set(files))[:_MENTION_MAX_ENTRIES]
+
+    dirs = set()
+    for f in files:
+        parts = f.split("/")[:-1]
+        for i in range(1, len(parts) + 1):
+            dirs.add("/".join(parts[:i]))
+
+    entries = ([{"path": d, "is_dir": True} for d in dirs]
+               + [{"path": f, "is_dir": False} for f in files])
+    entries.sort(key=lambda e: (e["path"].count("/"), not e["is_dir"], e["path"]))
+    _mention_cache[root] = (now, entries)
+    return entries
+
+
+def rank_mentions(query: str, root: Optional[str] = None) -> List[Dict]:
+    """Entradas do projeto que batem com o trecho digitado depois do '@'.
+
+    Sem corte: 'src vin' (AND dos termos) acha src/vincent/*, e um empate de
+    score prefere o caminho mais curto — ui.py antes de build/lib/ui.py.
+    """
+    entries = project_files(root)
+    if not str(query or "").strip():
+        return entries
+    scored = []
+    for e in entries:
+        s = score_item(query, e["path"])
+        if s is not None:
+            scored.append((s, e))
+    scored.sort(key=lambda p: (-p[0], len(p[1]["path"])))
+    return [e for _, e in scored]
+
+
+def mention_text(entry: Dict) -> str:
+    """'@src/vincent/' pra diretório, '@src/vincent/ui.py' pra arquivo."""
+    return "@" + entry["path"] + ("/" if entry["is_dir"] else "")
+
+
 # ─── Autocomplete de comandos e argumentos ────────────────────────────────────
 _EFFORT_VALUES = ("low", "medium", "high")
 _ONOFF_VALUES = ("on", "off")
@@ -687,18 +784,22 @@ class VincentCompleter(Completer):
         return [o for _, o in scored]
 
     def _paths(self, document, complete_event):
-        """'@arquivo' (estilo Claude Code) ou qualquer palavra com '/': delega
-        pro PathCompleter que já vem na lib."""
+        """'@arquivo' (estilo Claude Code): busca fuzzy no índice do projeto,
+        respeitando .gitignore. Palavra com '/' ou '~': PathCompleter da lib."""
         word = document.get_word_before_cursor(WORD=True)
         if word.startswith("@"):
-            raw = word[1:]
-        elif "/" in word or word.startswith("~"):
-            raw = word
-        else:
+            for e in rank_mentions(word[1:]):
+                icon = "📁" if e["is_dir"] else "📄"
+                yield Completion(
+                    mention_text(e), start_position=-len(word),
+                    display=f"{icon} {e['path']}" + ("/" if e["is_dir"] else ""),
+                    display_meta="diretório" if e["is_dir"] else "arquivo",
+                )
             return
-        for c in _PATHS.get_completions(Document(raw, len(raw)), complete_event):
-            yield Completion(c.text, start_position=c.start_position,
-                             display=c.display, display_meta="arquivo")
+        if "/" in word or word.startswith("~"):
+            for c in _PATHS.get_completions(Document(word, len(word)), complete_event):
+                yield Completion(c.text, start_position=c.start_position,
+                                 display=c.display, display_meta="arquivo")
 
     def get_completions(self, document, complete_event):
         text = document.text_before_cursor
@@ -752,7 +853,7 @@ _CHIP_ORDER = (
     ("latency", "⏱", "", "class:bottom-toolbar"),
 )
 _TOOLBAR_HINT = ("Ctrl+O modelos · Ctrl+P comandos · Ctrl+L limpa · "
-                 "Alt+Enter nova linha · Ctrl+D sai")
+                 "Alt+Enter nova linha · @ anexa arquivo · Ctrl+D sai")
 
 
 def _toolbar_fragments(status: Dict, width: Optional[int] = None) -> List:
