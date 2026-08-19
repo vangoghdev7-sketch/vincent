@@ -364,9 +364,13 @@ class VincentAgent:
                     tool_result = {"success": True, "output": str(tool_result)} if tool_result is not None else {"success": False, "error": "Nenhum resultado retornado pela ferramenta."}
 
             if pre_patch_snapshot is not None and tool_result.get("success"):
-                tool_result["auto_heal"] = self._auto_heal_check(
+                heal_res = self._auto_heal_check(
                     patch_path, pre_patch_snapshot, on_step_callback
                 )
+                if heal_res.get("healed"):
+                    tool_result["success"] = False
+                    tool_result["error"] = f"Erro de sintaxe no código aplicado: {heal_res.get('error')}. O arquivo foi restaurado."
+                tool_result["auto_heal"] = heal_res
 
             # Auto-cura: Detecta erros de execução e injeta alerta no contexto
             is_error = bool(tool_result.get("error")) or (tool_result.get("exit_code", 0) != 0)
