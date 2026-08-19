@@ -77,6 +77,12 @@ class PluginManager:
                 self.active_plugins.add(core)
                 self.skills[core]["active"] = True
 
+        # Restaura toggles manuais do usuário que existiam antes do rescan
+        for name in previously_active:
+            if name in self.skills:
+                self.active_plugins.add(name)
+                self.skills[name]["active"] = True
+
         return len(self.skills)
 
     def list_plugins(self):
