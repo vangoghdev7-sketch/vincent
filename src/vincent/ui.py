@@ -167,6 +167,13 @@ class NeuralSpinner:
         self.stop_event.set()
         if self.thread:
             self.thread.join(timeout=0.4)
+        if self.is_tty:
+            with self._lock:
+                try:
+                    sys.stdout.write("\r\033[K")
+                    sys.stdout.flush()
+                except (BrokenPipeError, OSError):
+                    pass
 
 
 def strip_ansi(text: str) -> str:
