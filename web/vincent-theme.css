@@ -1,0 +1,63 @@
+/* ============================================================================
+   VincentOS — Starry Night (Van Gogh) theme
+   Web console (OmniRoute-based) brand override.
+   Palette mirrored from vincent/src/vincent/static/app.html + src/vincent/ui.py.
+   Night-first: the brand is inherently dark ("A Noite Estrelada").
+
+   Applied as a layer (nginx <style> injection) on top of the base OmniRoute
+   design tokens — the upstream source stays unmodified, so the brand lives
+   entirely in this file + the panel Appearance settings.
+   ============================================================================ */
+
+:root,
+.dark {
+  /* Brand accents — violet -> cyan gradient of the Vincent logo */
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
+  --color-accent: #7c3aed;
+  --color-accent-hover: #8b5cf6;
+  --color-accent-light: #06b6d4;
+  --grad-brand: linear-gradient(135deg, #7c3aed, #06b6d4);
+
+  /* Semantic (matches Vincent web palette) */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* Deep night backgrounds */
+  --color-bg: #060610;
+  --color-bg-alt: #0e0e1a;
+  --color-bg-primary: #060610;
+  --color-bg-subtle: #0e0e1a;
+  --color-surface: #16162a;
+  --color-card: #16162a;
+  --color-sidebar: #0e0e1a;
+  --color-border: #1e1e38;
+
+  /* Text */
+  --color-text-main: #e2e8f0;
+  --color-text-primary: #e2e8f0;
+  --color-text-muted: #94a3b8;
+
+  /* Surfaces / identity */
+  --surface-2: #16162a;
+  --grid-line: rgba(124, 58, 237, 0.06);
+  --section-alt: rgba(124, 58, 237, 0.03);
+
+  /* Fumadocs (docs pages) */
+  --color-fd-background: #060610;
+  --color-fd-foreground: #e2e8f0;
+  --color-fd-muted: #16162a;
+  --color-fd-card: #0e0e1a;
+  --color-fd-border: #1e1e38;
+  --color-fd-primary: #7c3aed;
+
+  /* Data tables */
+  --table-header-bg: rgba(14, 14, 26, 0.95);
+  --table-row-hover: rgba(124, 58, 237, 0.08);
+  --table-row-selected: rgba(124, 58, 237, 0.14);
+}
