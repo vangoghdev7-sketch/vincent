@@ -1,10 +1,27 @@
 """
 Vincent TUI — Terminal de tela cheia (Textual) no nível de Claude Code / OpenCode.
 
-Substitui o REPL primitivo linha-a-linha por um app Textual completo:
-Header vivo (modelo + caveman + effort + estado), conversa scrollável com
-markdown/syntax-highlighting, streaming de tokens ao vivo, trace agêntico
-com spinner, slash commands e Input fixo no rodapé.
+Substitui o REPL primitivo linha-a-linha por um app Textual completo, agora com
+um LAYOUT DE DASHBOARD profissional:
+
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  header (título · relógio)                                         │
+    ├──────────────────────────────────────────────────────────────────┤
+    │  ✦ Vincent          ◆ modelo   ⚙ effort   ▣ caveman   ● estado    │  ← barra de status
+    ├───────────────┬──────────────────────────────────┬────────────────┤
+    │  SIDEBAR      │  CONVERSA (scroll)                │  TRACE         │
+    │  · sessão     │   bolhas de mensagem refinadas    │  passos        │
+    │  · comandos   │                                   │  agênticos     │
+    │  · atalhos    │                                   │  ao vivo       │
+    ├───────────────┴──────────────────────────────────┴────────────────┤
+    │  indicador "pensando"                                              │
+    │  ❯  input …                                    (Enter envia)        │
+    ├──────────────────────────────────────────────────────────────────┤
+    │  footer (atalhos)                                                  │
+    └──────────────────────────────────────────────────────────────────┘
+
+Header vivo, conversa scrollável com markdown/syntax-highlighting, streaming de
+tokens ao vivo, trace agêntico com spinner, slash commands e Input fixo no rodapé.
 
 Embrulha `vincent.agent.VincentAgent` sem tocar em nenhum outro módulo.
 
@@ -46,18 +63,56 @@ from textual.widgets import (
     Static,
 )
 
-# ─── Paleta "noite estrelada" (mesma de vincent.ui / vincent.tui) ──────────────
-COBALT = "#0087ff"
-GOLD = "#ffd700"
-STARRY_GOLD = "#ffaf00"
-GREEN = "#00ff87"
-VIOLET = "#af87ff"
-SCARLET = "#ff5f5f"
-WHITE = "#e4e4e4"
-GRAY = "#6c6c6c"
-NIGHT = "#0b0f1a"
-NIGHT_2 = "#111726"
-PANEL = "#141b2d"
+# ══════════════════════════════════════════════════════════════════════════════
+#  DESIGN TOKENS — arquitetura de 3 camadas (primitivo → semântico → aplicado)
+#  Paleta "noite estrelada" mantida, mas organizada em superfícies em camadas,
+#  bordas sutis, um acento forte (cobalto/violeta) usado com parcimônia e cores
+#  de estado consistentes (sucesso / aviso / erro).
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Camada 1: primitivos (valores crus) ───────────────────────────────────────
+COBALT = "#3b82f6"       # acento primário — azul cobalto vivo
+COBALT_DIM = "#1d4ed8"   # acento fundo/hover
+VIOLET = "#a78bfa"       # acento secundário — violeta estelar
+VIOLET_DIM = "#7c3aed"
+GOLD = "#facc15"         # destaque do usuário
+STARRY_GOLD = "#f59e0b"  # aviso / "trabalhando"
+GREEN = "#34d399"        # sucesso / ocioso
+SCARLET = "#f87171"      # erro
+CYAN = "#22d3ee"         # info fria (ferramentas)
+
+# Neutros em rampa (do mais escuro ao mais claro) — superfícies em camadas.
+INK_0 = "#080b14"        # base absoluta (fundo do app)
+INK_1 = "#0c1120"        # superfície de conteúdo (conversa)
+INK_2 = "#121a2e"        # painel elevado (sidebar / trace)
+INK_3 = "#1a2540"        # elevado 2 (cabeçalhos de painel / campo de input)
+INK_4 = "#24314f"        # bordas / divisores
+LINE = "#1e293b"         # linha sutil / hairline
+TEXT = "#e8eaf0"         # texto primário
+TEXT_DIM = "#9aa4bf"     # texto secundário
+MUTED = "#5b6689"        # texto terciário / desabilitado
+
+# ── Camada 2: aliases semânticos (usados no CSS via % de formatação) ───────────
+BG = INK_0
+SURFACE = INK_1
+PANEL = INK_2
+ELEVATED = INK_3
+BORDER = INK_4
+BORDER_SOFT = LINE
+FG = TEXT
+FG_DIM = TEXT_DIM
+FG_MUTED = MUTED
+ACCENT = COBALT
+ACCENT_2 = VIOLET
+OK = GREEN
+WARN = STARRY_GOLD
+ERR = SCARLET
+
+# Compat: nomes antigos ainda referenciados no corpo (trace coloring etc.).
+WHITE = TEXT
+GRAY = MUTED
+NIGHT = BG
+NIGHT_2 = PANEL
 
 
 BANNER = r"""[b #af87ff]╦  ╦[/][b #0087ff]╦[/][b #af87ff]╔╗╔╔═╗╔═╗╔╗╔╔╦╗[/]
@@ -85,8 +140,13 @@ sozinho quando usar ferramentas).
 | `/exit` | sai |
 
 ## Atalhos
-`Enter` envia · `Ctrl+L` limpa · `Ctrl+P` catálogo · `Ctrl+C` / `Ctrl+Q` sai
+`Enter` envia · `Ctrl+L` limpa · `Ctrl+P` catálogo · `Ctrl+B` sidebar · `Ctrl+C` / `Ctrl+Q` sai
 """
+
+
+def _now() -> str:
+    """Timestamp discreto HH:MM para o cabeçalho das mensagens."""
+    return time.strftime("%H:%M")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -95,6 +155,7 @@ sozinho quando usar ferramentas).
 class ChatMessage(Vertical):
     """Uma bolha de conversa (usuário ou Vincent) com cabeçalho + corpo markdown.
 
+    Cabeçalho: ícone + nome do papel + timestamp discreto à direita.
     O corpo é um `Markdown`, então blocos ```lang``` ganham syntax-highlight e a
     formatação (títulos, listas, tabelas) é renderizada de verdade. Durante o
     streaming acumulamos o texto cru e re-renderizamos via `update()`.
@@ -104,16 +165,22 @@ class ChatMessage(Vertical):
         super().__init__()
         self.role = role  # "user" | "vincent" | "system"
         self._raw = text
+        self._stamp = _now()
         self.add_class(f"msg-{role}")
 
     def compose(self) -> ComposeResult:
         if self.role == "user":
-            label = "▌ você"
+            icon, name = "▐", "você"
         elif self.role == "vincent":
-            label = "✦ vincent"
+            icon, name = "✦", "vincent"
         else:
-            label = "· sistema"
-        yield Label(label, classes="msg-role")
+            icon, name = "•", "sistema"
+        head = Text()
+        head.append(f"{icon} ", style="bold")
+        head.append(name, style="bold")
+        with Horizontal(classes="msg-head"):
+            yield Static(head, classes="msg-role")
+            yield Static(Text(self._stamp, style=f"{FG_MUTED}"), classes="msg-time")
         yield Markdown(self._raw, classes="msg-body")
 
     @property
@@ -152,20 +219,26 @@ class TracePanel(RichLog):
         if stripped.startswith("🧠"):
             self.write(f"[b {VIOLET}]{safe}[/]")
         elif stripped.startswith("⚙"):
-            self.write(f"[{COBALT}]{safe}[/]")
+            self.write(f"[{CYAN}]{safe}[/]")
         elif stripped.startswith("↳") or "↳" in stripped[:4]:
-            self.write(f"[{GRAY}]{safe}[/]")
+            self.write(f"[{FG_DIM}]{safe}[/]")
         elif stripped.startswith("⚡"):
             self.write(f"[{STARRY_GOLD}]{safe}[/]")
         elif "⚠" in stripped or stripped.lower().startswith("auto-cura"):
             self.write(f"[{SCARLET}]{safe}[/]")
         elif stripped.startswith("🧾"):
             self.write(f"[{GOLD}]{safe}[/]")
+        elif stripped.startswith("✅") or stripped.startswith("✦"):
+            self.write(f"[{GREEN}]{safe}[/]")
         else:
-            self.write(f"[{WHITE}]{safe}[/]")
+            self.write(f"[{FG_DIM}]{safe}[/]")
 
     def banner(self, line: str) -> None:
         self.write(f"[b {GREEN}]{rich_escape(line)}[/]")
+
+    def rule(self) -> None:
+        """Divisor sutil entre pedidos."""
+        self.write(f"[{BORDER}]{'─' * 30}[/]")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -178,6 +251,8 @@ class ModelsScreen(ModalScreen):
         Binding("escape", "dismiss", "Fechar"),
         Binding("up", "cursor_up", "↑", show=False),
         Binding("down", "cursor_down", "↓", show=False),
+        Binding("pageup", "page_up", "↟", show=False),
+        Binding("pagedown", "page_down", "↡", show=False),
         Binding("enter", "choose", "Selecionar"),
     ]
 
@@ -193,10 +268,12 @@ class ModelsScreen(ModalScreen):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="models-box"):
-            yield Label(f"Catálogo de modelos  ·  {len(self._models)} disponíveis", id="models-title")
+            with Horizontal(id="models-header"):
+                yield Static(Text("✦ ", style=f"bold {VIOLET}") + Text("Catálogo de modelos", style=f"bold {FG}"), id="models-title")
+                yield Static(Text(f"{len(self._models)} disponíveis", style=f"{FG_MUTED}"), id="models-count")
             log = RichLog(id="models-list", markup=True, highlight=False, wrap=False, auto_scroll=False)
             yield log
-            yield Label("↑/↓ navega · Enter seleciona · Esc fecha", id="models-hint")
+            yield Static(Text("↑/↓ navega   ⇞/⇟ página   ⏎ seleciona   esc fecha", style=f"{FG_MUTED}"), id="models-hint")
 
     def on_mount(self) -> None:
         self._render_list()
@@ -210,24 +287,25 @@ class ModelsScreen(ModalScreen):
         start = max(0, self._idx - window // 2)
         end = min(total, start + window)
         if start > 0:
-            log.write(f"[{GRAY}]  … {start} acima …[/]")
+            log.write(f"[{MUTED}]   ⋯ {start} acima[/]")
         for i in range(start, end):
             m = self._models[i]
             disp = m.get("display_id") or m.get("id") or "?"
             local = m.get("is_local")
             free = m.get("is_free")
-            badge = (
-                f"[{GREEN}]● local[/]" if local
-                else (f"[{STARRY_GOLD}]○ free[/]" if free else f"[{COBALT}]○ cloud[/]")
-            )
-            marker = f"[b {GOLD}]➤ [/]" if i == self._idx else "  "
+            if local:
+                badge = f"[{GREEN}]● local[/]"
+            elif free:
+                badge = f"[{STARRY_GOLD}]◐ free [/]"
+            else:
+                badge = f"[{COBALT}]○ cloud[/]"
             name = rich_escape(str(disp))
             if i == self._idx:
-                log.write(f"{marker}[b {WHITE}]{name}[/]  {badge}")
+                log.write(f"[b {GOLD}] ❯ [/][b {WHITE}]{name}[/]   {badge}")
             else:
-                log.write(f"{marker}[{WHITE}]{name}[/]  {badge}")
+                log.write(f"   [{FG_DIM}]{name}[/]   {badge}")
         if end < total:
-            log.write(f"[{GRAY}]  … {total - end} abaixo …[/]")
+            log.write(f"[{MUTED}]   ⋯ {total - end} abaixo[/]")
 
     def action_cursor_up(self) -> None:
         self._idx = max(0, self._idx - 1)
@@ -235,6 +313,14 @@ class ModelsScreen(ModalScreen):
 
     def action_cursor_down(self) -> None:
         self._idx = min(len(self._models) - 1, self._idx + 1)
+        self._render_list()
+
+    def action_page_up(self) -> None:
+        self._idx = max(0, self._idx - 12)
+        self._render_list()
+
+    def action_page_down(self) -> None:
+        self._idx = min(len(self._models) - 1, self._idx + 12)
         self._render_list()
 
     def action_choose(self) -> None:
@@ -258,22 +344,53 @@ class VincentTUI(App):
     SUB_TITLE = "terminal de inteligência unificada"
 
     CSS = """
+    /* ═══════════════════════════════════════════════════════════════════
+       BASE — fundo em camadas + scrollbars estilizadas
+       ═══════════════════════════════════════════════════════════════════ */
     Screen {
-        background: %(NIGHT)s;
-        color: %(WHITE)s;
+        background: %(BG)s;
+        color: %(FG)s;
         layers: base overlay;
     }
+    * {
+        scrollbar-background: %(SURFACE)s;
+        scrollbar-background-hover: %(SURFACE)s;
+        scrollbar-background-active: %(SURFACE)s;
+        scrollbar-color: %(BORDER)s;
+        scrollbar-color-hover: %(ACCENT_2)s;
+        scrollbar-color-active: %(ACCENT)s;
+        scrollbar-size-vertical: 1;
+        scrollbar-size-horizontal: 1;
+    }
+    Header {
+        background: %(BG)s;
+        color: %(FG_DIM)s;
+    }
+    Footer {
+        background: %(PANEL)s;
+        color: %(FG_DIM)s;
+    }
+    Footer > .footer-key--key {
+        color: %(ACCENT)s;
+        text-style: bold;
+    }
+    Footer > .footer-key--description {
+        color: %(FG_DIM)s;
+    }
 
-    #topbar {
+    /* ═══════════════════════════════════════════════════════════════════
+       STATUS BAR — barra de acento com badges (modelo/effort/caveman/estado)
+       ═══════════════════════════════════════════════════════════════════ */
+    #statusbar {
         height: 3;
-        padding: 0 1;
-        background: %(NIGHT_2)s;
-        border-bottom: heavy %(COBALT)s;
+        padding: 0 2;
+        background: %(PANEL)s;
+        border-bottom: tall %(BORDER)s;
     }
     #brand {
         width: auto;
         content-align: left middle;
-        color: %(VIOLET)s;
+        color: %(ACCENT_2)s;
         text-style: bold;
         padding: 0 2 0 0;
     }
@@ -282,125 +399,238 @@ class VincentTUI(App):
         content-align: right middle;
     }
 
+    /* ═══════════════════════════════════════════════════════════════════
+       LAYOUT PRINCIPAL — sidebar · conversa · trace
+       ═══════════════════════════════════════════════════════════════════ */
     #main {
         height: 1fr;
     }
 
-    #conversation {
-        width: 3fr;
+    /* ── Sidebar esquerda (sessão / comandos / atalhos) ── */
+    #sidebar {
+        width: 30;
+        min-width: 26;
+        max-width: 38;
+        background: %(PANEL)s;
+        border-right: tall %(BORDER)s;
+        padding: 0;
+    }
+    #sidebar.-hidden {
+        display: none;
+    }
+    .side-section {
+        height: auto;
+        padding: 1 2 0 2;
+    }
+    .side-head {
+        height: 1;
+        color: %(ACCENT_2)s;
+        text-style: bold;
+        margin: 0 0 1 0;
+    }
+    .side-row {
+        height: 1;
+        color: %(FG_DIM)s;
+    }
+    .side-key {
+        color: %(ACCENT)s;
+        text-style: bold;
+    }
+    #side-hint {
+        dock: bottom;
+        height: auto;
         padding: 1 2;
-        background: %(NIGHT)s;
+        color: %(FG_MUTED)s;
+        border-top: tall %(BORDER)s;
     }
 
-    #side {
+    /* ── Conversa (centro) ── */
+    #conversation {
         width: 1fr;
-        min-width: 34;
+        padding: 1 3 1 3;
+        background: %(SURFACE)s;
+    }
+
+    /* ── Painel de trace (direita) ── */
+    #side {
+        width: 40;
+        min-width: 30;
+        max-width: 52;
+        background: %(PANEL)s;
+        border-left: tall %(BORDER)s;
         padding: 0;
-        border-left: heavy %(PANEL)s;
+    }
+    #side.-hidden {
+        display: none;
     }
     #trace-title {
         height: 1;
-        padding: 0 1;
-        background: %(PANEL)s;
-        color: %(VIOLET)s;
+        padding: 0 2;
+        background: %(ELEVATED)s;
+        color: %(ACCENT_2)s;
         text-style: bold;
+        border-bottom: tall %(BORDER)s;
     }
     TracePanel {
         height: 1fr;
-        padding: 0 1;
-        background: %(NIGHT_2)s;
-        scrollbar-size-vertical: 1;
+        padding: 1 2;
+        background: %(PANEL)s;
     }
 
-    /* Mensagens */
+    /* ═══════════════════════════════════════════════════════════════════
+       BOLHAS DE MENSAGEM — superfície, padding respirável, acento por papel
+       ═══════════════════════════════════════════════════════════════════ */
     ChatMessage {
         height: auto;
-        margin: 1 0 0 0;
-        padding: 0 1 1 1;
+        width: 1fr;
+        max-width: 120;
+        margin: 0 0 1 0;
+        padding: 0 0 0 0;
+    }
+    .msg-head {
+        height: 1;
+        margin: 0 0 0 1;
     }
     .msg-role {
+        width: auto;
         height: 1;
-        text-style: bold;
-        margin: 0 0 0 0;
+        content-align: left middle;
+    }
+    .msg-time {
+        width: 1fr;
+        height: 1;
+        content-align: right middle;
+        color: %(FG_MUTED)s;
     }
     .msg-body {
         height: auto;
         margin: 0;
-        padding: 0 1;
-        background: transparent;
+        padding: 1 2;
+        background: %(PANEL)s;
     }
-    .msg-user {
-        border-left: heavy %(GOLD)s;
-    }
-    .msg-user .msg-role { color: %(GOLD)s; }
-    .msg-vincent {
-        border-left: heavy %(COBALT)s;
-    }
-    .msg-vincent .msg-role { color: %(COBALT)s; }
-    .msg-system {
-        border-left: heavy %(GRAY)s;
-    }
-    .msg-system .msg-role { color: %(GRAY)s; }
 
-    /* Barra de digitação */
+    /* Usuário — acento dourado */
+    .msg-user .msg-role { color: %(GOLD)s; }
+    .msg-user .msg-body {
+        background: %(ELEVATED)s;
+        border-left: thick %(GOLD)s;
+    }
+    /* Vincent — acento cobalto */
+    .msg-vincent .msg-role { color: %(ACCENT)s; }
+    .msg-vincent .msg-body {
+        background: %(PANEL)s;
+        border-left: thick %(ACCENT)s;
+    }
+    /* Sistema — discreto */
+    .msg-system .msg-role { color: %(FG_MUTED)s; }
+    .msg-system .msg-body {
+        background: %(SURFACE)s;
+        border-left: thick %(BORDER)s;
+        color: %(FG_DIM)s;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       INDICADOR "PENSANDO"
+       ═══════════════════════════════════════════════════════════════════ */
+    #working {
+        height: 1;
+        padding: 0 3;
+        color: %(WARN)s;
+        background: %(SURFACE)s;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       BARRA DE INPUT — campo elevado com borda de foco de acento + chevron
+       ═══════════════════════════════════════════════════════════════════ */
     #prompt-row {
         height: auto;
-        padding: 0 1 0 1;
-        background: %(NIGHT_2)s;
-        border-top: heavy %(COBALT)s;
+        padding: 1 2;
+        background: %(PANEL)s;
+        border-top: tall %(BORDER)s;
+    }
+    #promptwrap {
+        height: auto;
+        background: %(ELEVATED)s;
+        border: round %(BORDER)s;
+        padding: 0 1;
+    }
+    #promptwrap:focus-within {
+        border: round %(ACCENT)s;
+        background: %(ELEVATED)s;
     }
     #chevron {
         width: 3;
         content-align: center middle;
-        color: %(GREEN)s;
+        color: %(ACCENT)s;
         text-style: bold;
     }
     #prompt {
+        width: 1fr;
         border: none;
-        background: %(NIGHT_2)s;
-        color: %(WHITE)s;
+        height: auto;
+        background: %(ELEVATED)s;
+        color: %(FG)s;
+        padding: 0 1;
     }
     #prompt:focus {
         border: none;
+        background: %(ELEVATED)s;
     }
-    #working {
-        height: 1;
-        padding: 0 1;
-        color: %(STARRY_GOLD)s;
-        background: %(NIGHT_2)s;
+    #prompt > .input--placeholder {
+        color: %(FG_MUTED)s;
+    }
+    #prompt-hint {
+        width: auto;
+        content-align: right middle;
+        color: %(FG_MUTED)s;
+        padding: 0 1 0 2;
     }
 
-    /* Modal de modelos */
+    /* ═══════════════════════════════════════════════════════════════════
+       MODAL — catálogo de modelos (superfície elevada, borda de acento)
+       ═══════════════════════════════════════════════════════════════════ */
     ModelsScreen {
         align: center middle;
     }
     #models-box {
-        width: 82;
+        width: 86;
+        max-width: 92%%;
         height: 80%%;
-        max-height: 40;
+        max-height: 42;
         background: %(PANEL)s;
-        border: heavy %(VIOLET)s;
-        padding: 1 2;
+        border: round %(ACCENT_2)s;
+        padding: 1 2 1 2;
+    }
+    #models-header {
+        height: 1;
+        margin: 0 0 1 0;
     }
     #models-title {
+        width: auto;
         height: 1;
-        text-style: bold;
-        color: %(VIOLET)s;
+        content-align: left middle;
+    }
+    #models-count {
+        width: 1fr;
+        height: 1;
+        content-align: right middle;
     }
     #models-list {
         height: 1fr;
-        background: %(NIGHT_2)s;
-        margin: 1 0;
-        padding: 0 1;
+        background: %(SURFACE)s;
+        border: round %(BORDER)s;
+        margin: 0 0 1 0;
+        padding: 1 1;
     }
     #models-hint {
         height: 1;
-        color: %(GRAY)s;
+        content-align: center middle;
     }
     """ % {
-        "NIGHT": NIGHT, "NIGHT_2": NIGHT_2, "PANEL": PANEL, "COBALT": COBALT,
-        "VIOLET": VIOLET, "GOLD": GOLD, "GREEN": GREEN, "WHITE": WHITE,
-        "GRAY": GRAY, "STARRY_GOLD": STARRY_GOLD,
+        "BG": BG, "SURFACE": SURFACE, "PANEL": PANEL, "ELEVATED": ELEVATED,
+        "BORDER": BORDER, "BORDER_SOFT": BORDER_SOFT, "FG": FG, "FG_DIM": FG_DIM,
+        "FG_MUTED": FG_MUTED, "ACCENT": ACCENT, "ACCENT_2": ACCENT_2,
+        "OK": OK, "WARN": WARN, "ERR": ERR, "GOLD": GOLD, "WHITE": WHITE,
     }
 
     BINDINGS = [
@@ -408,6 +638,8 @@ class VincentTUI(App):
         Binding("ctrl+q", "quit", "Sair"),
         Binding("ctrl+l", "clear_chat", "Limpar"),
         Binding("ctrl+p", "open_models", "Modelos"),
+        Binding("ctrl+b", "toggle_sidebar", "Sidebar"),
+        Binding("ctrl+t", "toggle_trace", "Trace"),
     ]
 
     working = reactive(False)
@@ -427,19 +659,63 @@ class VincentTUI(App):
     # ── Layout ────────────────────────────────────────────────────────────────
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
-        with Horizontal(id="topbar"):
-            yield Static(BANNER.splitlines()[0] if False else "✦ Vincent", id="brand")
+        with Horizontal(id="statusbar"):
+            yield Static(Text("✦ Vincent", style=f"bold {ACCENT_2}"), id="brand")
             yield Static("", id="statusline")
         with Horizontal(id="main"):
+            # Sidebar esquerda — identidade da sessão, comandos e atalhos.
+            with Vertical(id="sidebar"):
+                with Vertical(classes="side-section"):
+                    yield Static(Text("SESSÃO", style=f"bold {ACCENT_2}"), classes="side-head")
+                    yield Static(self._session_line(), id="side-session", classes="side-row")
+                with Vertical(classes="side-section"):
+                    yield Static(Text("COMANDOS", style=f"bold {ACCENT_2}"), classes="side-head")
+                    for key, desc in (
+                        ("/help", "ajuda"),
+                        ("/models", "catálogo"),
+                        ("/model", "trocar modelo"),
+                        ("/effort", "raciocínio"),
+                        ("/caveman", "compressão"),
+                        ("/act", "modo agente"),
+                        ("/ask", "chat direto"),
+                        ("/clear", "limpar"),
+                    ):
+                        row = Text()
+                        row.append(f"{key:<9}", style=f"bold {ACCENT}")
+                        row.append(desc, style=f"{FG_DIM}")
+                        yield Static(row, classes="side-row")
+                yield Static(
+                    Text("Enter", style=f"bold {ACCENT}") + Text(" envia  ", style=FG_MUTED)
+                    + Text("^L", style=f"bold {ACCENT}") + Text(" limpa\n", style=FG_MUTED)
+                    + Text("^P", style=f"bold {ACCENT}") + Text(" modelos  ", style=FG_MUTED)
+                    + Text("^B", style=f"bold {ACCENT}") + Text(" sidebar", style=FG_MUTED),
+                    id="side-hint",
+                )
+            # Conversa central.
             yield VerticalScroll(id="conversation")
+            # Painel de trace direito.
             with Vertical(id="side"):
-                yield Label("● trace agêntico", id="trace-title")
+                yield Static(Text("● trace agêntico", style=f"bold {ACCENT_2}"), id="trace-title")
                 yield TracePanel()
         yield Static("", id="working")
         with Horizontal(id="prompt-row"):
-            yield Static("❯", id="chevron")
-            yield Input(placeholder="Pergunte, ou peça uma tarefa…  (/help pra comandos)", id="prompt")
+            with Horizontal(id="promptwrap"):
+                yield Static("❯", id="chevron")
+                yield Input(placeholder="Pergunte, ou peça uma tarefa…   (/help para comandos)", id="prompt")
+            yield Static(Text("Enter ↵", style=f"{FG_MUTED}"), id="prompt-hint")
         yield Footer()
+
+    def _session_line(self) -> Text:
+        """Linha de estado compacta pra sidebar."""
+        t = Text()
+        if self._agent is None:
+            if self._boot_error:
+                t.append("● offline", style=f"bold {ERR}")
+            else:
+                t.append("◌ iniciando…", style=f"bold {WARN}")
+        else:
+            t.append("● online", style=f"bold {OK}")
+        return t
 
     # ── Ciclo de vida ─────────────────────────────────────────────────────────
     def on_mount(self) -> None:
@@ -458,7 +734,7 @@ class VincentTUI(App):
         conv.mount(ChatMessage("system", (
             "Bem-vindo ao **Vincent**. Converse normalmente ou peça uma tarefa — "
             "eu decido sozinho quando investigar o código e rodar ferramentas.\n\n"
-            "Use `/help` para ver os comandos."
+            "Use `/help` para ver os comandos, ou `Ctrl+P` para o catálogo de modelos."
         )))
         trace = self.query_one(TracePanel)
         trace.banner("✦ trace pronto — passos agênticos aparecem aqui")
@@ -493,13 +769,26 @@ class VincentTUI(App):
         self._refresh_status()
 
     # ── Status ────────────────────────────────────────────────────────────────
+    def _badge(self, label: str, value: str, color: str, *, on: bool = True) -> Text:
+        """Um 'chip' de status: rótulo apagado + valor colorido."""
+        t = Text()
+        t.append(f"{label} ", style=f"{FG_MUTED}")
+        t.append(value, style=f"bold {color}" if on else f"{FG_MUTED}")
+        return t
+
     def _refresh_status(self) -> None:
+        # Sincroniza a linha de sessão da sidebar (se já montada).
+        try:
+            self.query_one("#side-session", Static).update(self._session_line())
+        except Exception:
+            pass
+
         st = self.query_one("#statusline", Static)
         if self._agent is None:
             if self._boot_error:
-                st.update(Text("● motor offline", style=f"bold {SCARLET}"))
+                st.update(Text("● motor offline", style=f"bold {ERR}"))
             else:
-                st.update(Text("● iniciando motor…", style=f"bold {STARRY_GOLD}"))
+                st.update(Text("◌ iniciando motor…", style=f"bold {WARN}"))
             return
 
         model = getattr(self._agent, "display_model", "?")
@@ -507,18 +796,18 @@ class VincentTUI(App):
         effort = getattr(getattr(self._agent, "model_manager", None), "effort", "medium")
         busy = self.working
 
+        sep = Text("  ·  ", style=f"{BORDER}")
         line = Text()
-        line.append("◆ ", style=COBALT)
-        line.append(str(model), style=f"bold {COBALT}")
-        line.append("   caveman:", style=GRAY)
-        line.append(str(caveman), style=GREEN if caveman != "off" else GRAY)
-        line.append("   effort:", style=GRAY)
-        line.append(str(effort), style=STARRY_GOLD)
-        line.append("   ", style=GRAY)
+        line.append_text(self._badge("◆", str(model), ACCENT))
+        line.append_text(sep)
+        line.append_text(self._badge("⚙ effort", str(effort), WARN))
+        line.append_text(sep)
+        line.append_text(self._badge("▣ caveman", str(caveman), OK, on=(caveman != "off")))
+        line.append_text(sep)
         if busy:
-            line.append("● trabalhando", style=f"bold {STARRY_GOLD}")
+            line.append("● trabalhando", style=f"bold {WARN}")
         else:
-            line.append("● ocioso", style=f"bold {GREEN}")
+            line.append("● ocioso", style=f"bold {OK}")
         st.update(line)
 
     def watch_working(self, _old: bool, _new: bool) -> None:
@@ -540,9 +829,12 @@ class VincentTUI(App):
         frame = self._spinner_frames[self._spinner_i % len(self._spinner_frames)]
         self._spinner_i += 1
         try:
-            self.query_one("#working", Static).update(
-                Text(f"{frame} {getattr(self, '_spinner_msg', 'pensando')}…", style=STARRY_GOLD)
-            )
+            msg = getattr(self, "_spinner_msg", "pensando")
+            t = Text()
+            t.append(f"{frame} ", style=f"bold {ACCENT_2}")
+            t.append(f"{msg}", style=f"{WARN}")
+            t.append(" …", style=f"{FG_MUTED}")
+            self.query_one("#working", Static).update(t)
         except Exception:
             pass
 
@@ -690,7 +982,7 @@ class VincentTUI(App):
         self._start_spinner("pensando")
 
         trace = self.query_one(TracePanel)
-        trace.write(f"[{GRAY}]{'─' * 28}[/]")
+        trace.rule()
         trace.step(f"🧠 novo pedido: {rich_escape(task[:70])}")
 
         self._agent_worker(task, agentic)
@@ -773,6 +1065,18 @@ class VincentTUI(App):
         try:
             self.query_one(TracePanel).clear()
             self.query_one(TracePanel).banner("✦ trace limpo")
+        except Exception:
+            pass
+
+    def action_toggle_sidebar(self) -> None:
+        try:
+            self.query_one("#sidebar").toggle_class("-hidden")
+        except Exception:
+            pass
+
+    def action_toggle_trace(self) -> None:
+        try:
+            self.query_one("#side").toggle_class("-hidden")
         except Exception:
             pass
 
