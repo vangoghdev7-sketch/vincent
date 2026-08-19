@@ -249,8 +249,9 @@ def render_response_box(reply: str, model: str, latency: float, mode: str = "Sta
             print(f"{CYPRESS_GREEN}│{CLR_RST} {CANVAS_WHITE}{line}{CLR_RST}")
             
     # Rodapé com telemetria Ponytail
+    model_disp = model if len(model) <= 22 else model[:19] + "…"
     saved_str = f" | {CYPRESS_GREEN}-{tokens_saved} tok{SHADOW_GRAY}" if tokens_saved > 0 else ""
-    meta_info = f" {SHADOW_GRAY}⏱ {COBALT_BLUE}{latency:.2f}s{SHADOW_GRAY} │ 🎨 {VIOLET_SWIRL}{model}{SHADOW_GRAY} │ ⚡ {mode}{saved_str} "
+    meta_info = f" {SHADOW_GRAY}⏱ {COBALT_BLUE}{latency:.2f}s{SHADOW_GRAY} │ 🎨 {VIOLET_SWIRL}{model_disp}{SHADOW_GRAY} │ ⚡ {mode}{saved_str} "
     
     clean_meta = strip_ansi(meta_info)
     footer_len = max(2, term_width - len(clean_meta) - 5)
