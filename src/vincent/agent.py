@@ -316,7 +316,7 @@ class VincentAgent:
                 final_response = self._strip_tool_call(reply)
                 break
 
-            tool_name = tool_call.get("tool", "")
+            tool_name = str(tool_call.get("tool") or "")
             tool_args = tool_call.get("args") if isinstance(tool_call.get("args"), dict) else {}
 
             # Detecta repetição EXATA da mesma chamada (loop improdutivo do modelo)
