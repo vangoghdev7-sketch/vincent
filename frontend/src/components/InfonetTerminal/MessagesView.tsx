@@ -221,7 +221,7 @@ function sortMessages(items: MailItem[]): MailItem[] {
   });
 }
 
-function createVincent OSWelcomeMail(): MailItem {
+function createVincentOSWelcomeMail(): MailItem {
   return {
     id: SHADOWBROKER_WELCOME_ID,
     msgId: SHADOWBROKER_WELCOME_ID,
@@ -251,7 +251,7 @@ function ensureSeedMail(items: MailItem[]): MailItem[] {
   if (items.some((item) => item.id === SHADOWBROKER_WELCOME_ID)) {
     return sortMessages(items);
   }
-  return sortMessages([createVincent OSWelcomeMail(), ...items]);
+  return sortMessages([createVincentOSWelcomeMail(), ...items]);
 }
 
 function loadMailbox(scopeId: string): MailItem[] {

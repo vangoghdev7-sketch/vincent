@@ -25,12 +25,12 @@ export type LocalControlFetchOptions = RequestInit & {
   enforceProfileHint?: boolean;
 };
 
-export interface Vincent OSLocalControlBridge {
+export interface VincentOSLocalControlBridge {
   request?(input: LocalControlBridgeRequest): Promise<LocalControlBridgeResponse>;
   invoke?<T = unknown>(input: LocalControlInvokeRequest): Promise<T>;
 }
 
-function getDesktopBridge(): Vincent OSLocalControlBridge | null {
+function getDesktopBridge(): VincentOSLocalControlBridge | null {
   if (typeof window === 'undefined') return null;
   return window.__SHADOWBROKER_LOCAL_CONTROL__ || null;
 }

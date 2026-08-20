@@ -701,7 +701,7 @@ function ConnectModalBody({ apiEndpoint, handleCopy, copied }: ConnectModalBodyP
     lines.push('# Every direct Vincent API request must be HMAC-SHA256 signed with:');
     lines.push('#   X-SB-Timestamp, X-SB-Nonce, X-SB-Signature');
     lines.push('# Signature input: METHOD|path|timestamp|nonce|sha256(body)');
-    lines.push('# Use the Vincent OSClient/openclaw skill helper so requests are signed automatically.');
+    lines.push('# Use the VincentOSClient/openclaw skill helper so requests are signed automatically.');
     lines.push('');
     lines.push('# OPERATING DIRECTIVE:');
     lines.push('# You are a remote OpenClaw agent connected to Vincent.');

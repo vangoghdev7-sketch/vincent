@@ -5,9 +5,9 @@ import type {
   LocalControlInvokeMeta,
   LocalControlInvokeRequest,
 } from '@/lib/desktopControlContract';
-import type { Vincent OSLocalControlBridge } from '@/lib/localControlTransport';
+import type { VincentOSLocalControlBridge } from '@/lib/localControlTransport';
 
-export interface Vincent OSDesktopRuntime {
+export interface VincentOSDesktopRuntime {
   invokeLocalControl?<T = unknown>(
     command: DesktopControlCommand,
     payload?: unknown,
@@ -18,8 +18,8 @@ export interface Vincent OSDesktopRuntime {
 }
 
 function buildDesktopControlBridge(
-  runtime: Vincent OSDesktopRuntime,
-): Vincent OSLocalControlBridge | null {
+  runtime: VincentOSDesktopRuntime,
+): VincentOSLocalControlBridge | null {
   if (!runtime.invokeLocalControl) return null;
   return {
     invoke<T = unknown>(input: LocalControlInvokeRequest): Promise<T> {
@@ -28,7 +28,7 @@ function buildDesktopControlBridge(
   };
 }
 
-export function installDesktopControlBridge(runtime: Vincent OSDesktopRuntime): boolean {
+export function installDesktopControlBridge(runtime: VincentOSDesktopRuntime): boolean {
   if (typeof window === 'undefined') return false;
   const bridge = buildDesktopControlBridge(runtime);
   if (!bridge) return false;
