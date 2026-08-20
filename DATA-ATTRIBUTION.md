@@ -69,5 +69,5 @@ These sources have their own terms; consult each link before redistributing.
 
 If you represent a data provider and have concerns about how Vincent
 uses your data, please open an issue or contact the maintainer at
-`bigbodycobain@gmail.com`. We will respond promptly and, if needed, adjust
+the maintainer via GitHub issues. We will respond promptly and, if needed, adjust
 usage or remove the source.

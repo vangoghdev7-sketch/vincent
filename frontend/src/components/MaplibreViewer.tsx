@@ -2003,7 +2003,7 @@ const MaplibreViewer = ({
             '<a href="https://aisstream.io" target="_blank" rel="noopener">aisstream.io</a>',
             '<a href="https://meshtastic.liamcottle.net" target="_blank" rel="noopener">Meshtastic map by Liam Cottle</a>',
             'NASA · NOAA · USGS · GDELT',
-            '<a href="https://github.com/BigBodyCobain/Vincent OS/blob/main/DATA-ATTRIBUTION.md" target="_blank" rel="noopener">full sources</a>',
+            '<a href="https://github.com/vangoghdev7-sketch/vincent/blob/main/DATA-ATTRIBUTION.md" target="_blank" rel="noopener">full sources</a>',
           ]}
         />
         {/* Esri World Imagery — high-res static satellite (zoom 0-18+) */}

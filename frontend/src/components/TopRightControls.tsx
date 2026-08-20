@@ -60,7 +60,7 @@ type UpdateStatus =
   | 'update_error'
   | 'docker_update';
 
-const DEFAULT_RELEASES_URL = 'https://github.com/BigBodyCobain/Vincent OS/releases/latest';
+const DEFAULT_RELEASES_URL = 'https://github.com/vangoghdev7-sketch/vincent/releases/latest';
 const AUTO_UPDATE_DETAIL =
   'This runtime can use the backend-managed update path. Docker deployments will show pull instructions instead of modifying files in place.';
 const DESKTOP_UPDATER_DETAIL =
@@ -402,7 +402,7 @@ export default function TopRightControls({
       const desktopContext = await getDesktopUpdateContext();
       const runtime = classifyUpdateRuntime(desktopContext);
       const res = await fetch(
-        'https://api.github.com/repos/BigBodyCobain/Vincent OS/releases/latest',
+        'https://api.github.com/repos/vangoghdev7-sketch/vincent/releases/latest',
       );
       if (!res.ok) throw new Error('Failed to fetch');
       const data = (await res.json()) as GitHubLatestRelease;

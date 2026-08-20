@@ -51,7 +51,7 @@ The backend deployment runs with the following settings by default:
 | `controllers.backend.rollingUpdate.unavailable` | Max unavailable during update | `1` |
 | `controllers.backend.containers.main.runAsUser` | Security context user | `1001` |
 | `controllers.backend.containers.main.runAsGroup` | Security context group | `1001` |
-| `controllers.backend.containers.main.image.repository` | Container image | `registry.gitlab.com/bigbodycobain/vincent_os/backend` (or `ghcr.io/bigbodycobain/vincent_os-backend`) |
+| `controllers.backend.containers.main.image.repository` | Container image | `registry.gitlab.com/vangoghdev7-sketch/vincent/backend` (or `ghcr.io/vangoghdev7-sketch/vincent-backend`) |
 | `controllers.backend.containers.main.image.tag` | Container tag | `latest` |
 | `controllers.backend.service.type` | Service type | `ClusterIP` |
 | `controllers.backend.service.ports.http.port` | HTTP port | `8000` |
@@ -77,7 +77,7 @@ The frontend deployment configuration:
 | `controllers.frontend.rollingUpdate.unavailable` | Max unavailable during update | `1` |
 | `controllers.frontend.containers.main.runAsUser` | Security context user | `1001` |
 | `controllers.frontend.containers.main.runAsGroup` | Security context group | `1001` |
-| `controllers.frontend.containers.main.image.repository` | Container image | `registry.gitlab.com/bigbodycobain/vincent_os/frontend` (or `ghcr.io/bigbodycobain/vincent_os-frontend`) |
+| `controllers.frontend.containers.main.image.repository` | Container image | `registry.gitlab.com/vangoghdev7-sketch/vincent/frontend` (or `ghcr.io/vangoghdev7-sketch/vincent-frontend`) |
 | `controllers.frontend.containers.main.image.tag` | Container tag | `latest` |
 
 #### Frontend Environment Variables

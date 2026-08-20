@@ -1,10 +1,10 @@
 ## Default registry is GHCR because the GitHub release workflow publishes:
-##   ghcr.io/bigbodycobain/vincent_os-backend:latest
-##   ghcr.io/bigbodycobain/vincent_os-frontend:latest
+##   ghcr.io/vangoghdev7-sketch/vincent-backend:latest
+##   ghcr.io/vangoghdev7-sketch/vincent-frontend:latest
 ##
 ## GitLab mirror images can still be used by swapping the image lines to:
-##   registry.gitlab.com/bigbodycobain/vincent_os/backend:latest
-##   registry.gitlab.com/bigbodycobain/vincent_os/frontend:latest
+##   registry.gitlab.com/vangoghdev7-sketch/vincent/backend:latest
+##   registry.gitlab.com/vangoghdev7-sketch/vincent/frontend:latest
 
 services:
   backend:

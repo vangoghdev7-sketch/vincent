@@ -85,5 +85,5 @@ Client IDs changed from `sbmesh-{uuid}` to `sb096-{uuid}` so the Meshtastic team
 
 ## Contact
 
-Repository: [github.com/BigBodyCobain/Vincent](https://github.com/BigBodyCobain/Vincent)  
-Maintainer: BigBodyCobain
+Repository: [github.com/vangoghdev7-sketch/vincent](https://github.com/vangoghdev7-sketch/vincent)  
+Maintainer: vangoghdev7-sketch

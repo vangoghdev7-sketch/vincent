@@ -23,7 +23,7 @@ if %errorlevel% equ 0 (
     echo   You will NOT receive updates this way.
     echo.
     echo   If you use Docker, re-clone the repository:
-    echo     git clone https://github.com/BigBodyCobain/Vincent OS.git
+    echo     git clone https://github.com/vangoghdev7-sketch/vincent.git
     echo     cd Vincent OS
     echo     docker compose pull
     echo     docker compose up -d

@@ -14,8 +14,8 @@ vincent_os:
           image:
             pullPolicy: Always
             # GHCR (primary, public, auto-built on every push to main).
-            # GitLab fallback: registry.gitlab.com/bigbodycobain/vincent_os/backend (requires auth + currently no CI builds it).
-            repository: ghcr.io/bigbodycobain/vincent_os-backend
+            # GitLab fallback: registry.gitlab.com/vangoghdev7-sketch/vincent/backend (requires auth + currently no CI builds it).
+            repository: ghcr.io/vangoghdev7-sketch/vincent-backend
             tag: latest
           env:
             AIS_API_KEY:
@@ -44,8 +44,8 @@ vincent_os:
           image:
             pullPolicy: Always
             # GHCR (primary, public, auto-built on every push to main).
-            # GitLab fallback: registry.gitlab.com/bigbodycobain/vincent_os/frontend (requires auth + currently no CI builds it).
-            repository: ghcr.io/bigbodycobain/vincent_os-frontend
+            # GitLab fallback: registry.gitlab.com/vangoghdev7-sketch/vincent/frontend (requires auth + currently no CI builds it).
+            repository: ghcr.io/vangoghdev7-sketch/vincent-frontend
             tag: latest
 
           env:

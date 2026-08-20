@@ -44,5 +44,5 @@ Re-audit when adding a new fetcher or changing scheduler cadence.
 
 ## Related issues
 
-- [#375](https://github.com/BigBodyCobain/Vincent OS/issues/375) — dev bind, store lock, slow executor
-- [#239](https://github.com/BigBodyCobain/Vincent OS/issues/239) — duplicate route CI guard (`test_no_new_duplicate_routes.py`)
+- [#375](https://github.com/vangoghdev7-sketch/vincent/issues/375) — dev bind, store lock, slow executor
+- [#239](https://github.com/vangoghdev7-sketch/vincent/issues/239) — duplicate route CI guard (`test_no_new_duplicate_routes.py`)

@@ -19,12 +19,12 @@ vincent_os:
       containers:
         main:
           image:
-            repository: registry.gitlab.com/bigbodycobain/vincent_os/backend
+            repository: registry.gitlab.com/vangoghdev7-sketch/vincent/backend
             tag: latest
 
     frontend:
       containers:
         main:
           image:
-            repository: registry.gitlab.com/bigbodycobain/vincent_os/frontend
+            repository: registry.gitlab.com/vangoghdev7-sketch/vincent/frontend
             tag: latest

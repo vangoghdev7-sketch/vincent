@@ -25,8 +25,8 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-GITHUB_RELEASES_URL = "https://api.github.com/repos/BigBodyCobain/Vincent OS/releases/latest"
-GITHUB_RELEASES_PAGE_URL = "https://github.com/BigBodyCobain/Vincent OS/releases/latest"
+GITHUB_RELEASES_URL = "https://api.github.com/repos/vangoghdev7-sketch/vincent/releases/latest"
+GITHUB_RELEASES_PAGE_URL = "https://github.com/vangoghdev7-sketch/vincent/releases/latest"
 DOCKER_UPDATE_COMMANDS = (
     "docker compose pull && docker compose up -d"
 )

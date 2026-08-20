@@ -9,7 +9,7 @@ import {
 } from '@/lib/updateRuntime';
 
 const RELEASE: GitHubLatestRelease = {
-  html_url: 'https://github.com/BigBodyCobain/Vincent OS/releases/tag/v0.9.84',
+  html_url: 'https://github.com/vangoghdev7-sketch/vincent/releases/tag/v0.9.84',
   assets: [
     { name: 'Vincent OS_0.9.84_x64_en-US.msi', browser_download_url: 'https://example.test/windows.msi' },
     { name: 'Vincent OS_0.9.84_x64-setup.exe', browser_download_url: 'https://example.test/windows-setup.exe' },

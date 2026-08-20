@@ -161,7 +161,7 @@ export function getPreferredManualUpdateUrl(
   const releaseUrl =
     typeof release.html_url === 'string' && release.html_url.trim().length > 0
       ? release.html_url
-      : 'https://github.com/BigBodyCobain/Vincent OS/releases/latest';
+      : 'https://github.com/vangoghdev7-sketch/vincent/releases/latest';
   if (runtime !== 'desktop_packaged') return releaseUrl;
   return pickDesktopInstallerUrl(release, platform) || releaseUrl;
 }

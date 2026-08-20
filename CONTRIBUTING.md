@@ -6,7 +6,7 @@ Thank you for taking the time to contribute. This document covers things specifi
 
 ## Code contributions
 
-1. Fork the repo on GitHub (`bigbodycobain/Vincent`) or GitLab (`bigbodycobain/Vincent` mirror).
+1. Fork the repo on GitHub (`vangoghdev7-sketch/vincent`) or GitLab (`vangoghdev7-sketch/vincent` mirror).
 2. Make your changes on a feature branch.
 3. Run the local test suite:
    - Backend: `pytest backend/tests/`

@@ -454,7 +454,7 @@ VincentOS is composed of an intelligence platform and a decoupled AI brain:
 - **Privacy core (Rust crate)** — Argon2id, Ed25519/X25519, AES-GCM, and HKDF today, with locked protocol contracts for ring signatures, stealth addresses, Pedersen commitments, and blind-signature issuance whose cryptographic primitive lands in a future sprint.
 - **Vincent brain (Vincent OS, `:20128`)** — an OpenAI-compatible router (model `vincent`, zero-key) that consumes the platform as a tool API through the `vincent_os` OpenClaw skill. The brain is a separate process; the backend contains no LLM by design.
 
-Distribution: images are published to GitHub Container Registry (`ghcr.io/bigbodycobain/vincent_os-{backend,frontend}`) with a GitLab mirror, multi-arch for `linux/amd64` and `linux/arm64` (Raspberry Pi 5 supported).
+Distribution: images are published to GitHub Container Registry (`ghcr.io/vangoghdev7-sketch/vincent-{backend,frontend}`) with a GitLab mirror, multi-arch for `linux/amd64` and `linux/arm64` (Raspberry Pi 5 supported).
 
 </details>
 

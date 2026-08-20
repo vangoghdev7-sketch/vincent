@@ -11,7 +11,7 @@ const bundleDir = path.resolve(process.argv[2]);
 const tauriConfigPath = path.resolve(__dirname, '..', 'src-tauri', 'tauri.conf.json');
 const updateBaseUrl = (
   (process.env.VINCENT_UPDATE_BASE_URL || process.env.SHADOWBROKER_UPDATE_BASE_URL) ||
-  'https://github.com/BigBodyCobain/Vincent OS/releases/latest/download'
+  'https://github.com/vangoghdev7-sketch/vincent/releases/latest/download'
 ).replace(/\/+$/, '');
 
 const releaseSuffixes = [

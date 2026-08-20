@@ -105,7 +105,7 @@ def test_updater_refuses_same_release_checksum_as_sole_trust_root(tmp_path, monk
         updater._validate_zip_hash(
             str(archive),
             asset_name=archive.name,
-            sha256sums_url="https://github.com/BigBodyCobain/Vincent OS/releases/download/v9.9.9/SHA256SUMS.txt",
+            sha256sums_url="https://github.com/vangoghdev7-sketch/vincent/releases/download/v9.9.9/SHA256SUMS.txt",
             release_tag="v9.9.9",
         )
 

@@ -102,7 +102,7 @@ the same values through `TAURI_SIGNING_PRIVATE_KEY` and
 The production updater endpoint is:
 
 ```text
-https://github.com/BigBodyCobain/Vincent OS/releases/latest/download/latest.json
+https://github.com/vangoghdev7-sketch/vincent/releases/latest/download/latest.json
 ```
 
 For GitHub releases, upload `latest.json`, the installer (`.msi` / `.exe`), and
