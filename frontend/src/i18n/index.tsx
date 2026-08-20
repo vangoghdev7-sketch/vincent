@@ -4,9 +4,10 @@ import { createContext, useContext, useState, useCallback, useEffect, type React
 import en from './translations/en.json';
 import zhCN from './translations/zh-CN.json';
 import fr from './translations/fr.json';
+import ptBR from './translations/pt-BR.json';
 import fa from './translations/fa.json';
 
-export type Locale = 'en' | 'zh-CN' | 'fr' | 'fa';
+export type Locale = 'en' | 'zh-CN' | 'fr' | 'pt-BR' | 'fa';
 
 /** Locales that read right-to-left. Used to set <html dir> and lang. */
 const RTL_LOCALES: ReadonlySet<Locale> = new Set(['fa']);
@@ -38,6 +39,7 @@ export const LOCALES: ReadonlyArray<{ code: Locale; label: string }> = [
   { code: 'en', label: 'English' },
   { code: 'zh-CN', label: '中文 (简体)' },
   { code: 'fr', label: 'Français' },
+  { code: 'pt-BR', label: 'Português (Brasil)' },
   { code: 'fa', label: 'فارسی' },
 ];
 
@@ -45,6 +47,7 @@ const translations: Record<Locale, Record<string, Record<string, string>>> = {
   en,
   'zh-CN': zhCN,
   fr,
+  'pt-BR': ptBR,
   fa,
 };
 
