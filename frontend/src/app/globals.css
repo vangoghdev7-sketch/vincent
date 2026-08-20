@@ -524,3 +524,4 @@ textarea:disabled {
   background: #ef4444;
   box-shadow: 0 0 4px rgba(239, 68, 68, 0.5);
 }
+body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-image: url('/starry_night.jpg'); background-size: cover; background-position: center; opacity: 0.15; z-index: -1; pointer-events: none; }

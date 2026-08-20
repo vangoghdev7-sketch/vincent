@@ -1502,7 +1502,7 @@ export default function AIIntelPanel({
             <div className="p-3 space-y-3 max-h-[60vh] overflow-y-auto styled-scrollbar">
 
               {/* ── Vincent local brain status ───────────────────── */}
-              <VincentBrainStatus />
+              <img src="/vendetta.jpg" alt="Vincent Avatar" style={{ width: "32px", height: "32px", borderRadius: "50%", border: "2px solid cyan", marginRight: "8px" }} /><VincentBrainStatus />
 
               {/* ── Connect OpenClaw Button ──────────────────────── */}
               <button
