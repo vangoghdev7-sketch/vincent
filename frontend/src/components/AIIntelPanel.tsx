@@ -690,13 +690,13 @@ function ConnectModalBody({ apiEndpoint, handleCopy, copied }: ConnectModalBodyP
   // Connection snippet — display is masked, copy has real key
   const buildSnippet = (key: string) => {
     const lines: string[] = [];
-    if (resolvedUrl) lines.push(`SHADOWBROKER_URL=${resolvedUrl}`);
-    lines.push(`SHADOWBROKER_HMAC_SECRET=${key}`);
-    lines.push(`SHADOWBROKER_ACCESS=${accessTier}`);
-    if (connectionMode === 'remote' && nodeId) lines.push(`SHADOWBROKER_NODE_ID=${nodeId}`);
+    if (resolvedUrl) lines.push(`VINCENT_URL=${resolvedUrl}`);
+    lines.push(`VINCENT_HMAC_SECRET=${key}`);
+    lines.push(`VINCENT_ACCESS=${accessTier}`);
+    if (connectionMode === 'remote' && nodeId) lines.push(`VINCENT_NODE_ID=${nodeId}`);
     lines.push('');
     lines.push('# AUTH DIRECTIVE:');
-    lines.push('# SHADOWBROKER_HMAC_SECRET is a shared HMAC signing secret, not a raw API key.');
+    lines.push('# VINCENT_HMAC_SECRET is a shared HMAC signing secret, not a raw API key.');
     lines.push('# Never send it as X-Admin-Key, Authorization: Bearer, a query parameter, or a plain request header.');
     lines.push('# Every direct Vincent API request must be HMAC-SHA256 signed with:');
     lines.push('#   X-SB-Timestamp, X-SB-Nonce, X-SB-Signature');
@@ -810,7 +810,7 @@ function ConnectModalBody({ apiEndpoint, handleCopy, copied }: ConnectModalBodyP
       lines.push('# 2. Tor starts a SOCKS5 proxy on localhost:9050');
       lines.push('# 3. Route requests through it:  pip install PySocks requests[socks]');
       lines.push('#    proxies = {"http": "socks5h://127.0.0.1:9050", "https": "socks5h://127.0.0.1:9050"}');
-      lines.push('#    requests.get(SHADOWBROKER_URL + "/api/health", proxies=proxies)');
+      lines.push('#    requests.get(VINCENT_URL + "/api/health", proxies=proxies)');
     }
     return lines.join('\n');
   };

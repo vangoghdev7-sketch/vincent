@@ -182,7 +182,7 @@ def outbound_user_agent(purpose: str = "") -> str:
     upstream abuse teams cannot block every install with one ``Vincent OS``
     rule.
 
-    Set ``SHADOWBROKER_USER_AGENT`` to override the entire string if needed.
+    Set ``VINCENT_USER_AGENT`` to override the entire string if needed.
     """
     handle = get_operator_handle()
     if purpose:
@@ -201,7 +201,7 @@ def _reset_operator_handle_cache_for_tests() -> None:
 
 def default_user_agent() -> str:
     """Default User-Agent for ``fetch_with_curl`` and legacy call sites."""
-    custom = (os.environ.get("SHADOWBROKER_USER_AGENT") or "").strip()
+    custom = (os.environ.get("VINCENT_USER_AGENT", os.environ.get("SHADOWBROKER_USER_AGENT") or "").strip()
     if custom:
         return custom
     return outbound_user_agent()
@@ -235,7 +235,7 @@ def external_curl_fallback_enabled() -> bool:
     """Return whether the backend may spawn an external curl process."""
     if os.name != "nt":
         return True
-    return _env_truthy("SHADOWBROKER_ENABLE_WINDOWS_CURL_FALLBACK")
+    return _env_truthy("VINCENT_ENABLE_WINDOWS_CURL_FALLBACK")
 
 
 class _DummyResponse:
@@ -306,7 +306,7 @@ def fetch_with_curl(url, method="GET", json_data=None, timeout=15, headers=None,
     if not external_curl_fallback_enabled():
         logger.warning(
             "External curl fallback disabled on Windows for %s; set "
-            "SHADOWBROKER_ENABLE_WINDOWS_CURL_FALLBACK=1 to opt in.",
+            "VINCENT_ENABLE_WINDOWS_CURL_FALLBACK=1 to opt in.",
             domain,
         )
         with _cb_lock:

@@ -26,7 +26,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-API = os.environ.get("SHADOWBROKER_API", "http://127.0.0.1:8000")
+API = os.environ.get("VINCENT_API", os.environ.get("SHADOWBROKER_API", "http://127.0.0.1:8000")
 MARKER = os.environ.get("E2E_DM_MARKER", f"dm-short-addr-e2e-{int(time.time())}")
 REPLY_MARKER = os.environ.get("E2E_DM_REPLY_MARKER", f"{MARKER}-reply")
 _E2E_REQUESTS_MAILBOX_TOKEN = "e2e-tor-requests"

@@ -25,7 +25,7 @@ export const revalidate = 0;
 
 const DEFAULT_CANDIDATE_URLS = [
   process.env.VINCENT_AI_GATEWAY_URL,
-  process.env.OMNIROUTE_URL,
+  process.env.VINCENT_ROUTER_URL,
   process.env.BRAIN_BASE,
   'http://host.containers.internal:20128',
   'http://127.0.0.1:20128',

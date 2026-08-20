@@ -36,7 +36,7 @@ Vincent is **self-hosted**: each install uses its own backend egress IP. This do
 - **Code:** `backend/services/network_utils.py` — `outbound_user_agent()`, `OPERATOR_HANDLE`
 - **Sent:** `operator-7f3a92` or `your-handle (purpose: nominatim)` — **no** shared app product name
 - **Why:** Upstreams can rate-limit **one install**; a block on `operator-abc123` does not require blocking every Vincent user
-- **Override:** `SHADOWBROKER_USER_AGENT` replaces the entire string
+- **Override:** `VINCENT_USER_AGENT` replaces the entire string
 - **Note:** The same handle across Wikipedia, Broadcastify, etc. still correlates **your** traffic across those sites — that is intentional per-install attribution, not anonymity
 
 ---
@@ -48,7 +48,7 @@ Vincent is **self-hosted**: each install uses its own backend egress IP. This do
 - **Windows:** Scraper **off** until you enable **Global Incidents** and confirm the UI dialog → `backend/data/liveuamap_scraper_opt_in.json`
 - **Linux/macOS:** Scraper runs when the layer is on (unless env forces off)
 - **API:** `GET /api/liveuamap/scraper-status`, `POST /api/liveuamap/scraper-opt-in`
-- **Env:** `SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER=true|false` overrides UI on all platforms
+- **Env:** `VINCENT_ENABLE_LIVEUAMAP_SCRAPER=true|false` overrides UI on all platforms
 - **Honesty:** Backend-only; no browser-direct LiveUAMap from end users. Stealth remains a functional tradeoff for Turnstile; disable layer or env if unacceptable
 
 ## UAP sightings (NUFORC map layer)
@@ -114,6 +114,6 @@ Vincent is **self-hosted**: each install uses its own backend egress IP. This do
 1. Set `OPERATOR_HANDLE` if you want a recognizable name on upstream logs.
 2. Pin `DEEPSTATE_MIRROR_COMMIT` for reproducible frontlines (optional).
 3. Windows: enable Global Incidents in UI only if you accept LiveUAMap server contact.
-4. Set `SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER=false` to forbid LiveUAMap entirely.
+4. Set `VINCENT_ENABLE_LIVEUAMAP_SCRAPER=false` to forbid LiveUAMap entirely.
 5. Set `MESHTASTIC_SEND_CALLSIGN_HEADER=true` only if you want callsign sent upstream.
 6. Self-host map tiles if basemap CDN exposure matters.

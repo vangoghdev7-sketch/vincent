@@ -2,8 +2,8 @@
 """Verify OpenClaw HMAC auth against a running Vincent OS backend.
 
 Usage:
-    export SHADOWBROKER_URL=http://127.0.0.1:8000
-    export SHADOWBROKER_HMAC_SECRET=<from Connect OpenClaw modal>
+    export VINCENT_URL=http://127.0.0.1:8000
+    export VINCENT_HMAC_SECRET=<from Connect OpenClaw modal>
     python verify_hmac.py
 
 Signs the same canonical JSON body as openclaw-skills/vincent_os/sb_query.py.
@@ -37,10 +37,10 @@ def sign(method: str, path: str, body: bytes, secret: str) -> dict[str, str]:
 
 
 def main() -> int:
-    base = os.environ.get("SHADOWBROKER_URL", "http://127.0.0.1:8000").rstrip("/")
-    secret = os.environ.get("SHADOWBROKER_HMAC_SECRET", "").strip()
+    base = os.environ.get("VINCENT_URL", os.environ.get("SHADOWBROKER_URL", "http://127.0.0.1:8000").rstrip("/")
+    secret = os.environ.get("VINCENT_HMAC_SECRET", os.environ.get("SHADOWBROKER_HMAC_SECRET", "").strip()
     if not secret:
-        print("Set SHADOWBROKER_HMAC_SECRET to the value from Connect OpenClaw.", file=sys.stderr)
+        print("Set VINCENT_HMAC_SECRET to the value from Connect OpenClaw.", file=sys.stderr)
         return 2
 
     path = "/api/ai/channel/command"

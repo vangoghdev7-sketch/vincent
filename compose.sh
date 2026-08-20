@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_FILE="$SCRIPT_DIR/docker-compose.yml"
-ENGINE="${SHADOWBROKER_CONTAINER_ENGINE:-auto}"
+ENGINE="${VINCENT_CONTAINER_ENGINE:-auto}"
 COMPOSE_ARGS=()
 COMPOSE_PROVIDER=""
 

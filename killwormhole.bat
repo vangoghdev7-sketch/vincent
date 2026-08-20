@@ -1,7 +1,7 @@
 @echo off
 setlocal
 echo ==========================================
-echo  SHADOWBROKER - Kill Wormhole Process
+echo  VINCENT - Kill Wormhole Process
 echo ==========================================
 echo.
 

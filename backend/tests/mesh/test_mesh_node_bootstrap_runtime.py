@@ -475,7 +475,7 @@ def test_meshnode_scripts_enable_private_hashchain_runtime():
     sh = (root / "meshnode.sh").read_text(encoding="utf-8")
 
     for script in (bat, sh):
-        assert "SHADOWBROKER_MESH_NODE_RUNTIME=true" in script
+        assert "VINCENT_MESH_NODE_RUNTIME=true" in script
         assert "MESH_INFONET_ALLOW_CLEARNET_SYNC=false" in script
         assert "MESH_ARTI_ENABLED=true" in script
         assert "MESH_DM_HASHCHAIN_SPOOL_LIMIT=2" in script

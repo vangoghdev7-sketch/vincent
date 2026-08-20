@@ -194,7 +194,7 @@ const FOLDERS: Array<{ key: MailFolder; label: string; icon: React.ReactNode }> 
 const MAIL_POLL_BASE_MS = 12_000;
 const DM_LANE_BACKGROUND_PREP_TIMEOUT_MS = 5_000;
 const STORAGE_VERSION = 1;
-const SHADOWBROKER_WELCOME_ID = 'vincent_os-welcome';
+const VINCENT_WELCOME_ID = 'vincent_os-welcome';
 const MAIL_SUBJECT_PREFIX = 'MAIL_SUBJECT:';
 
 function randomId(prefix: string): string {
@@ -223,8 +223,8 @@ function sortMessages(items: MailItem[]): MailItem[] {
 
 function createVincentOSWelcomeMail(): MailItem {
   return {
-    id: SHADOWBROKER_WELCOME_ID,
-    msgId: SHADOWBROKER_WELCOME_ID,
+    id: VINCENT_WELCOME_ID,
+    msgId: VINCENT_WELCOME_ID,
     folder: 'inbox',
     kind: 'system',
     direction: 'local',
@@ -248,7 +248,7 @@ function createVincentOSWelcomeMail(): MailItem {
 }
 
 function ensureSeedMail(items: MailItem[]): MailItem[] {
-  if (items.some((item) => item.id === SHADOWBROKER_WELCOME_ID)) {
+  if (items.some((item) => item.id === VINCENT_WELCOME_ID)) {
     return sortMessages(items);
   }
   return sortMessages([createVincentOSWelcomeMail(), ...items]);

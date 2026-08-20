@@ -69,8 +69,8 @@ Playwright searched under `/app/.cache`.
 
 ```env
 # Explicitly enable or disable only the browser provider.
-SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER=true
-SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER=false
+VINCENT_ENABLE_LIVEUAMAP_SCRAPER=true
+VINCENT_ENABLE_LIVEUAMAP_SCRAPER=false
 ```
 
 On Windows, the first Global Incidents enable offers LiveUAMap browser

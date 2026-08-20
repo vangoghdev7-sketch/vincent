@@ -18,7 +18,7 @@ It does **not** move DM/data-plane operations into native code.
 ## Architecture
 
 1. `main.rs` creates the main window programmatically and attaches an
-   `initialization_script` so `window.__SHADOWBROKER_DESKTOP__` exists before
+   `initialization_script` so `window.__VINCENT_DESKTOP__` exists before
    page JavaScript runs
 2. `bridge.rs` routes Tauri IPC through `policy.rs` before any privileged
    backend dispatch
@@ -33,9 +33,9 @@ It does **not** move DM/data-plane operations into native code.
 
 ## Environment variables
 
-- `SHADOWBROKER_BACKEND_URL` - Optional backend override. In packaged mode, if unset, the app launches its bundled local backend automatically.
-- `SHADOWBROKER_ADMIN_KEY` - Optional admin key for privileged backend access
-- `SHADOWBROKER_FRONTEND_URL` - Explicit frontend origin override for dev/custom setups
+- `VINCENT_BACKEND_URL` - Optional backend override. In packaged mode, if unset, the app launches its bundled local backend automatically.
+- `VINCENT_ADMIN_KEY` - Optional admin key for privileged backend access
+- `VINCENT_FRONTEND_URL` - Explicit frontend origin override for dev/custom setups
 
 ## Development
 

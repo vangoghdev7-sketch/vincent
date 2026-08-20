@@ -42,8 +42,8 @@ def _gmst(jd_ut1):
 # CelesTrak fair use: fetch at most once per 24 hours (86400s).
 # SGP4 propagation runs every 60s using cached TLEs — positions stay live.
 _CELESTRAK_FETCH_INTERVAL = 86400  # 24 hours
-_MIN_VISIBLE_SATELLITE_CATALOG = int(os.environ.get("SHADOWBROKER_MIN_VISIBLE_SATELLITES", "350"))
-_MAX_VISIBLE_SATELLITE_CATALOG = int(os.environ.get("SHADOWBROKER_MAX_VISIBLE_SATELLITES", "450"))
+_MIN_VISIBLE_SATELLITE_CATALOG = int(os.environ.get("VINCENT_MIN_VISIBLE_SATELLITES", os.environ.get("SHADOWBROKER_MIN_VISIBLE_SATELLITES", "350"))
+_MAX_VISIBLE_SATELLITE_CATALOG = int(os.environ.get("VINCENT_MAX_VISIBLE_SATELLITES", os.environ.get("SHADOWBROKER_MAX_VISIBLE_SATELLITES", "450"))
 _CELESTRAK_VISIBLE_GROUPS = {
     "military": {"mission": "military", "sat_type": "Military / Defense"},
     "radar": {"mission": "sar", "sat_type": "Radar / SAR"},

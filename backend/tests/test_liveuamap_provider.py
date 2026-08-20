@@ -134,7 +134,7 @@ def test_api_failure_does_not_force_browser_when_browser_is_disabled(monkeypatch
 def test_browser_disable_does_not_disable_configured_api_scheduler_gate(monkeypatch, tmp_path):
     monkeypatch.setattr(settings, "_OPT_IN_FILE", tmp_path / "choice.json")
     monkeypatch.setattr(settings.os, "name", "nt")
-    monkeypatch.setenv("SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER", "false")
+    monkeypatch.setenv("VINCENT_ENABLE_LIVEUAMAP_SCRAPER", "false")
     monkeypatch.setenv("LIVEUAMAP_API_URL", "https://api.example.test/events")
     assert settings.liveuamap_browser_scraper_enabled() is False
     assert settings.liveuamap_scraper_enabled() is True

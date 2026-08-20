@@ -727,7 +727,7 @@ _NUFORC_LIVE_SIGHTING_ID_RE = re.compile(r"id=(\d+)")
 # Round 7a: NUFORC's site is sensitive to non-browser UAs but we send a
 # per-install operator handle prefixed by Mozilla/5.0 so we're identifiable
 # without being aggregately blocked. Operators who want stricter privacy
-# can override the entire UA via SHADOWBROKER_USER_AGENT.
+# can override the entire UA via VINCENT_USER_AGENT.
 def _nuforc_live_user_agent() -> str:
     return f"Mozilla/5.0 ({outbound_user_agent('nuforc-live')})"
 _NUFORC_LIVE_SESSION_COOKIES = _NUFORC_DATA_DIR / "nuforc_session.cookies"

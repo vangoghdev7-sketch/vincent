@@ -7,14 +7,14 @@ import pytest
 
 class TestDevBindHost:
     def test_defaults_to_loopback(self, monkeypatch):
-        monkeypatch.delenv("SHADOWBROKER_DEV_BIND_ALL", raising=False)
+        monkeypatch.delenv("VINCENT_DEV_BIND_ALL", raising=False)
         from main import _dev_uvicorn_bind_host
 
         assert _dev_uvicorn_bind_host() == "127.0.0.1"
 
     @pytest.mark.parametrize("value", ("1", "true", "yes", "on", "TRUE"))
     def test_bind_all_opt_in(self, monkeypatch, value):
-        monkeypatch.setenv("SHADOWBROKER_DEV_BIND_ALL", value)
+        monkeypatch.setenv("VINCENT_DEV_BIND_ALL", value)
         from main import _dev_uvicorn_bind_host
 
         assert _dev_uvicorn_bind_host() == "0.0.0.0"

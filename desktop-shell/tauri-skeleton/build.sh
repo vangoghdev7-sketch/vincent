@@ -128,7 +128,7 @@ echo ""
 
 cd "$SCRIPT_DIR/src-tauri"
 
-export SHADOWBROKER_BACKEND_URL="${SHADOWBROKER_BACKEND_URL:-http://127.0.0.1:8000}"
+export VINCENT_BACKEND_URL="${VINCENT_BACKEND_URL:-http://127.0.0.1:8000}"
 if [ -z "${TAURI_SIGNING_PRIVATE_KEY:-}" ] && [ -z "${TAURI_SIGNING_PRIVATE_KEY_PATH:-}" ] && [ -f "$LOCAL_UPDATER_KEY" ]; then
     TAURI_SIGNING_PRIVATE_KEY="$(cat "$LOCAL_UPDATER_KEY")"
     export TAURI_SIGNING_PRIVATE_KEY
@@ -142,7 +142,7 @@ echo "=== Vincent OS Tauri Build ==="
 echo "Frontend dist:    $FRONTEND_OUT"
 echo "Companion www:    $SCRIPT_DIR/src-tauri/companion-www"
 echo "Backend runtime:  $SCRIPT_DIR/src-tauri/backend-runtime"
-echo "Backend URL:      $SHADOWBROKER_BACKEND_URL"
+echo "Backend URL:      $VINCENT_BACKEND_URL"
 if [ -n "${TAURI_SIGNING_PRIVATE_KEY:-}" ] || [ -n "${TAURI_SIGNING_PRIVATE_KEY_PATH:-}" ]; then
     echo "Updater signing:  enabled"
 else

@@ -459,7 +459,7 @@ Make sure the Vincent backend is running on localhost:8000.`,
                 <p className="text-cyan-400 font-bold mt-2">Step 2: Configure the API Endpoint</p>
                 <p className="text-gray-400">Tell your OpenClaw agent to connect to:</p>
                 <code className="block bg-purple-950/40 border border-purple-800/30 px-2 py-1 text-purple-300 text-[13px] rounded-sm">
-                  SHADOWBROKER_URL={apiEndpoint}
+                  VINCENT_URL={apiEndpoint}
                 </code>
 
                 <p className="text-cyan-400 font-bold mt-2">Step 3: Tell Your Agent</p>

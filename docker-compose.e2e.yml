@@ -6,7 +6,7 @@ services:
       MESH_ONLY: "true"
       # DM E2E uses direct onion relay_push_peer_urls — skip fleet hashchain sync
       # (hundreds of dead manifest peers wedge /api/wormhole/status during Tor warmup).
-      SHADOWBROKER_MESH_NODE_RUNTIME: "false"
+      VINCENT_MESH_NODE_RUNTIME: "false"
       MESH_ARTI_ENABLED: "true"
       MESH_INFONET_FLEET_JOIN: "false"
       MESH_INFONET_FLEET_JOIN_DISABLED: "true"

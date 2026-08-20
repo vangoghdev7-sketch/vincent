@@ -80,7 +80,7 @@ def _warn_legacy_prekey_lookup(agent_id: str) -> None:
 
 
 def _fleet_peer_lookup_user_agent() -> str:
-    custom = str(os.environ.get("SHADOWBROKER_MESH_PEER_USER_AGENT") or "").strip()
+    custom = str(os.environ.get("VINCENT_MESH_PEER_USER_AGENT", os.environ.get("SHADOWBROKER_MESH_PEER_USER_AGENT") or "").strip()
     if custom:
         return custom
     return "Mozilla/5.0 (compatible; Vincent OSMesh/1.0)"

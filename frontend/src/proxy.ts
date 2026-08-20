@@ -191,7 +191,7 @@ export function proxy(request: NextRequest) {
     request: { headers: requestHeaders },
   });
 
-  const strictCsp = process.env.SHADOWBROKER_STRICT_CSP === '1';
+  const strictCsp = (process.env.VINCENT_STRICT_CSP || process.env.SHADOWBROKER_STRICT_CSP) === '1';
   response.headers.set('Content-Security-Policy', buildCsp(nonce, strictCsp));
   if (!strictCsp && process.env.NODE_ENV === 'production') {
     response.headers.set('Content-Security-Policy-Report-Only', buildCsp(nonce, true));

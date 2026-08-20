@@ -32,7 +32,7 @@ services:
       # LiveUAMap is optional enrichment for Global Incidents. GDELT remains
       # available regardless. The browser provider preserves existing Linux/
       # Docker behavior unless explicitly disabled; paid API access is optional.
-      - SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER=${SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER:-}
+      - VINCENT_ENABLE_LIVEUAMAP_SCRAPER=${VINCENT_ENABLE_LIVEUAMAP_SCRAPER:-}
       - LIVEUAMAP_API_URL=${LIVEUAMAP_API_URL:-}
       - LIVEUAMAP_API_KEY=${LIVEUAMAP_API_KEY:-}
       - LIVEUAMAP_API_AUTH_HEADER=${LIVEUAMAP_API_AUTH_HEADER:-Authorization}
@@ -56,7 +56,7 @@ services:
       - MESH_ARTI_SOCKS_PORT=${MESH_ARTI_SOCKS_PORT:-9050}
       # Lean Infonet participant (meshnode.sh equivalent). Skips global OSINT fetchers.
       - MESH_ONLY=${MESH_ONLY:-}
-      - SHADOWBROKER_MESH_NODE_RUNTIME=${SHADOWBROKER_MESH_NODE_RUNTIME:-}
+      - VINCENT_MESH_NODE_RUNTIME=${VINCENT_MESH_NODE_RUNTIME:-}
       # Operator-trusted sync/push peers. Leave empty unless you control the peer secret on both sides.
       - MESH_RELAY_PEERS=${MESH_RELAY_PEERS:-}
       - MESH_PUBLIC_PEER_URL=${MESH_PUBLIC_PEER_URL:-}
@@ -85,12 +85,12 @@ services:
       - MESHTASTIC_OPERATOR_CALLSIGN=${MESHTASTIC_OPERATOR_CALLSIGN:-}
       # The bundled Docker UI talks to the backend across Docker's private bridge.
       # Treat that bridge as local operator access while ports remain bound to 127.0.0.1 by default.
-      - SHADOWBROKER_TRUST_DOCKER_BRIDGE_LOCAL_OPERATOR=${SHADOWBROKER_TRUST_DOCKER_BRIDGE_LOCAL_OPERATOR:-1}
+      - VINCENT_TRUST_DOCKER_BRIDGE_LOCAL_OPERATOR=${VINCENT_TRUST_DOCKER_BRIDGE_LOCAL_OPERATOR:-1}
       # Issue #250: bridge trust is now bound to specific container hostnames
       # (default: 'frontend' compose service + 'vincent_os-frontend' container
       # name). If you rename the frontend service or run with a different
       # container_name, list the hostnames here (comma-separated, no spaces).
-      - SHADOWBROKER_TRUSTED_FRONTEND_HOSTS=${SHADOWBROKER_TRUSTED_FRONTEND_HOSTS:-frontend,vincent_os-frontend}
+      - VINCENT_TRUSTED_FRONTEND_HOSTS=${VINCENT_TRUSTED_FRONTEND_HOSTS:-frontend,vincent_os-frontend}
       # Third-party fetcher opt-ins. Default OFF — these phone home to
       # politically/commercially sensitive upstreams (Polymarket, Kalshi,
       # Yahoo Finance, EU disinfo trackers, NUFORC dataset host, etc.).

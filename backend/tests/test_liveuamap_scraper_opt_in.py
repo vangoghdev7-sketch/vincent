@@ -14,7 +14,7 @@ def opt_in_file(tmp_path, monkeypatch):
     path = tmp_path / "liveuamap_scraper_opt_in.json"
     monkeypatch.setattr(settings, "_OPT_IN_FILE", path)
     monkeypatch.delenv("LIVEUAMAP_API_URL", raising=False)
-    monkeypatch.delenv("SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER", raising=False)
+    monkeypatch.delenv("VINCENT_ENABLE_LIVEUAMAP_SCRAPER", raising=False)
     return path
 
 
@@ -52,7 +52,7 @@ def test_linux_preserves_existing_auto_enrichment_default(monkeypatch, opt_in_fi
 def test_env_force_off_disables_browser_even_after_opt_in(monkeypatch, opt_in_file):
     monkeypatch.setattr(settings.os, "name", "nt")
     settings.set_liveuamap_ui_opt_in(True)
-    monkeypatch.setenv("SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER", "false")
+    monkeypatch.setenv("VINCENT_ENABLE_LIVEUAMAP_SCRAPER", "false")
     assert settings.liveuamap_browser_scraper_enabled() is False
     assert settings.liveuamap_scraper_enabled() is False
 

@@ -23,9 +23,9 @@ def _env_truthy(name: str) -> bool:
 
 def ais_stream_proxy_enabled() -> bool:
     """Return whether the external Node AIS proxy may be started."""
-    setting = str(os.getenv("SHADOWBROKER_ENABLE_AIS_STREAM_PROXY", "")).strip().lower()
+    setting = str(os.getenv("VINCENT_ENABLE_AIS_STREAM_PROXY", "")).strip().lower()
     if setting:
-        return _env_truthy("SHADOWBROKER_ENABLE_AIS_STREAM_PROXY")
+        return _env_truthy("VINCENT_ENABLE_AIS_STREAM_PROXY")
     return True
 
 
@@ -802,7 +802,7 @@ def start_ais_stream():
     if not ais_stream_proxy_enabled():
         logger.info(
             "AIS live stream proxy disabled for this runtime; using cached AIS vessels. "
-            "Set SHADOWBROKER_ENABLE_AIS_STREAM_PROXY=1 to opt in."
+            "Set VINCENT_ENABLE_AIS_STREAM_PROXY=1 to opt in."
         )
         return
 

@@ -11,7 +11,7 @@ import time
 import urllib.error
 import urllib.request
 
-API = os.environ.get("SHADOWBROKER_API", "http://127.0.0.1:8000").strip().rstrip("/")
+API = os.environ.get("VINCENT_API", os.environ.get("SHADOWBROKER_API", "http://127.0.0.1:8000").strip().rstrip("/")
 MARKER = os.environ.get("SWARM_VERIFY_MARKER", f"SWARM-V1-{int(time.time())}")
 
 
@@ -109,7 +109,7 @@ def step_gate_propagation() -> None:
     try:
         subprocess.run(
             [sys.executable, os.path.join(os.path.dirname(__file__), "e2e_openclaw_infonet_agent_live.py")],
-            env={**os.environ, "E2E_MARKER": MARKER, "SHADOWBROKER_API": API},
+            env={**os.environ, "E2E_MARKER": MARKER, "VINCENT_API": API},
             check=True,
             timeout=600,
         )

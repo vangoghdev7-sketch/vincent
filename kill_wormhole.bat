@@ -6,7 +6,7 @@
 
 echo.
 echo  ========================================
-echo   SHADOWBROKER WORMHOLE CLEANUP (Windows)
+echo   VINCENT WORMHOLE CLEANUP (Windows)
 echo  ========================================
 echo.
 

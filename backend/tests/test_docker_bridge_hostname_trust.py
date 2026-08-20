@@ -2,7 +2,7 @@
 the frontend container's hostname, not the entire 172.16.0.0/12 range.
 
 Previous behavior trusted ANY private-RFC1918 source IP on the bridge
-when ``SHADOWBROKER_TRUST_DOCKER_BRIDGE_LOCAL_OPERATOR=1``. On a shared
+when ``VINCENT_TRUST_DOCKER_BRIDGE_LOCAL_OPERATOR=1``. On a shared
 Docker host this granted local-operator privileges to any other
 container that could route to the backend's bridge — far broader than
 intended.
@@ -11,7 +11,7 @@ The fix narrows trust to source IPs that forward-resolve from one of the
 configured frontend container hostnames (default: the compose service
 name ``frontend`` plus the explicit ``container_name``
 ``vincent_os-frontend``). Operators with renamed containers can list
-the new names in ``SHADOWBROKER_TRUSTED_FRONTEND_HOSTS``.
+the new names in ``VINCENT_TRUSTED_FRONTEND_HOSTS``.
 
 These tests exercise the resolution helpers directly so that we don't
 need a live Docker daemon to validate the contract.
@@ -35,20 +35,20 @@ class TestTrustedHostnameParsing:
         with patch.dict("os.environ", {}, clear=False):
             # Make sure the env var is not set so we exercise the default.
             import os
-            os.environ.pop("SHADOWBROKER_TRUSTED_FRONTEND_HOSTS", None)
+            os.environ.pop("VINCENT_TRUSTED_FRONTEND_HOSTS", None)
             assert self._fn()() == ["frontend", "vincent_os-frontend"]
 
     def test_custom_list_via_env(self):
         with patch.dict(
             "os.environ",
-            {"SHADOWBROKER_TRUSTED_FRONTEND_HOSTS": "my-ui,alt-frontend"},
+            {"VINCENT_TRUSTED_FRONTEND_HOSTS": "my-ui,alt-frontend"},
         ):
             assert self._fn()() == ["my-ui", "alt-frontend"]
 
     def test_whitespace_trimmed(self):
         with patch.dict(
             "os.environ",
-            {"SHADOWBROKER_TRUSTED_FRONTEND_HOSTS": "  my-ui , alt-frontend  "},
+            {"VINCENT_TRUSTED_FRONTEND_HOSTS": "  my-ui , alt-frontend  "},
         ):
             assert self._fn()() == ["my-ui", "alt-frontend"]
 
@@ -57,7 +57,7 @@ class TestTrustedHostnameParsing:
         # misconfigured env var doesn't silently dismantle bridge trust.
         with patch.dict(
             "os.environ",
-            {"SHADOWBROKER_TRUSTED_FRONTEND_HOSTS": ""},
+            {"VINCENT_TRUSTED_FRONTEND_HOSTS": ""},
         ):
             # Per docs: empty string sets the env var to "" so os.environ.get
             # returns "" — that string is parsed and yields []. We assert

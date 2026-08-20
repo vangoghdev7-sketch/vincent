@@ -6,7 +6,7 @@
 
 echo ""
 echo " ========================================"
-echo "  SHADOWBROKER WORMHOLE CLEANUP (Unix)"
+echo "  VINCENT WORMHOLE CLEANUP (Unix)"
 echo " ========================================"
 echo ""
 

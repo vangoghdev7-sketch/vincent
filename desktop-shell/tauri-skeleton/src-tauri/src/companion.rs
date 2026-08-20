@@ -2,7 +2,7 @@
 //!
 //! When explicitly enabled by the user, allows opening the frontend in the
 //! system browser on a loopback-only URL. The browser session does **not**
-//! receive the native desktop control boundary (`window.__SHADOWBROKER_DESKTOP__`)
+//! receive the native desktop control boundary (`window.__VINCENT_DESKTOP__`)
 //! and therefore cannot invoke any of the 27 native-control commands. It
 //! operates at materially reduced trust compared with the native window.
 //!
@@ -68,10 +68,10 @@ pub struct CompanionStatus {
 /// shared URL when the user enables the browser opener.
 pub struct CompanionState {
     enabled: bool,
-    /// Default frontend URL (from `SHADOWBROKER_FRONTEND_URL` or the
+    /// Default frontend URL (from `VINCENT_FRONTEND_URL` or the
     /// `http://127.0.0.1:3000` fallback used in dev mode).
     default_frontend_url: String,
-    /// Whether `SHADOWBROKER_FRONTEND_URL` was explicitly set by the user.
+    /// Whether `VINCENT_FRONTEND_URL` was explicitly set by the user.
     /// When true the default URL is honored even in packaged builds
     /// (explicit override beats built-in server).
     frontend_url_explicit: bool,
@@ -365,7 +365,7 @@ mod tests {
         assert_eq!(
             cs.effective_url(),
             "http://127.0.0.1:4000",
-            "explicit SHADOWBROKER_FRONTEND_URL must beat the built-in server URL"
+            "explicit VINCENT_FRONTEND_URL must beat the built-in server URL"
         );
         assert!(!cs.uses_builtin_server());
     }

@@ -146,14 +146,14 @@ _INTEL_STARTUP_CACHE_KEYS = (
     "military_bases",
     "wastewater",
 )
-_STARTUP_PRIORITY_TIMEOUT_S = float(os.environ.get("SHADOWBROKER_STARTUP_PRIORITY_TIMEOUT_S", "18"))
-_STARTUP_HEAVY_REFRESH_DELAY_S = float(os.environ.get("SHADOWBROKER_STARTUP_HEAVY_REFRESH_DELAY_S", "90"))
+_STARTUP_PRIORITY_TIMEOUT_S = float(os.environ.get("VINCENT_STARTUP_PRIORITY_TIMEOUT_S", os.environ.get("SHADOWBROKER_STARTUP_PRIORITY_TIMEOUT_S", "18"))
+_STARTUP_HEAVY_REFRESH_DELAY_S = float(os.environ.get("VINCENT_STARTUP_HEAVY_REFRESH_DELAY_S", os.environ.get("SHADOWBROKER_STARTUP_HEAVY_REFRESH_DELAY_S", "90"))
 _STARTUP_HEAVY_REFRESH_STARTED = False
 _STARTUP_HEAVY_REFRESH_LOCK = threading.Lock()
-_FETCH_WORKERS = int(os.environ.get("SHADOWBROKER_FETCH_WORKERS", "8"))
-_HEAVY_FETCH_WORKERS = int(os.environ.get("SHADOWBROKER_HEAVY_FETCH_WORKERS", "2"))
-_SLOW_FETCH_CONCURRENCY = int(os.environ.get("SHADOWBROKER_SLOW_FETCH_CONCURRENCY", "4"))
-_STARTUP_HEAVY_CONCURRENCY = int(os.environ.get("SHADOWBROKER_STARTUP_HEAVY_CONCURRENCY", "2"))
+_FETCH_WORKERS = int(os.environ.get("VINCENT_FETCH_WORKERS", os.environ.get("SHADOWBROKER_FETCH_WORKERS", "8"))
+_HEAVY_FETCH_WORKERS = int(os.environ.get("VINCENT_HEAVY_FETCH_WORKERS", os.environ.get("SHADOWBROKER_HEAVY_FETCH_WORKERS", "2"))
+_SLOW_FETCH_CONCURRENCY = int(os.environ.get("VINCENT_SLOW_FETCH_CONCURRENCY", os.environ.get("SHADOWBROKER_SLOW_FETCH_CONCURRENCY", "4"))
+_STARTUP_HEAVY_CONCURRENCY = int(os.environ.get("VINCENT_STARTUP_HEAVY_CONCURRENCY", os.environ.get("SHADOWBROKER_STARTUP_HEAVY_CONCURRENCY", "2"))
 
 # Fast-tier pool (flights, ships, sigint, …). Slow / heavy work uses a separate pool
 # so Playwright, GDELT, CCTV ingest, etc. cannot starve the 60s refresh path (#375).
@@ -578,7 +578,7 @@ def _run_delayed_startup_heavy_refresh() -> None:
 def _schedule_delayed_startup_heavy_refresh() -> None:
     global _STARTUP_HEAVY_REFRESH_STARTED
     if _STARTUP_HEAVY_REFRESH_DELAY_S < 0:
-        logger.info("Startup heavy synthesis disabled by SHADOWBROKER_STARTUP_HEAVY_REFRESH_DELAY_S")
+        logger.info("Startup heavy synthesis disabled by VINCENT_STARTUP_HEAVY_REFRESH_DELAY_S")
         return
     with _STARTUP_HEAVY_REFRESH_LOCK:
         if _STARTUP_HEAVY_REFRESH_STARTED:
@@ -700,7 +700,7 @@ def update_all_data(*, startup_mode: bool = False):
 
 
 _scheduler = None
-_STARTUP_CCTV_INGEST_DELAY_S = int(os.environ.get("SHADOWBROKER_STARTUP_CCTV_INGEST_DELAY_S", "180"))
+_STARTUP_CCTV_INGEST_DELAY_S = int(os.environ.get("VINCENT_STARTUP_CCTV_INGEST_DELAY_S", os.environ.get("SHADOWBROKER_STARTUP_CCTV_INGEST_DELAY_S", "180"))
 _FINANCIAL_REFRESH_MINUTES = 30
 
 

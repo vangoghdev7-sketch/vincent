@@ -207,11 +207,11 @@ def update_liveuamap():
         if liveuamap_requires_ui_opt_in():
             logger.info(
                 "Liveuamap scraper disabled: enable Global Incidents in the UI to "
-                "consent, or set SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER=1."
+                "consent, or set VINCENT_ENABLE_LIVEUAMAP_SCRAPER=1."
             )
         else:
             logger.info(
-                "Liveuamap scraper disabled; set SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER=1 to opt in."
+                "Liveuamap scraper disabled; set VINCENT_ENABLE_LIVEUAMAP_SCRAPER=1 to opt in."
             )
         return
     logger.info("Running scheduled Liveuamap scraper...")

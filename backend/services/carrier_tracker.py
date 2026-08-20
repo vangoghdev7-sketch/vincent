@@ -252,7 +252,7 @@ _DEFAULT_FRESHNESS_WINDOW_DAYS = 14
 
 
 def _freshness_window_days() -> int:
-    raw = str(os.environ.get("SHADOWBROKER_CARRIER_FRESHNESS_DAYS", "") or "").strip()
+    raw = str(os.environ.get("VINCENT_CARRIER_FRESHNESS_DAYS", os.environ.get("SHADOWBROKER_CARRIER_FRESHNESS_DAYS", "") or "").strip()
     if not raw:
         return _DEFAULT_FRESHNESS_WINDOW_DAYS
     try:

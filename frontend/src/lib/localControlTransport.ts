@@ -32,7 +32,7 @@ export interface VincentOSLocalControlBridge {
 
 function getDesktopBridge(): VincentOSLocalControlBridge | null {
   if (typeof window === 'undefined') return null;
-  return window.__SHADOWBROKER_LOCAL_CONTROL__ || null;
+  return window.__VINCENT_LOCAL_CONTROL__ || null;
 }
 
 export function hasLocalControlBridge(): boolean {

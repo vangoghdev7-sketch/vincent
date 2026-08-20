@@ -17,10 +17,10 @@ DATA_DIR = Path(os.environ.get("SB_DATA_DIR", str(Path(__file__).parent.parent /
 if not DATA_DIR.is_absolute():
     DATA_DIR = Path(__file__).parent.parent / DATA_DIR
 OPERATOR_KEYS_ENV_PATH = Path(
-    os.environ.get("SHADOWBROKER_OPERATOR_KEYS_ENV", str(DATA_DIR / "operator_api_keys.env"))
+    os.environ.get("VINCENT_OPERATOR_KEYS_ENV", os.environ.get("SHADOWBROKER_OPERATOR_KEYS_ENV", str(DATA_DIR / "operator_api_keys.env"))
 )
 OPENCLAW_ENV_PATH = Path(
-    os.environ.get("SHADOWBROKER_OPENCLAW_ENV", str(DATA_DIR / "openclaw.env"))
+    os.environ.get("VINCENT_OPENCLAW_ENV", os.environ.get("SHADOWBROKER_OPENCLAW_ENV", str(DATA_DIR / "openclaw.env"))
 )
 OPENCLAW_PERSISTED_KEYS = frozenset({"OPENCLAW_HMAC_SECRET", "OPENCLAW_ACCESS_TIER"})
 _ENV_KEY_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")

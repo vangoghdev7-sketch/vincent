@@ -4,7 +4,7 @@ services:
   backend:
     environment:
       MESH_ONLY: "${MESH_ONLY:-false}"
-      SHADOWBROKER_MESH_NODE_RUNTIME: "${SHADOWBROKER_MESH_NODE_RUNTIME:-true}"
+      VINCENT_MESH_NODE_RUNTIME: "${VINCENT_MESH_NODE_RUNTIME:-true}"
       MESH_ARTI_ENABLED: "true"
       MESH_INFONET_FLEET_JOIN: "${MESH_INFONET_FLEET_JOIN:-true}"
       MESH_INFONET_FLEET_JOIN_DISABLED: "${MESH_INFONET_FLEET_JOIN_DISABLED:-false}"
@@ -18,8 +18,8 @@ services:
       GT_ANALYTICS_ENABLED: "false"
       GT_ANALYTICS_PROFILE: "lean"
       # Lean 1-vCPU nodes: fewer fetch worker threads reduces scheduler contention.
-      SHADOWBROKER_FETCH_WORKERS: "4"
-      SHADOWBROKER_HEAVY_FETCH_WORKERS: "1"
+      VINCENT_FETCH_WORKERS: "4"
+      VINCENT_HEAVY_FETCH_WORKERS: "1"
     deploy:
       resources:
         limits:

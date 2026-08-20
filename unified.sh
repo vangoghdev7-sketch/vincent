@@ -30,10 +30,10 @@ up_port() {
 
 cleanup_legacy_containers() {
   if command -v podman >/dev/null 2>&1; then
-    podman rm -f shadowbroker-backend shadowbroker-frontend >/dev/null 2>&1 || true
+    podman rm -f vincent-backend vincent-frontend >/dev/null 2>&1 || true
   fi
   if command -v docker >/dev/null 2>&1; then
-    docker rm -f shadowbroker-backend shadowbroker-frontend >/dev/null 2>&1 || true
+    docker rm -f vincent-backend vincent-frontend >/dev/null 2>&1 || true
   fi
 }
 
@@ -49,7 +49,7 @@ setup_links() {
   echo "[*] Refreshing ./vincent symlink index:"
   link "$HOME/.vincent"                                                vincent-config
   link "$HOME/.vincentos"                                              vincentos-config
-  link "$HOME/.omniroute"                                              router-config
+  link "$HOME/.vincent-router"                                              router-config
   link "$HOME/.openclaw/agents"                                        openclaw-agents
   link "$HOME/.openclaw/skills/vincent_os"                             openclaw-skill
   link "$HOME/.local/bin"                                              bin
@@ -66,8 +66,8 @@ ensure_router() {
     "$HOME/.local/bin/vincent_os" \
     "$(command -v vincent_os || true)" \
     "$HOME/.nvm/versions/node/v24.15.0/bin/vincent_os" \
-    "$(command -v omniroute || true)" \
-    "$HOME/.nvm/versions/node/v24.15.0/bin/omniroute"; do
+    "$(command -v vincent-router || true)" \
+    "$HOME/.nvm/versions/node/v24.15.0/bin/vincent-router"; do
     if [ -n "$candidate" ] && [ -x "$candidate" ]; then
       bin="$candidate"
       break
@@ -113,7 +113,7 @@ case "${1:-status}" in
     echo "    To stop the router: $0 stop-router"
     ;;
   stop-router)
-    pkill -f 'node .*(vincent_os|omniroute)' && echo "[=] Vincent Router stopped" || echo "[i] No router process found"
+    pkill -f 'node .*(vincent_os|vincent-router)' && echo "[=] Vincent Router stopped" || echo "[i] No router process found"
     ;;
   restart)
     "$0" stop

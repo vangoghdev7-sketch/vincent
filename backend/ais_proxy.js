@@ -51,9 +51,9 @@ const AIS_WS_URL = `wss://${AIS_HOST}/v0/stream`;
 //   - the Docker backend image (PIN_FILE_CANDIDATES[0])
 //   - the Tauri desktop runtime (PIN_FILE_CANDIDATES[1])
 //   - a future relocated layout (operator can drop a file at
-//     SHADOWBROKER_AIS_PINS env var)
+//     VINCENT_AIS_PINS env var)
 const PIN_FILE_CANDIDATES = [
-    process.env.SHADOWBROKER_AIS_PINS || '',
+    (process.env.VINCENT_AIS_PINS || process.env.SHADOWBROKER_AIS_PINS) || '',
     path.join(__dirname, 'data', 'aisstream_spki_pins.json'),
     path.join(__dirname, 'aisstream_spki_pins.json'),
 ].filter(Boolean);
@@ -93,7 +93,7 @@ function loadSpkiPins() {
     if (embedded.length > 0) {
         console.error(
             '[AIS Proxy] No external SPKI pin file found; using embedded fallback. '
-            + `(Set SHADOWBROKER_AIS_PINS or drop ${PIN_FILE_CANDIDATES[1]} to override.)`
+            + `(Set VINCENT_AIS_PINS or drop ${PIN_FILE_CANDIDATES[1]} to override.)`
         );
     }
     return embedded;

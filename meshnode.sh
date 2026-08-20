@@ -53,7 +53,7 @@ mkdir -p data
 echo '{"enabled":true,"updated_at":0}' > data/node.json
 
 export MESH_ONLY=true
-export SHADOWBROKER_MESH_NODE_RUNTIME=true
+export VINCENT_MESH_NODE_RUNTIME=true
 export MESH_NODE_MODE=participant
 export MESH_INFONET_ALLOW_CLEARNET_SYNC=false
 export MESH_ARTI_ENABLED=true

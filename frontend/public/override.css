@@ -12,7 +12,7 @@ body {
     margin: 0;
 }
 
-.shadowbroker-container {
+.vincent-container {
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);

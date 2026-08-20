@@ -5,15 +5,15 @@
 #   - Rust toolchain (rustup.rs)
 #   - Tauri CLI: cargo install tauri-cli@^2
 #   - Node.js 18+ and the frontend dev server running on :3000
-#   - Backend running on :8000 (or set SHADOWBROKER_BACKEND_URL)
+#   - Backend running on :8000 (or set VINCENT_BACKEND_URL)
 #
 # Usage:
 #   ./dev.sh                                # default backend at http://127.0.0.1:8000
-#   SHADOWBROKER_ADMIN_KEY=secret ./dev.sh  # with admin key for privileged commands
+#   VINCENT_ADMIN_KEY=secret ./dev.sh  # with admin key for privileged commands
 #
 # This script starts Tauri in dev mode, which:
 #   1. Opens a native window pointed at the frontend dev server (http://127.0.0.1:3000)
-#   2. Injects window.__SHADOWBROKER_DESKTOP__ for native command routing
+#   2. Injects window.__VINCENT_DESKTOP__ for native command routing
 #   3. Proxies privileged commands to the backend with X-Admin-Key header
 #
 # Platform notes:
@@ -34,14 +34,14 @@ fi
 
 cd "$SCRIPT_DIR/src-tauri"
 
-export SHADOWBROKER_BACKEND_URL="${SHADOWBROKER_BACKEND_URL:-http://127.0.0.1:8000}"
+export VINCENT_BACKEND_URL="${VINCENT_BACKEND_URL:-http://127.0.0.1:8000}"
 
 echo "=== Vincent OS Tauri Dev Shell ==="
-echo "Backend URL: $SHADOWBROKER_BACKEND_URL"
-echo "Admin key:   ${SHADOWBROKER_ADMIN_KEY:+(set)}"
+echo "Backend URL: $VINCENT_BACKEND_URL"
+echo "Admin key:   ${VINCENT_ADMIN_KEY:+(set)}"
 echo ""
 echo "Make sure the frontend dev server is running on http://127.0.0.1:3000"
-echo "Make sure the backend is running on $SHADOWBROKER_BACKEND_URL"
+echo "Make sure the backend is running on $VINCENT_BACKEND_URL"
 echo ""
 
 cargo tauri dev

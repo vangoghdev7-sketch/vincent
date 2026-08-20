@@ -5,8 +5,8 @@ describe('desktopBridgeBootstrapPreference', () => {
   beforeEach(() => {
     vi.resetModules();
     // Clean window globals before each test
-    delete (window as Record<string, unknown>).__SHADOWBROKER_DESKTOP__;
-    delete (window as Record<string, unknown>).__SHADOWBROKER_LOCAL_CONTROL__;
+    delete (window as Record<string, unknown>).__VINCENT_DESKTOP__;
+    delete (window as Record<string, unknown>).__VINCENT_LOCAL_CONTROL__;
   });
 
   it('prefers a pre-installed native runtime over the HTTP shim', async () => {
@@ -22,19 +22,19 @@ describe('desktopBridgeBootstrapPreference', () => {
       clearNativeControlAuditReport: vi.fn(),
     };
 
-    // Simulate Tauri injection: set __SHADOWBROKER_DESKTOP__ before bootstrap
-    window.__SHADOWBROKER_DESKTOP__ = nativeRuntime;
+    // Simulate Tauri injection: set __VINCENT_DESKTOP__ before bootstrap
+    window.__VINCENT_DESKTOP__ = nativeRuntime;
 
     const { bootstrapDesktopControlBridge } = await import('@/lib/desktopBridge');
     const installed = bootstrapDesktopControlBridge();
 
     expect(installed).toBe(true);
     // The bridge should have been derived from the native runtime
-    expect(window.__SHADOWBROKER_LOCAL_CONTROL__).toBeDefined();
-    expect(window.__SHADOWBROKER_LOCAL_CONTROL__!.invoke).toBeDefined();
+    expect(window.__VINCENT_LOCAL_CONTROL__).toBeDefined();
+    expect(window.__VINCENT_LOCAL_CONTROL__!.invoke).toBeDefined();
 
     // Invoke through the bridge — should delegate to the native runtime
-    await window.__SHADOWBROKER_LOCAL_CONTROL__!.invoke!({
+    await window.__VINCENT_LOCAL_CONTROL__!.invoke!({
       command: 'wormhole.status',
       payload: undefined,
     });
@@ -43,7 +43,7 @@ describe('desktopBridgeBootstrapPreference', () => {
   });
 
   it('does not install bridge when no native runtime and shim env is off', async () => {
-    // No __SHADOWBROKER_DESKTOP__ and NEXT_PUBLIC_ENABLE_DESKTOP_BRIDGE_SHIM != '1'
+    // No __VINCENT_DESKTOP__ and NEXT_PUBLIC_ENABLE_DESKTOP_BRIDGE_SHIM != '1'
     const originalEnv = process.env.NEXT_PUBLIC_ENABLE_DESKTOP_BRIDGE_SHIM;
     process.env.NEXT_PUBLIC_ENABLE_DESKTOP_BRIDGE_SHIM = '0';
 
@@ -51,7 +51,7 @@ describe('desktopBridgeBootstrapPreference', () => {
     const installed = bootstrapDesktopControlBridge();
 
     expect(installed).toBe(false);
-    expect(window.__SHADOWBROKER_LOCAL_CONTROL__).toBeUndefined();
+    expect(window.__VINCENT_LOCAL_CONTROL__).toBeUndefined();
 
     process.env.NEXT_PUBLIC_ENABLE_DESKTOP_BRIDGE_SHIM = originalEnv;
   });
@@ -65,12 +65,12 @@ describe('desktopBridgeBootstrapPreference', () => {
 
     expect(installed).toBe(true);
     // Bridge installed via shim
-    expect(window.__SHADOWBROKER_LOCAL_CONTROL__).toBeDefined();
-    // __SHADOWBROKER_DESKTOP__ is the HTTP-backed shim
-    expect(window.__SHADOWBROKER_DESKTOP__).toBeDefined();
-    expect(window.__SHADOWBROKER_DESKTOP__!.invokeLocalControl).toBeDefined();
-    expect(window.__SHADOWBROKER_DESKTOP__!.getNativeControlAuditReport).toBeDefined();
-    expect(window.__SHADOWBROKER_DESKTOP__!.clearNativeControlAuditReport).toBeDefined();
+    expect(window.__VINCENT_LOCAL_CONTROL__).toBeDefined();
+    // __VINCENT_DESKTOP__ is the HTTP-backed shim
+    expect(window.__VINCENT_DESKTOP__).toBeDefined();
+    expect(window.__VINCENT_DESKTOP__!.invokeLocalControl).toBeDefined();
+    expect(window.__VINCENT_DESKTOP__!.getNativeControlAuditReport).toBeDefined();
+    expect(window.__VINCENT_DESKTOP__!.clearNativeControlAuditReport).toBeDefined();
 
     process.env.NEXT_PUBLIC_ENABLE_DESKTOP_BRIDGE_SHIM = originalEnv;
   });
@@ -87,7 +87,7 @@ describe('desktopBridgeBootstrapPreference', () => {
       getNativeControlAuditReport: () => auditReport,
       clearNativeControlAuditReport: vi.fn(),
     };
-    window.__SHADOWBROKER_DESKTOP__ = nativeRuntime;
+    window.__VINCENT_DESKTOP__ = nativeRuntime;
 
     const { bootstrapDesktopControlBridge, getDesktopNativeControlAuditReport } =
       await import('@/lib/desktopBridge');
@@ -104,7 +104,7 @@ describe('desktopBridgeBootstrapPreference', () => {
     const nativeRuntime: VincentOSDesktopRuntime = {
       invokeLocalControl: nativeInvoke,
     };
-    window.__SHADOWBROKER_DESKTOP__ = nativeRuntime;
+    window.__VINCENT_DESKTOP__ = nativeRuntime;
 
     const { installDesktopControlBridge } = await import('@/lib/desktopBridge');
     installDesktopControlBridge(nativeRuntime);
@@ -163,12 +163,12 @@ describe('desktopBridgeBootstrapPreference', () => {
     const nativeRuntime: VincentOSDesktopRuntime = {
       invokeLocalControl: nativeInvoke,
     };
-    window.__SHADOWBROKER_DESKTOP__ = nativeRuntime;
+    window.__VINCENT_DESKTOP__ = nativeRuntime;
 
     const { installDesktopControlBridge } = await import('@/lib/desktopBridge');
     installDesktopControlBridge(nativeRuntime);
 
-    await window.__SHADOWBROKER_LOCAL_CONTROL__!.invoke!({
+    await window.__VINCENT_LOCAL_CONTROL__!.invoke!({
       command: 'wormhole.gate.key.rotate',
       payload: { gate_id: 'infonet', reason: 'operator_reset' },
       meta: {
@@ -221,14 +221,14 @@ describe('desktopBridgeBootstrapPreference', () => {
       }),
       clearNativeControlAuditReport: vi.fn(),
     };
-    window.__SHADOWBROKER_DESKTOP__ = nativeRuntime;
+    window.__VINCENT_DESKTOP__ = nativeRuntime;
 
     const { installDesktopControlBridge } = await import('@/lib/desktopBridge');
     installDesktopControlBridge(nativeRuntime);
 
     // Declare wrong capability: 'settings' for a wormhole_gate_key command
     await expect(
-      window.__SHADOWBROKER_LOCAL_CONTROL__!.invoke!({
+      window.__VINCENT_LOCAL_CONTROL__!.invoke!({
         command: 'wormhole.gate.key.rotate',
         payload: { gate_id: 'infonet', reason: 'test' },
         meta: { capability: 'settings' },
@@ -284,14 +284,14 @@ describe('desktopBridgeBootstrapPreference', () => {
       }),
       clearNativeControlAuditReport: vi.fn(),
     };
-    window.__SHADOWBROKER_DESKTOP__ = nativeRuntime;
+    window.__VINCENT_DESKTOP__ = nativeRuntime;
 
     const { installDesktopControlBridge } = await import('@/lib/desktopBridge');
     installDesktopControlBridge(nativeRuntime);
 
     // settings_only profile cannot access wormhole_gate_key commands
     await expect(
-      window.__SHADOWBROKER_LOCAL_CONTROL__!.invoke!({
+      window.__VINCENT_LOCAL_CONTROL__!.invoke!({
         command: 'wormhole.gate.key.rotate',
         payload: { gate_id: 'infonet', reason: 'test' },
         meta: {
@@ -330,17 +330,17 @@ describe('desktopBridgeBootstrapPreference', () => {
       }),
       clearNativeControlAuditReport: () => { auditCallCount = 0; },
     };
-    window.__SHADOWBROKER_DESKTOP__ = nativeRuntime;
+    window.__VINCENT_DESKTOP__ = nativeRuntime;
 
     const { installDesktopControlBridge, getDesktopNativeControlAuditReport } =
       await import('@/lib/desktopBridge');
     installDesktopControlBridge(nativeRuntime);
 
-    await window.__SHADOWBROKER_LOCAL_CONTROL__!.invoke!({
+    await window.__VINCENT_LOCAL_CONTROL__!.invoke!({
       command: 'wormhole.status',
       payload: undefined,
     });
-    await window.__SHADOWBROKER_LOCAL_CONTROL__!.invoke!({
+    await window.__VINCENT_LOCAL_CONTROL__!.invoke!({
       command: 'settings.privacy.get',
       payload: undefined,
     });

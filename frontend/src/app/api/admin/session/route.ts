@@ -35,7 +35,7 @@ function cookieOptions() {
  * minted, and do the validation locally instead of round-tripping to a
  * potentially-public endpoint. If ADMIN_KEY is unset, the backend
  * already auto-trusts loopback / docker-bridge callers via
- * require_local_operator + SHADOWBROKER_TRUST_DOCKER_BRIDGE_LOCAL_OPERATOR,
+ * require_local_operator + VINCENT_TRUST_DOCKER_BRIDGE_LOCAL_OPERATOR,
  * so legitimate local users keep working — they just don't get (and
  * don't need) a privileged session cookie.
  */

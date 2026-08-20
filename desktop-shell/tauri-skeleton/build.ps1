@@ -122,8 +122,8 @@ Write-Host ""
 Push-Location $srcTauriDir
 $tauriConfigBackup = $null
 try {
-  if (-not $env:SHADOWBROKER_BACKEND_URL) {
-    $env:SHADOWBROKER_BACKEND_URL = "http://127.0.0.1:8000"
+  if (-not $env:VINCENT_BACKEND_URL) {
+    $env:VINCENT_BACKEND_URL = "http://127.0.0.1:8000"
   }
   if (
     -not $env:TAURI_SIGNING_PRIVATE_KEY -and
@@ -140,7 +140,7 @@ try {
   Write-Host "Frontend dist:    $frontendOut"
   Write-Host "Companion www:    $companionDir"
   Write-Host "Backend runtime:  $backendRuntimeDir"
-  Write-Host "Backend URL:      $env:SHADOWBROKER_BACKEND_URL"
+  Write-Host "Backend URL:      $env:VINCENT_BACKEND_URL"
   if ($env:TAURI_SIGNING_PRIVATE_KEY -or $env:TAURI_SIGNING_PRIVATE_KEY_PATH) {
     Write-Host "Updater signing:  enabled"
   } else {

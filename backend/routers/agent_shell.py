@@ -43,7 +43,7 @@ def _set_winsize(fd: int, rows: int, cols: int) -> None:
 def _configured_agent_shell_origins() -> set[str]:
     """Return explicitly configured browser origins accepted by the shell."""
     allowed: set[str] = set()
-    for env_name in ("SHADOWBROKER_AGENT_SHELL_ALLOWED_ORIGINS", "CORS_ORIGINS"):
+    for env_name in ("VINCENT_AGENT_SHELL_ALLOWED_ORIGINS", "CORS_ORIGINS"):
         for raw in os.environ.get(env_name, "").split(","):
             candidate = raw.strip()
             if not candidate:

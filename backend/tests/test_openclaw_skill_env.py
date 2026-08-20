@@ -15,8 +15,8 @@ def _load_sb_query(monkeypatch):
 
 
 def test_openclaw_skill_prefers_hmac_secret_env(monkeypatch):
-    monkeypatch.setenv("SHADOWBROKER_HMAC_SECRET", "preferred-hmac-secret")
-    monkeypatch.setenv("SHADOWBROKER_KEY", "legacy-hmac-secret")
+    monkeypatch.setenv("VINCENT_HMAC_SECRET", "preferred-hmac-secret")
+    monkeypatch.setenv("VINCENT_KEY", "legacy-hmac-secret")
 
     module = _load_sb_query(monkeypatch)
 
@@ -24,8 +24,8 @@ def test_openclaw_skill_prefers_hmac_secret_env(monkeypatch):
 
 
 def test_openclaw_skill_accepts_legacy_key_as_hmac_secret_alias(monkeypatch):
-    monkeypatch.delenv("SHADOWBROKER_HMAC_SECRET", raising=False)
-    monkeypatch.setenv("SHADOWBROKER_KEY", "legacy-hmac-secret")
+    monkeypatch.delenv("VINCENT_HMAC_SECRET", raising=False)
+    monkeypatch.setenv("VINCENT_KEY", "legacy-hmac-secret")
 
     module = _load_sb_query(monkeypatch)
     client = module.Vincent OSClient()

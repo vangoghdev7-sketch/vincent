@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 _start_time = time.time()
 _MESH_ONLY = os.environ.get("MESH_ONLY", "").strip().lower() in ("1", "true", "yes")
-_HEADLESS_MESH_NODE_RUNTIME = os.environ.get("SHADOWBROKER_MESH_NODE_RUNTIME", "").strip().lower() in (
+_HEADLESS_MESH_NODE_RUNTIME = os.environ.get("VINCENT_MESH_NODE_RUNTIME", os.environ.get("SHADOWBROKER_MESH_NODE_RUNTIME", "").strip().lower() in (
     "1",
     "true",
     "yes",
@@ -2866,7 +2866,7 @@ async def lifespan(app: FastAPI):
         # is listening on port 8000 instantly.  The frontend's adaptive polling
         # (retries every 3s) will pick up data piecemeal as each fetcher finishes.
         def _background_preload():
-            delay_s = float(os.environ.get("SHADOWBROKER_STARTUP_PRELOAD_DELAY_S", "2.0") or 0)
+            delay_s = float(os.environ.get("VINCENT_STARTUP_PRELOAD_DELAY_S", os.environ.get("SHADOWBROKER_STARTUP_PRELOAD_DELAY_S", "2.0") or 0)
             if delay_s > 0:
                 time.sleep(delay_s)
             logger.info("=== PRELOADING DATA (background â€” server already accepting requests) ===")
@@ -12138,10 +12138,10 @@ def _dev_uvicorn_bind_host() -> str:
     """Default loopback for `python main.py` so LAN clients cannot reach a dev server (#375).
 
     Docker compose still publishes 127.0.0.1:8000; the dashboard stays on :3000.
-    Set SHADOWBROKER_DEV_BIND_ALL=true only when you intentionally need LAN access
+    Set VINCENT_DEV_BIND_ALL=true only when you intentionally need LAN access
     (and use ADMIN_KEY for remote callers).
     """
-    if str(os.environ.get("SHADOWBROKER_DEV_BIND_ALL", "")).strip().lower() in {
+    if str(os.environ.get("VINCENT_DEV_BIND_ALL", os.environ.get("SHADOWBROKER_DEV_BIND_ALL", "")).strip().lower() in {
         "1",
         "true",
         "yes",
@@ -12156,7 +12156,7 @@ if __name__ == "__main__":
     _port = int(os.environ.get("BACKEND_PORT", "8000"))
     if _host == "127.0.0.1":
         logger.info(
-            "Dev server binding %s:%s (loopback). Set SHADOWBROKER_DEV_BIND_ALL=true for 0.0.0.0.",
+            "Dev server binding %s:%s (loopback). Set VINCENT_DEV_BIND_ALL=true for 0.0.0.0.",
             _host,
             _port,
         )

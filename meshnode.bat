@@ -98,7 +98,7 @@ if not exist "data\" mkdir data
 echo {"enabled":true,"updated_at":0} > data\node.json
 
 set MESH_ONLY=true
-set SHADOWBROKER_MESH_NODE_RUNTIME=true
+set VINCENT_MESH_NODE_RUNTIME=true
 set MESH_NODE_MODE=participant
 set MESH_INFONET_ALLOW_CLEARNET_SYNC=false
 set MESH_ARTI_ENABLED=true

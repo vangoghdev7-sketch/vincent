@@ -70,12 +70,12 @@ No configuration needed. The client connects to `localhost:8000` automatically.
 Set these environment variables in your agent's config:
 
 ```bash
-SHADOWBROKER_URL=https://your-vincent_os-host:8000
-SHADOWBROKER_HMAC_SECRET=your-hmac-secret-here
+VINCENT_URL=https://your-vincent_os-host:8000
+VINCENT_HMAC_SECRET=your-hmac-secret-here
 ```
 
 The HMAC secret is found in Vincent OS's **Connect OpenClaw** modal (AI Intel panel).
-`SHADOWBROKER_HMAC_SECRET` is a shared signing secret, not a raw API key. Do not
+`VINCENT_HMAC_SECRET` is a shared signing secret, not a raw API key. Do not
 send it as `X-Admin-Key`, `Authorization: Bearer`, a query parameter, or any
 plain request header. The `Vincent OSClient` signs every direct request with
 `X-SB-Timestamp`, `X-SB-Nonce`, and `X-SB-Signature` using:
@@ -84,8 +84,8 @@ plain request header. The `Vincent OSClient` signs every direct request with
 HMAC-SHA256(secret, METHOD|path|timestamp|nonce|sha256(body))
 ```
 
-For compatibility with older snippets, `SHADOWBROKER_KEY` is also accepted by
-the client as the same HMAC signing secret. Prefer `SHADOWBROKER_HMAC_SECRET`
+For compatibility with older snippets, `VINCENT_KEY` is also accepted by
+the client as the same HMAC signing secret. Prefer `VINCENT_HMAC_SECRET`
 for new setups.
 
 **Docker Compose:** host-side agents (`localhost:8000` from the Kali/macOS host)
@@ -673,26 +673,26 @@ Morning Intelligence Digest — Apr 2, 2026 08:00
 
 | Signature Key | Prefix | When to Use |
 |--------------|--------|-------------|
-| `brief` | 🌍📡 SHADOWBROKER BRIEF: | Morning/evening intelligence digest |
-| `warning` | 🌍⚠️ SHADOWBROKER WARNING: | Life-safety alert (earthquake, weather emergency) |
-| `news` | 🌍📰 SHADOWBROKER NEWS: | Breaking news alert |
-| `intel` | 🌍🛰️ SHADOWBROKER INTEL: | Intelligence update (carrier movement, military buildup) |
-| `searching` | 🌍🔍 SHADOWBROKER SEARCHING: | Search/query in progress |
-| `pinning` | 🌍📌 SHADOWBROKER PINNING: | Placing pins on the map |
-| `markets` | 🌍📊 SHADOWBROKER MARKETS: | Prediction market or financial alert |
-| `sigint` | 🌍📻 SHADOWBROKER SIGINT: | SIGINT/RF anomaly |
-| `threat` | 🌍🔴 SHADOWBROKER THREAT: | Threat level change |
-| `near_you` | 🌍📍 SHADOWBROKER NEAR YOU: | Proximity-based event |
-| `tracking` | 🌍🎯 SHADOWBROKER TRACKING: | Tracking a specific entity |
-| `correlation` | 🌍⚡ SHADOWBROKER CORRELATION: | Cross-layer correlation |
-| `seismic` | 🌍🌋 SHADOWBROKER SEISMIC: | Earthquake/volcanic activity |
-| `fire` | 🌍🔥 SHADOWBROKER FIRE: | FIRMS fire hotspot |
-| `flight` | 🌍🛫 SHADOWBROKER FLIGHT: | Military/tracked flight alert |
-| `maritime` | 🌍🚢 SHADOWBROKER MARITIME: | Ship/carrier event |
-| `weather` | 🌍🌤️ SHADOWBROKER WEATHER: | Weather alert |
-| `sar` | 🌍📡 SHADOWBROKER SAR: | Synthetic aperture radar anomaly (deformation, flood, damage) |
-| `online` | 🌍✅ SHADOWBROKER ONLINE: | System connected |
-| `clearing` | 🌍❌ SHADOWBROKER CLEARING: | Pins/data cleared |
+| `brief` | 🌍📡 VINCENT BRIEF: | Morning/evening intelligence digest |
+| `warning` | 🌍⚠️ VINCENT WARNING: | Life-safety alert (earthquake, weather emergency) |
+| `news` | 🌍📰 VINCENT NEWS: | Breaking news alert |
+| `intel` | 🌍🛰️ VINCENT INTEL: | Intelligence update (carrier movement, military buildup) |
+| `searching` | 🌍🔍 VINCENT SEARCHING: | Search/query in progress |
+| `pinning` | 🌍📌 VINCENT PINNING: | Placing pins on the map |
+| `markets` | 🌍📊 VINCENT MARKETS: | Prediction market or financial alert |
+| `sigint` | 🌍📻 VINCENT SIGINT: | SIGINT/RF anomaly |
+| `threat` | 🌍🔴 VINCENT THREAT: | Threat level change |
+| `near_you` | 🌍📍 VINCENT NEAR YOU: | Proximity-based event |
+| `tracking` | 🌍🎯 VINCENT TRACKING: | Tracking a specific entity |
+| `correlation` | 🌍⚡ VINCENT CORRELATION: | Cross-layer correlation |
+| `seismic` | 🌍🌋 VINCENT SEISMIC: | Earthquake/volcanic activity |
+| `fire` | 🌍🔥 VINCENT FIRE: | FIRMS fire hotspot |
+| `flight` | 🌍🛫 VINCENT FLIGHT: | Military/tracked flight alert |
+| `maritime` | 🌍🚢 VINCENT MARITIME: | Ship/carrier event |
+| `weather` | 🌍🌤️ VINCENT WEATHER: | Weather alert |
+| `sar` | 🌍📡 VINCENT SAR: | Synthetic aperture radar anomaly (deformation, flood, damage) |
+| `online` | 🌍✅ VINCENT ONLINE: | System connected |
+| `clearing` | 🌍❌ VINCENT CLEARING: | Pins/data cleared |
 
 ---
 

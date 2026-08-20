@@ -244,7 +244,7 @@ def _is_local_or_docker(host: str) -> bool:
 
 
 def _docker_bridge_local_operator_enabled() -> bool:
-    return str(os.environ.get("SHADOWBROKER_TRUST_DOCKER_BRIDGE_LOCAL_OPERATOR", "")).strip().lower() in {
+    return str(os.environ.get("VINCENT_TRUST_DOCKER_BRIDGE_LOCAL_OPERATOR", os.environ.get("SHADOWBROKER_TRUST_DOCKER_BRIDGE_LOCAL_OPERATOR", "")).strip().lower() in {
         "1",
         "true",
         "yes",
@@ -276,12 +276,11 @@ def _trusted_bridge_frontend_hostnames() -> list[str]:
     Default covers both Docker Compose service name (``frontend``) and the
     explicit ``container_name`` from the shipped docker-compose.yml
     (``vincent_os-frontend``). Operators with non-default names can
-    override via the ``SHADOWBROKER_TRUSTED_FRONTEND_HOSTS`` env var
+    override via the ``VINCENT_TRUSTED_FRONTEND_HOSTS`` env var
     (comma-separated, no spaces).
     """
     raw = str(
-        os.environ.get(
-            "SHADOWBROKER_TRUSTED_FRONTEND_HOSTS",
+        os.environ.get("VINCENT_TRUSTED_FRONTEND_HOSTS", os.environ.get("SHADOWBROKER_TRUSTED_FRONTEND_HOSTS",
             "frontend,vincent_os-frontend",
         )
     ).strip()

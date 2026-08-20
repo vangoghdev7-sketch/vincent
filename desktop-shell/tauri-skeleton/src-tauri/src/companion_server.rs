@@ -17,7 +17,7 @@
 //!    no admin session cookies, no admin-gated backend endpoints, no
 //!    Next.js middleware. Only public data endpoints are reachable.
 //!
-//! **Not used in dev mode** — when `SHADOWBROKER_FRONTEND_URL` is explicitly
+//! **Not used in dev mode** — when `VINCENT_FRONTEND_URL` is explicitly
 //! set, or when no bundled frontend assets exist, this server is not started.
 //! In those cases the main window and companion both fall back to the
 //! configured external URL (a running Next.js dev server).

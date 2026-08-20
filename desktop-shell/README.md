@@ -66,7 +66,7 @@ desktop-shell/
 
 The accepted 27-command privileged path remains native-only:
 
-- frontend bridge detection builds `window.__SHADOWBROKER_LOCAL_CONTROL__`
+- frontend bridge detection builds `window.__VINCENT_LOCAL_CONTROL__`
 - privileged requests go through Tauri IPC
 - Rust policy enforces capability/profile rules before dispatch
 - Rust audit ring records all outcomes

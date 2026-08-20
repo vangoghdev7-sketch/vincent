@@ -44,7 +44,7 @@ def fresh_tracker(tmp_path, monkeypatch):
 
     monkeypatch.setattr(carrier_tracker, "SEED_FILE", seed_path)
     monkeypatch.setattr(carrier_tracker, "CACHE_FILE", cache_path)
-    monkeypatch.delenv("SHADOWBROKER_CARRIER_FRESHNESS_DAYS", raising=False)
+    monkeypatch.delenv("VINCENT_CARRIER_FRESHNESS_DAYS", raising=False)
 
     # Reset module-level mutable state.
     carrier_tracker._carrier_positions.clear()
@@ -221,7 +221,7 @@ class TestFreshnessLabelling:
         # Default window = 14 days → 20-day-old entry is stale.
         assert fresh_tracker._compute_position_confidence(entry, now=now) == "stale"
         # Stretch to 30 days → same entry is now "recent".
-        monkeypatch.setenv("SHADOWBROKER_CARRIER_FRESHNESS_DAYS", "30")
+        monkeypatch.setenv("VINCENT_CARRIER_FRESHNESS_DAYS", "30")
         assert fresh_tracker._compute_position_confidence(entry, now=now) == "recent"
 
     def test_aged_cache_entry_keeps_its_position_never_reverts(self, fresh_tracker):

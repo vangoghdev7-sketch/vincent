@@ -164,14 +164,14 @@ const OnboardingModal = React.memo(function OnboardingModal({
       : torAddress || '<prepare remote .onion link>';
 
   const agentSnippet = [
-    `SHADOWBROKER_URL=${agentEndpoint}`,
-    agentSecret ? `SHADOWBROKER_HMAC_SECRET=${agentSecret}` : 'SHADOWBROKER_HMAC_SECRET=<generate in Vincent>',
-    `SHADOWBROKER_ACCESS=${agentTier}`,
+    `VINCENT_URL=${agentEndpoint}`,
+    agentSecret ? `VINCENT_HMAC_SECRET=${agentSecret}` : 'VINCENT_HMAC_SECRET=<generate in Vincent>',
+    `VINCENT_ACCESS=${agentTier}`,
     '',
     '# FIRST: load available tools',
     `GET ${agentEndpoint}/api/ai/tools`,
     '',
-    '# Auth: SHADOWBROKER_HMAC_SECRET is not a raw API key.',
+    '# Auth: VINCENT_HMAC_SECRET is not a raw API key.',
     '# Sign every direct request with X-SB-Timestamp, X-SB-Nonce, and X-SB-Signature.',
     '# Signature input: METHOD|path|timestamp|nonce|sha256(body).',
     '# Do not send the secret as X-Admin-Key, Authorization, or a query parameter.',

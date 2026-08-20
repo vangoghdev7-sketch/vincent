@@ -14,7 +14,7 @@ import urllib.request
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SKILL_DIR = os.path.join(ROOT, "openclaw-skills", "vincent_os")
-API = os.environ.get("SHADOWBROKER_API", "http://127.0.0.1:8000")
+API = os.environ.get("VINCENT_API", os.environ.get("SHADOWBROKER_API", "http://127.0.0.1:8000")
 MARKER = os.environ.get("E2E_MARKER", f"OPENCLAW-AGENT-E2E-{int(time.time())}")
 
 
@@ -71,7 +71,7 @@ async def agent_post(secret: str, message: str) -> dict:
     sys.path.insert(0, SKILL_DIR)
     from sb_query import Vincent OSClient
 
-    os.environ["SHADOWBROKER_HMAC_SECRET"] = secret
+    os.environ["VINCENT_HMAC_SECRET"] = secret
     client = Vincent OSClient(base_url=API)
     try:
         ready = await client.ensure_infonet_ready(join_swarm=True)

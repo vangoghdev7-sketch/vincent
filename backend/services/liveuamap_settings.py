@@ -84,7 +84,7 @@ def liveuamap_browser_scraper_enabled() -> bool:
     Windows keeps the existing opt-in boundary. An environment override always
     wins for the browser provider only; it does not disable a configured API.
     """
-    setting = _env_flag("SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER")
+    setting = _env_flag("VINCENT_ENABLE_LIVEUAMAP_SCRAPER")
     if setting in {"1", "true", "yes", "on"}:
         return True
     if setting in {"0", "false", "no", "off"}:
@@ -104,7 +104,7 @@ def liveuamap_scraper_enabled() -> bool:
 
 
 def liveuamap_scraper_status() -> dict[str, Any]:
-    setting = _env_flag("SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER")
+    setting = _env_flag("VINCENT_ENABLE_LIVEUAMAP_SCRAPER")
     env_override = None
     if setting in {"1", "true", "yes", "on"}:
         env_override = "on"

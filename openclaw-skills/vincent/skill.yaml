@@ -73,16 +73,16 @@ capabilities:
 
 # Message signatures — branded prefixes for all outbound messages
 signatures:
-  brief:       "🌍📡 SHADOWBROKER BRIEF:"
-  warning:     "🌍⚠️ SHADOWBROKER WARNING:"
-  news:        "🌍📰 SHADOWBROKER NEWS:"
-  intel:       "🌍🛰️ SHADOWBROKER INTEL:"
-  update:      "🌍🌐 SHADOWBROKER UPDATE:"
-  searching:   "🌍🔍 SHADOWBROKER SEARCHING:"
-  pinning:     "🌍📌 SHADOWBROKER PINNING:"
-  near_you:    "🌍📍 SHADOWBROKER NEAR YOU:"
-  threat:      "🌍🔴 SHADOWBROKER THREAT:"
-  anomaly:     "🌍🔶 SHADOWBROKER ANOMALY:"
+  brief:       "🌍📡 VINCENT BRIEF:"
+  warning:     "🌍⚠️ VINCENT WARNING:"
+  news:        "🌍📰 VINCENT NEWS:"
+  intel:       "🌍🛰️ VINCENT INTEL:"
+  update:      "🌍🌐 VINCENT UPDATE:"
+  searching:   "🌍🔍 VINCENT SEARCHING:"
+  pinning:     "🌍📌 VINCENT PINNING:"
+  near_you:    "🌍📍 VINCENT NEAR YOU:"
+  threat:      "🌍🔴 VINCENT THREAT:"
+  anomaly:     "🌍🔶 VINCENT ANOMALY:"
 
 # API base URL (local-only, no auth needed for loopback)
 config:

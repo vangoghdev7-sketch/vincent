@@ -2,7 +2,7 @@
 VINCENT OS — Multi-AI Swarm & Router Gateway API.
 
 Provides endpoints for inspecting AI providers, discovering models, checking swarm
-liveness at port 20128 (Vincent AI Swarm Gateway / OmniRoute), and smart routing
+liveness at port 20128 (Vincent AI Swarm Gateway / Vincent Router), and smart routing
 with graceful fallbacks when keys are not configured yet.
 """
 
@@ -24,7 +24,7 @@ router = APIRouter(tags=["ai-swarm"])
 
 AI_GATEWAY_DEFAULT_URLS = [
     os.environ.get("VINCENT_AI_GATEWAY_URL", ""),
-    os.environ.get("OMNIROUTE_URL", ""),
+    os.environ.get("VINCENT_ROUTER_URL", ""),
     "http://127.0.0.1:20128",
     "http://localhost:20128",
     "http://host.containers.internal:20128",

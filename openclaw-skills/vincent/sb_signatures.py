@@ -13,53 +13,53 @@ Usage:
 # Signature registry — emoji prefix + action label
 _SIGNATURES: dict[str, str] = {
     # ── Core Intelligence ──────────────────────────────────────────────
-    "brief":       "🌍📡 SHADOWBROKER BRIEF:",
-    "warning":     "🌍⚠️ SHADOWBROKER WARNING:",
-    "news":        "🌍📰 SHADOWBROKER NEWS:",
-    "intel":       "🌍🛰️ SHADOWBROKER INTEL:",
-    "update":      "🌍🌐 SHADOWBROKER UPDATE:",
+    "brief":       "🌍📡 VINCENT BRIEF:",
+    "warning":     "🌍⚠️ VINCENT WARNING:",
+    "news":        "🌍📰 VINCENT NEWS:",
+    "intel":       "🌍🛰️ VINCENT INTEL:",
+    "update":      "🌍🌐 VINCENT UPDATE:",
 
     # ── Search & Discovery ─────────────────────────────────────────────
-    "searching":   "🌍🔍 SHADOWBROKER SEARCHING:",
-    "pinning":     "🌍📌 SHADOWBROKER PINNING:",
-    "geolocate":   "🌍📸 SHADOWBROKER GEOLOCATE:",
+    "searching":   "🌍🔍 VINCENT SEARCHING:",
+    "pinning":     "🌍📌 VINCENT PINNING:",
+    "geolocate":   "🌍📸 VINCENT GEOLOCATE:",
 
     # ── Proximity & Location ───────────────────────────────────────────
-    "near_you":    "🌍📍 SHADOWBROKER NEAR YOU:",
-    "watching":    "🌍👁️ SHADOWBROKER WATCHING:",
+    "near_you":    "🌍📍 VINCENT NEAR YOU:",
+    "watching":    "🌍👁️ VINCENT WATCHING:",
 
     # ── Threat & Security ──────────────────────────────────────────────
-    "threat":      "🌍🔴 SHADOWBROKER THREAT:",
-    "sigint":      "🌍📻 SHADOWBROKER SIGINT:",
-    "anomaly":     "🌍🔶 SHADOWBROKER ANOMALY:",
+    "threat":      "🌍🔴 VINCENT THREAT:",
+    "sigint":      "🌍📻 VINCENT SIGINT:",
+    "anomaly":     "🌍🔶 VINCENT ANOMALY:",
 
     # ── Transport & Movement ───────────────────────────────────────────
-    "flight":      "🌍🛫 SHADOWBROKER FLIGHT:",
-    "maritime":    "🌍🚢 SHADOWBROKER MARITIME:",
-    "satellite":   "🌍🛰️ SHADOWBROKER SATELLITE:",
+    "flight":      "🌍🛫 VINCENT FLIGHT:",
+    "maritime":    "🌍🚢 VINCENT MARITIME:",
+    "satellite":   "🌍🛰️ VINCENT SATELLITE:",
 
     # ── Infrastructure ─────────────────────────────────────────────────
-    "cyber":       "🌍💻 SHADOWBROKER CYBER:",
-    "network":     "🌍🔗 SHADOWBROKER NETWORK:",
+    "cyber":       "🌍💻 VINCENT CYBER:",
+    "network":     "🌍🔗 VINCENT NETWORK:",
 
     # ── System ─────────────────────────────────────────────────────────
-    "online":      "🌍✅ SHADOWBROKER ONLINE:",
-    "offline":     "🌍🔴 SHADOWBROKER OFFLINE:",
-    "error":       "🌍❌ SHADOWBROKER ERROR:",
+    "online":      "🌍✅ VINCENT ONLINE:",
+    "offline":     "🌍🔴 VINCENT OFFLINE:",
+    "error":       "🌍❌ VINCENT ERROR:",
 
     # ── Mesh & Wormhole ────────────────────────────────────────────────
-    "mesh":        "🌍📶 SHADOWBROKER MESH:",
-    "wormhole":    "🌍🌀 SHADOWBROKER WORMHOLE:",
-    "dead_drop":   "🌍💀 SHADOWBROKER DEAD DROP:",
+    "mesh":        "🌍📶 VINCENT MESH:",
+    "wormhole":    "🌍🌀 VINCENT WORMHOLE:",
+    "dead_drop":   "🌍💀 VINCENT DEAD DROP:",
 
     # ── Time Machine ───────────────────────────────────────────────────
-    "timemachine": "🌍🕰️ SHADOWBROKER TIMEMACHINE:",
+    "timemachine": "🌍🕰️ VINCENT TIMEMACHINE:",
 
     # ── Reports ────────────────────────────────────────────────────────
-    "report":      "🌍📋 SHADOWBROKER REPORT:",
+    "report":      "🌍📋 VINCENT REPORT:",
 
     # ── SAR (Synthetic Aperture Radar) ─────────────────────────────────
-    "sar":         "🌍📡 SHADOWBROKER SAR:",
+    "sar":         "🌍📡 VINCENT SAR:",
 }
 
 
@@ -70,7 +70,7 @@ def sig(action: str) -> str:
         action: One of the registered action types (brief, warning, news, etc.)
 
     Returns:
-        The full branded signature string, e.g. "🌍📡 SHADOWBROKER BRIEF:"
+        The full branded signature string, e.g. "🌍📡 VINCENT BRIEF:"
         Falls back to a generic UPDATE signature for unknown actions.
     """
     return _SIGNATURES.get(action.lower().strip(), _SIGNATURES["update"])

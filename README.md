@@ -125,7 +125,7 @@ Container updates are delivered through signed registries. The legacy ZIP self-u
 
 ### CSP hardening
 
-The production frontend ships with a hydration-compatible CSP and a strict nonce-only CSP in `Content-Security-Policy-Report-Only`. Set `SHADOWBROKER_STRICT_CSP=1` only after verifying the exact build hydrates correctly in your deployment. Runtime Google Fonts are not required; the bundled Next font pipeline serves the dashboard font from the app build.
+The production frontend ships with a hydration-compatible CSP and a strict nonce-only CSP in `Content-Security-Policy-Report-Only`. Set `VINCENT_STRICT_CSP=1` only after verifying the exact build hydrates correctly in your deployment. Runtime Google Fonts are not required; the bundled Next font pipeline serves the dashboard font from the app build.
 
 ---
 
@@ -197,11 +197,11 @@ Capabilities: full telemetry access across all 40+ layers; compact cross-layer s
 
 **Connect an agent:** open the AI Intel panel in the left sidebar, click **Connect Agent**, and copy the HMAC secret. For Vincent on the same host, no secret is needed — the skill talks to `http://127.0.0.1:8000` as local operator over loopback. For remote agents, use the HMAC contract above. Discovery: `GET /api/ai/tools` and `GET /api/ai/capabilities`.
 
-**Docker Compose and remote agents:** the dashboard talks to the backend over Docker's private bridge (trusted automatically). An agent on the host (outside the container) hits `http://localhost:8000` from the Docker gateway IP, where HMAC is required. In AI Intel → **Connect Agent**, click **Bootstrap** then **Reveal**, copy `SHADOWBROKER_HMAC_SECRET` into your agent environment, and restart the backend once so `data/openclaw.env` on the `backend_data` volume is loaded. Smoke-test with:
+**Docker Compose and remote agents:** the dashboard talks to the backend over Docker's private bridge (trusted automatically). An agent on the host (outside the container) hits `http://localhost:8000` from the Docker gateway IP, where HMAC is required. In AI Intel → **Connect Agent**, click **Bootstrap** then **Reveal**, copy `VINCENT_HMAC_SECRET` into your agent environment, and restart the backend once so `data/openclaw.env` on the `backend_data` volume is loaded. Smoke-test with:
 
 ```bash
-export SHADOWBROKER_URL=http://127.0.0.1:8000
-export SHADOWBROKER_HMAC_SECRET=<from Connect Agent modal>
+export VINCENT_URL=http://127.0.0.1:8000
+export VINCENT_HMAC_SECRET=<from Connect Agent modal>
 python openclaw-skills/vincent_os/verify_hmac.py
 ```
 
@@ -364,7 +364,7 @@ npm run dev
 
 This starts the Next.js frontend on `http://localhost:3000` and the FastAPI backend on `http://localhost:8000`.
 
-> **Running the backend outside Docker** (`cd backend && python main.py`): the dev server binds loopback only (`127.0.0.1:8000`) so other machines on your LAN cannot hit admin/local-trust routes with an empty `ADMIN_KEY`. Set `SHADOWBROKER_DEV_BIND_ALL=true` only when you deliberately need `0.0.0.0`, and use a strong `ADMIN_KEY` for any non-local callers.
+> **Running the backend outside Docker** (`cd backend && python main.py`): the dev server binds loopback only (`127.0.0.1:8000`) so other machines on your LAN cannot hit admin/local-trust routes with an empty `ADMIN_KEY`. Set `VINCENT_DEV_BIND_ALL=true` only when you deliberately need `0.0.0.0`, and use a strong `ADMIN_KEY` for any non-local callers.
 
 #### Local AIS receiver (optional)
 

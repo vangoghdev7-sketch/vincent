@@ -9,7 +9,7 @@ describe('localControlTransport capability metadata', () => {
     const invoke = vi.fn(async () => ({ ok: true }));
     Object.defineProperty(globalThis, 'window', {
       value: {
-        __SHADOWBROKER_LOCAL_CONTROL__: {
+        __VINCENT_LOCAL_CONTROL__: {
           invoke,
         },
       },
@@ -50,7 +50,7 @@ describe('localControlTransport capability metadata', () => {
     vi.stubGlobal('fetch', fetchMock);
     Object.defineProperty(globalThis, 'window', {
       value: {
-        __SHADOWBROKER_LOCAL_CONTROL__: {
+        __VINCENT_LOCAL_CONTROL__: {
           invoke,
         },
       },

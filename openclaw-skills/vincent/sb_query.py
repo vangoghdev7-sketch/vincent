@@ -4,8 +4,8 @@ This module provides all the functions OpenClaw needs to interact with
 the Vincent OS OSINT platform.
 
 For local access (same machine), no authentication is needed.
-For remote access, set SHADOWBROKER_HMAC_SECRET to enable HMAC-signed requests.
-Older Vincent OS UI snippets used SHADOWBROKER_KEY; this client still accepts
+For remote access, set VINCENT_HMAC_SECRET to enable HMAC-signed requests.
+Older Vincent OS UI snippets used VINCENT_KEY; this client still accepts
 that value as an HMAC signing secret for compatibility. Never send either value
 as a raw bearer token, X-Admin-Key, query parameter, or unsigned header.
 
@@ -17,8 +17,8 @@ Usage (inside an OpenClaw skill):
 
 Remote usage:
     import os
-    os.environ["SHADOWBROKER_URL"] = "https://your-server.com:8000"
-    os.environ["SHADOWBROKER_HMAC_SECRET"] = "your-hmac-secret-here"
+    os.environ["VINCENT_URL"] = "https://your-server.com:8000"
+    os.environ["VINCENT_HMAC_SECRET"] = "your-hmac-secret-here"
     sb = Vincent OSClient()
 """
 
@@ -38,15 +38,15 @@ except ImportError:
     httpx = None  # Will use requests as fallback
 
 
-SB_BASE = os.environ.get("SHADOWBROKER_URL", "http://127.0.0.1:8000")
+SB_BASE = os.environ.get("VINCENT_URL", os.environ.get("SHADOWBROKER_URL", "http://127.0.0.1:8000")
 
 
 class Vincent OSClient:
     """Client for the Vincent OS REST API.
 
     Supports both local (no auth) and remote (HMAC-signed) connections.
-    Set SHADOWBROKER_HMAC_SECRET env var to enable remote authentication.
-    SHADOWBROKER_KEY is accepted only as a backwards-compatible HMAC-secret
+    Set VINCENT_HMAC_SECRET env var to enable remote authentication.
+    VINCENT_KEY is accepted only as a backwards-compatible HMAC-secret
     alias for older copy snippets.
     """
 
@@ -54,8 +54,8 @@ class Vincent OSClient:
         self.base = base_url.rstrip("/")
         self._hmac_secret = (
             hmac_secret
-            or os.environ.get("SHADOWBROKER_HMAC_SECRET", "")
-            or os.environ.get("SHADOWBROKER_KEY", "")
+            or os.environ.get("VINCENT_HMAC_SECRET", os.environ.get("SHADOWBROKER_HMAC_SECRET", "")
+            or os.environ.get("VINCENT_KEY", os.environ.get("SHADOWBROKER_KEY", "")
         )
         self._client = None
         # Version tracking for incremental updates

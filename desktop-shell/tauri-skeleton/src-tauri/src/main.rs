@@ -75,11 +75,11 @@ pub struct NativeGateCryptoState(std::sync::Mutex<gate_crypto::GateCryptoRuntime
 // in packaged mode). It is NOT served to the browser companion — the
 // companion loads from the same loopback server but in a plain browser
 // webview, which does not inject this script. That boundary preserves the
-// "native window only" trust model for `__SHADOWBROKER_DESKTOP__`.
+// "native window only" trust model for `__VINCENT_DESKTOP__`.
 const DESKTOP_INIT_SCRIPT: &str = r#"
 (function() {
   if (typeof window === 'undefined') return;
-  if (window.__SHADOWBROKER_DESKTOP__) return; // idempotent on navigation
+  if (window.__VINCENT_DESKTOP__) return; // idempotent on navigation
 
   var _auditLog = [];
   var _totalRecorded = 0;
@@ -151,7 +151,7 @@ const DESKTOP_INIT_SCRIPT: &str = r#"
     }
   }
 
-  window.__SHADOWBROKER_DESKTOP__ = {
+  window.__VINCENT_DESKTOP__ = {
     invokeLocalControl: function(command, payload, meta) {
       var expectedCap = _capMap[command];
       if (!expectedCap) {
@@ -279,15 +279,15 @@ fn desktop_local_custody_status() -> local_custody::LocalCustodyStatus {
 }
 
 fn main() {
-    let explicit_backend_url = std::env::var("SHADOWBROKER_BACKEND_URL").ok();
-    let admin_key = std::env::var("SHADOWBROKER_ADMIN_KEY").ok();
+    let explicit_backend_url = std::env::var("VINCENT_BACKEND_URL").ok();
+    let admin_key = std::env::var("VINCENT_ADMIN_KEY").ok();
 
     // Frontend URL detection:
-    // - If SHADOWBROKER_FRONTEND_URL is explicitly set → honor it (dev mode
+    // - If VINCENT_FRONTEND_URL is explicitly set → honor it (dev mode
     //   or custom setup; the built-in loopback app server is skipped)
     // - Else → default to http://127.0.0.1:3000 for dev; in packaged mode
     //   we'll start the loopback app server in setup below and override this.
-    let frontend_url_explicit = std::env::var("SHADOWBROKER_FRONTEND_URL").ok();
+    let frontend_url_explicit = std::env::var("VINCENT_FRONTEND_URL").ok();
     let default_frontend_url = frontend_url_explicit
         .clone()
         .unwrap_or_else(|| "http://127.0.0.1:3000".to_string());
@@ -355,7 +355,7 @@ fn main() {
             //
             // Packaged desktop now owns a bundled local backend runtime as
             // well as the static frontend export. In packaged mode, when the
-            // user has NOT explicitly set SHADOWBROKER_BACKEND_URL, the app:
+            // user has NOT explicitly set VINCENT_BACKEND_URL, the app:
             //   1. installs/refreshes the bundled backend into app-local
             //      writable storage
             //   2. launches it as a managed child process on loopback
@@ -499,13 +499,13 @@ fn main() {
             //       — giving the webview same-origin /api/* access.
             //   (b) Attach an initialization_script that runs BEFORE any page
             //       JavaScript on every page load (including full reloads),
-            //       so the __SHADOWBROKER_DESKTOP__ native control bridge is
+            //       so the __VINCENT_DESKTOP__ native control bridge is
             //       always present in the native window but never leaks into
             //       browser companion sessions.
             //
             // URL resolution order:
             //   1. Packaged mode with loopback app server → server URL
-            //   2. Explicit SHADOWBROKER_FRONTEND_URL → that URL
+            //   2. Explicit VINCENT_FRONTEND_URL → that URL
             //      (packaged + explicit override, or custom dev setup)
             //   3. Fall through to WebviewUrl::default() → resolves to
             //      build.devUrl (dev) or build.frontendDist (release) from
