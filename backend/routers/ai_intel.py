@@ -1617,7 +1617,7 @@ async def agent_tool_manifest(request: Request):
             "commands": "POST /api/ai/channel/command  body: {\"cmd\": \"<tool_name>\", \"args\": {<params>}}",
             "batch": "POST /api/ai/channel/batch  body: {\"commands\": [{\"cmd\": \"...\", \"args\": {...}}, ...]}  (max 20, concurrent execution, one HTTP round-trip)",
             "realtime_stream": "GET /api/ai/channel/sse  (Server-Sent Events — keeps Tor circuit warm, receives push events)",
-            "auth": "HMAC-SHA256 headers: X-SB-Timestamp, X-SB-Nonce, X-SB-Signature. Sign: HMAC(key, METHOD|path|ts|nonce|sha256(body))",
+            "auth": "HMAC-SHA256 headers: X-Vincent-Timestamp, X-Vincent-Nonce, X-Vincent-Signature. Sign: HMAC(key, METHOD|path|ts|nonce|sha256(body))",
         },
         "tools": [
             # ── Read Tools ────────────────────────────────────
@@ -2358,7 +2358,7 @@ async def api_capabilities(request: Request):
         "routing": routing_manifest(),
         "auth": {
             "method": "HMAC-SHA256",
-            "headers": ["X-SB-Timestamp", "X-SB-Nonce", "X-SB-Signature"],
+            "headers": ["X-Vincent-Timestamp", "X-Vincent-Nonce", "X-Vincent-Signature"],
             "signature_format": "HMAC-SHA256(secret, METHOD|path|timestamp|nonce|sha256(body))",
             "remote_agent_http_auth_identity": "shared_hmac_secret",
             "agent_ed25519_identity_used_for_http_auth": False,
@@ -2397,7 +2397,7 @@ async def api_capabilities(request: Request):
                            "connection for real-time push. Works perfectly over Tor SOCKS5 (unlike WebSocket).",
             "stream_endpoint": "GET /api/ai/channel/sse  (long-lived, returns text/event-stream)",
             "command_endpoint": "POST /api/ai/channel/command  (send commands, same as HTTP channel)",
-            "auth": "Same HMAC auth as all other endpoints (X-SB-Timestamp, X-SB-Nonce, X-SB-Signature)",
+            "auth": "Same HMAC auth as all other endpoints (X-Vincent-Timestamp, X-Vincent-Nonce, X-Vincent-Signature)",
             "protocol": {
                 "events_from_server": {
                     "connected": 'event: connected\\ndata: {"access_tier": "...", "layer_versions": {"ships": 42, ...}}',

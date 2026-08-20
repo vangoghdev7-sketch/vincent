@@ -78,7 +78,7 @@ The HMAC secret is found in Vincent OS's **Connect OpenClaw** modal (AI Intel pa
 `VINCENT_HMAC_SECRET` is a shared signing secret, not a raw API key. Do not
 send it as `X-Admin-Key`, `Authorization: Bearer`, a query parameter, or any
 plain request header. The `Vincent OSClient` signs every direct request with
-`X-SB-Timestamp`, `X-SB-Nonce`, and `X-SB-Signature` using:
+`X-Vincent-Timestamp`, `X-Vincent-Nonce`, and `X-Vincent-Signature` using:
 
 ```text
 HMAC-SHA256(secret, METHOD|path|timestamp|nonce|sha256(body))

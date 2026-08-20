@@ -27,7 +27,7 @@ def _load_env() -> None:
 
 async def main() -> None:
     _load_env()
-    from sb_query import Vincent OSClient
+    from vincent_query import Vincent OSClient
 
     sb = Vincent OSClient()
     try:

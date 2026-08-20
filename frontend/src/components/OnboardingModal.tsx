@@ -172,7 +172,7 @@ const OnboardingModal = React.memo(function OnboardingModal({
     `GET ${agentEndpoint}/api/ai/tools`,
     '',
     '# Auth: VINCENT_HMAC_SECRET is not a raw API key.',
-    '# Sign every direct request with X-SB-Timestamp, X-SB-Nonce, and X-SB-Signature.',
+    '# Sign every direct request with X-Vincent-Timestamp, X-Vincent-Nonce, and X-Vincent-Signature.',
     '# Signature input: METHOD|path|timestamp|nonce|sha256(body).',
     '# Do not send the secret as X-Admin-Key, Authorization, or a query parameter.',
     '# Restricted = read-only telemetry. Full = can write when asked.',

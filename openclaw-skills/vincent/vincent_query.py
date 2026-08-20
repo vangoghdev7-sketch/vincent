@@ -10,7 +10,7 @@ that value as an HMAC signing secret for compatibility. Never send either value
 as a raw bearer token, X-Admin-Key, query parameter, or unsigned header.
 
 Usage (inside an OpenClaw skill):
-    from sb_query import Vincent OSClient
+    from vincent_query import Vincent OSClient
     sb = Vincent OSClient()
     data = await sb.get_telemetry()
     await sb.place_pin(34.05, -118.24, "UAP Sighting", category="anomaly")
@@ -108,9 +108,9 @@ class Vincent OSClient:
         ).hexdigest()
 
         return {
-            "X-SB-Timestamp": ts,
-            "X-SB-Nonce": nonce,
-            "X-SB-Signature": signature,
+            "X-Vincent-Timestamp": ts,
+            "X-Vincent-Nonce": nonce,
+            "X-Vincent-Signature": signature,
         }
 
     # Patterns that look like LLM API keys — never send these to Vincent OS.

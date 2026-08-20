@@ -907,7 +907,7 @@ async def live_data_fast(
             return Response(
                 content=body,
                 media_type="application/json",
-                headers={"ETag": etag, "Cache-Control": "no-cache", "X-SB-Mode": "delta"},
+                headers={"ETag": etag, "Cache-Control": "no-cache", "X-Vincent-Mode": "delta"},
             )
 
     etag = _current_etag(prefix=("fast|initial|" if initial else "fast|full|") + bbox_suffix.lstrip("|") + ("|" if bbox_suffix else ""))
@@ -964,7 +964,7 @@ async def live_data_fast(
     return Response(
         content=_cached_live_data_bytes(etag, _build),
         media_type="application/json",
-        headers={"ETag": etag, "Cache-Control": "no-cache", "X-SB-Mode": "snapshot"},
+        headers={"ETag": etag, "Cache-Control": "no-cache", "X-Vincent-Mode": "snapshot"},
     )
 
 

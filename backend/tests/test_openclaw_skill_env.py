@@ -32,9 +32,9 @@ def test_openclaw_skill_accepts_legacy_key_as_hmac_secret_alias(monkeypatch):
     headers = client._sign_headers("GET", "/api/ai/tools")
 
     assert client._hmac_secret == "legacy-hmac-secret"
-    assert "X-SB-Timestamp" in headers
-    assert "X-SB-Nonce" in headers
-    assert "X-SB-Signature" in headers
+    assert "X-Vincent-Timestamp" in headers
+    assert "X-Vincent-Nonce" in headers
+    assert "X-Vincent-Signature" in headers
     assert "Authorization" not in headers
     assert "X-Admin-Key" not in headers
 

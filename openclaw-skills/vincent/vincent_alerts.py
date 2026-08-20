@@ -4,7 +4,7 @@ Sends branded alerts from the AI co-pilot to external channels.
 Supports Discord webhooks, Telegram bots, and generic webhooks.
 
 Usage:
-    from sb_alerts import AlertDispatcher
+    from vincent_alerts import AlertDispatcher
     dispatcher = AlertDispatcher()
     dispatcher.add_discord("https://discord.com/api/webhooks/...")
     await dispatcher.send("brief", "Morning intelligence digest...")
@@ -20,7 +20,7 @@ try:
 except ImportError:
     httpx = None
 
-from sb_signatures import sig
+from vincent_signatures import sig
 
 logger = logging.getLogger(__name__)
 

@@ -35,16 +35,16 @@ HMAC_SECRET = "test-route-secret-for-p1d-verification"
 def _sign(method: str, path: str, body: bytes = b"",
           secret: str = HMAC_SECRET, ts: int | None = None,
           nonce: str | None = None) -> dict[str, str]:
-    """Produce valid X-SB-* auth headers with body binding."""
+    """Produce valid X-Vincent-* auth headers with body binding."""
     ts_str = str(ts if ts is not None else int(time.time()))
     nonce = nonce or secrets.token_hex(16)
     body_digest = hashlib.sha256(body).hexdigest()
     message = f"{method.upper()}|{path}|{ts_str}|{nonce}|{body_digest}"
     sig = hmac_mod.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
     return {
-        "X-SB-Timestamp": ts_str,
-        "X-SB-Nonce": nonce,
-        "X-SB-Signature": sig,
+        "X-Vincent-Timestamp": ts_str,
+        "X-Vincent-Nonce": nonce,
+        "X-Vincent-Signature": sig,
     }
 
 
@@ -251,8 +251,8 @@ class TestWrongOrMissingSecret:
         """Timestamp + nonce present but no signature → 403."""
         body = _serialize_json({"cmd": "get_summary", "args": {}})
         headers = {
-            "X-SB-Timestamp": str(int(time.time())),
-            "X-SB-Nonce": secrets.token_hex(16),
+            "X-Vincent-Timestamp": str(int(time.time())),
+            "X-Vincent-Nonce": secrets.token_hex(16),
             "Content-Type": "application/json",
         }
         r = remote_client.post("/api/ai/channel/command", content=body, headers=headers)

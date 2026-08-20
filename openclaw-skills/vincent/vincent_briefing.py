@@ -4,12 +4,12 @@ Produces branded proximity-based briefings, daily digests, and
 anomaly alerts that the user receives via Discord/Telegram/console.
 
 Usage:
-    from sb_briefing import format_near_me_digest, format_anomaly_alert
+    from vincent_briefing import format_near_me_digest, format_anomaly_alert
     digest = await format_near_me_digest(lat, lng, radius=100)
 """
 
 from typing import Any, Optional
-from sb_signatures import sig
+from vincent_signatures import sig
 
 
 # ---------------------------------------------------------------------------

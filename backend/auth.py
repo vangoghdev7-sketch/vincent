@@ -396,9 +396,9 @@ async def _verify_openclaw_hmac(request: Request) -> bool:
     """Verify HMAC-signed request from a remote OpenClaw agent.
 
     Expected headers (only on direct HTTP, never on mesh wire):
-      X-SB-Timestamp: unix timestamp (integer)
-      X-SB-Nonce: random hex string (min 16 chars)
-      X-SB-Signature: HMAC-SHA256(secret, METHOD|path|timestamp|nonce|sha256(body))
+      X-Vincent-Timestamp (or X-SB-Timestamp): unix timestamp (integer)
+      X-Vincent-Nonce (or X-SB-Nonce): random hex string (min 16 chars)
+      X-Vincent-Signature (or X-SB-Signature): HMAC-SHA256(secret, METHOD|path|timestamp|nonce|sha256(body))
 
     The signing input includes a SHA-256 digest of the request body so that
     body-bearing requests (POST, PUT, PATCH, etc.) cannot be modified without
@@ -410,9 +410,9 @@ async def _verify_openclaw_hmac(request: Request) -> bool:
     if not secret:
         return False
 
-    ts_str = str(request.headers.get("X-SB-Timestamp", "") or "").strip()
-    nonce = str(request.headers.get("X-SB-Nonce", "") or "").strip()
-    signature = str(request.headers.get("X-SB-Signature", "") or "").strip()
+    ts_str = str(request.headers.get("X-Vincent-Timestamp") or request.headers.get("X-SB-Timestamp", "") or "").strip()
+    nonce = str(request.headers.get("X-Vincent-Nonce") or request.headers.get("X-SB-Nonce", "") or "").strip()
+    signature = str(request.headers.get("X-Vincent-Signature") or request.headers.get("X-SB-Signature", "") or "").strip()
 
     if not ts_str or not nonce or not signature:
         return False

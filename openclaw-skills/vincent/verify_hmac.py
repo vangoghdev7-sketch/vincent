@@ -29,9 +29,9 @@ def sign(method: str, path: str, body: bytes, secret: str) -> dict[str, str]:
     message = f"{method.upper()}|{path}|{ts}|{nonce}|{digest}"
     signature = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
     return {
-        "X-SB-Timestamp": ts,
-        "X-SB-Nonce": nonce,
-        "X-SB-Signature": signature,
+        "X-Vincent-Timestamp": ts,
+        "X-Vincent-Nonce": nonce,
+        "X-Vincent-Signature": signature,
         "Content-Type": "application/json",
     }
 

@@ -699,7 +699,7 @@ function ConnectModalBody({ apiEndpoint, handleCopy, copied }: ConnectModalBodyP
     lines.push('# VINCENT_HMAC_SECRET is a shared HMAC signing secret, not a raw API key.');
     lines.push('# Never send it as X-Admin-Key, Authorization: Bearer, a query parameter, or a plain request header.');
     lines.push('# Every direct Vincent API request must be HMAC-SHA256 signed with:');
-    lines.push('#   X-SB-Timestamp, X-SB-Nonce, X-SB-Signature');
+    lines.push('#   X-Vincent-Timestamp, X-Vincent-Nonce, X-Vincent-Signature');
     lines.push('# Signature input: METHOD|path|timestamp|nonce|sha256(body)');
     lines.push('# Use the VincentOSClient/openclaw skill helper so requests are signed automatically.');
     lines.push('');

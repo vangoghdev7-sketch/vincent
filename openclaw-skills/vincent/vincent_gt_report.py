@@ -36,7 +36,7 @@ async def main() -> None:
     args = parser.parse_args()
 
     _load_env()
-    from sb_query import Vincent OSClient
+    from vincent_query import Vincent OSClient
 
     sb = Vincent OSClient()
     report: dict[str, object] = {

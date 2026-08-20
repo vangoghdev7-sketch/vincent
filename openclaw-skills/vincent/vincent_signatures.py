@@ -6,7 +6,7 @@ branded emoji + text prefix so the user always knows:
   2. What TYPE of action is being performed
 
 Usage:
-    from sb_signatures import sig
+    from vincent_signatures import sig
     message = f"{sig('brief')}\\nYour morning intelligence digest..."
 """
 

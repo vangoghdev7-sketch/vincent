@@ -11,14 +11,14 @@ author: Vincent OS AI Module
 heartbeat:
   enabled: true
   interval_seconds: 60
-  handler: sb_monitor.heartbeat
+  handler: vincent_monitor.heartbeat
 
 # Skill entry points
 entry_points:
-  query: sb_query.Vincent OSClient
-  signatures: sb_signatures
-  briefing: sb_briefing
-  monitor: sb_monitor
+  query: vincent_query.Vincent OSClient
+  signatures: vincent_signatures
+  briefing: vincent_briefing
+  monitor: vincent_monitor
 
 # Dependencies
 requirements:
@@ -27,21 +27,21 @@ requirements:
 # Thin agent surface — expose only these to the LLM tool picker
 agent_surface:
   primary_reads:
-    - sb_query.Vincent OSClient.ask
-    - sb_query.Vincent OSClient.run_playbook
-    - sb_query.Vincent OSClient.send_batch
-    - sb_query.Vincent OSClient.channel_status
-    - sb_query.Vincent OSClient.infonet_status
-    - sb_query.Vincent OSClient.list_gates
-    - sb_query.Vincent OSClient.read_gate_messages
-    - sb_query.Vincent OSClient.poll_dms
+    - vincent_query.Vincent OSClient.ask
+    - vincent_query.Vincent OSClient.run_playbook
+    - vincent_query.Vincent OSClient.send_batch
+    - vincent_query.Vincent OSClient.channel_status
+    - vincent_query.Vincent OSClient.infonet_status
+    - vincent_query.Vincent OSClient.list_gates
+    - vincent_query.Vincent OSClient.read_gate_messages
+    - vincent_query.Vincent OSClient.poll_dms
   writes:
-    - sb_query.Vincent OSClient.place_pin
-    - sb_query.Vincent OSClient.place_pins_batch
-    - sb_query.Vincent OSClient.ensure_infonet_ready
-    - sb_query.Vincent OSClient.post_to_gate
-    - sb_query.Vincent OSClient.cast_vote
-    - sb_query.Vincent OSClient.send_encrypted_dm
+    - vincent_query.Vincent OSClient.place_pin
+    - vincent_query.Vincent OSClient.place_pins_batch
+    - vincent_query.Vincent OSClient.ensure_infonet_ready
+    - vincent_query.Vincent OSClient.post_to_gate
+    - vincent_query.Vincent OSClient.cast_vote
+    - vincent_query.Vincent OSClient.send_encrypted_dm
   blocked_without_confirm:
     - search_telemetry
     - get_telemetry
