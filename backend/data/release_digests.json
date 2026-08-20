@@ -1,6 +1,6 @@
 {
   "_comment": [
-    "Baked-in SHA-256 digests for known Shadowbroker release archives.",
+    "Baked-in SHA-256 digests for known Vincent OS release archives.",
     "",
     "Issue #231: the self-updater previously skipped integrity verification",
     "entirely whenever the MESH_UPDATE_SHA256 env var was unset (which is the",
@@ -33,33 +33,33 @@
     "against the previous entries during the transition."
   ],
   "v0.9.79": {
-    "ShadowBroker_v0.9.79.zip": "f6877c1d66614525315ea82636ce9f7b41178332c4dbf90d27431a1ea1d9cd47",
-    "ShadowBroker_0.9.79_x64-setup.exe": "f7b676ada45cac7da05868b0a353678c9ee700e3abcf456a7c0c038c36da446f",
-    "ShadowBroker_0.9.79_x64_en-US.msi": "e0713c3cdda184cfbea750bfac0d62a35678fec00847e6476f2cac8e7e42046e"
+    "Vincent OS_v0.9.79.zip": "f6877c1d66614525315ea82636ce9f7b41178332c4dbf90d27431a1ea1d9cd47",
+    "Vincent OS_0.9.79_x64-setup.exe": "f7b676ada45cac7da05868b0a353678c9ee700e3abcf456a7c0c038c36da446f",
+    "Vincent OS_0.9.79_x64_en-US.msi": "e0713c3cdda184cfbea750bfac0d62a35678fec00847e6476f2cac8e7e42046e"
   },
   "v0.9.8": {
-    "ShadowBroker_v0.9.8.zip": "183bb5cd62b9b9349d95df5ef7696cb6ca810ab4b991fa9dab6f898af4c7a175",
-    "ShadowBroker_0.9.8_x64-setup.exe": "94a0309862e9c81c92cdcbfea8eec9dbb97eef19ded82b26217b397defbc810c",
-    "ShadowBroker_0.9.8_x64_en-US.msi": "fe22f9d51e4360d74c18a7250c2fbb9ed4fa4c7a884b3ac0d04a21115466386b"
+    "Vincent OS_v0.9.8.zip": "183bb5cd62b9b9349d95df5ef7696cb6ca810ab4b991fa9dab6f898af4c7a175",
+    "Vincent OS_0.9.8_x64-setup.exe": "94a0309862e9c81c92cdcbfea8eec9dbb97eef19ded82b26217b397defbc810c",
+    "Vincent OS_0.9.8_x64_en-US.msi": "fe22f9d51e4360d74c18a7250c2fbb9ed4fa4c7a884b3ac0d04a21115466386b"
   },
   "v0.9.81": {
-    "ShadowBroker_v0.9.81.zip": "f81f454bdc88e9a32c351df38212b8cfa624704d65764b971bb091eef62259c6",
-    "ShadowBroker_0.9.81_x64-setup.exe": "25e9a95d0d8ce959a7d08fe8e7406772ae24b596652793e81d1de5d02510a5a6",
-    "ShadowBroker_0.9.81_x64_en-US.msi": "34e655fc0c0f195ee4ac978f228a4b2b9d5565253b8771aca9ef4693409e9e70"
+    "Vincent OS_v0.9.81.zip": "f81f454bdc88e9a32c351df38212b8cfa624704d65764b971bb091eef62259c6",
+    "Vincent OS_0.9.81_x64-setup.exe": "25e9a95d0d8ce959a7d08fe8e7406772ae24b596652793e81d1de5d02510a5a6",
+    "Vincent OS_0.9.81_x64_en-US.msi": "34e655fc0c0f195ee4ac978f228a4b2b9d5565253b8771aca9ef4693409e9e70"
   },
   "v0.9.82": {
-    "ShadowBroker_v0.9.82.zip": "202ab043465741dcc06de57c19ec8314904332f8e818b891d7174655719d084c",
-    "ShadowBroker_0.9.82_x64-setup.exe": "0eb9f2bda02ab691b39687641abc97e6bfb507b42f48de21970ad7dfb4ea15fc",
-    "ShadowBroker_0.9.82_x64_en-US.msi": "ced08f930171c0c08009a958cc30b0171a09f982230fc217c6808c2ed7ab2e30"
+    "Vincent OS_v0.9.82.zip": "202ab043465741dcc06de57c19ec8314904332f8e818b891d7174655719d084c",
+    "Vincent OS_0.9.82_x64-setup.exe": "0eb9f2bda02ab691b39687641abc97e6bfb507b42f48de21970ad7dfb4ea15fc",
+    "Vincent OS_0.9.82_x64_en-US.msi": "ced08f930171c0c08009a958cc30b0171a09f982230fc217c6808c2ed7ab2e30"
   },
   "v0.9.83": {
-    "ShadowBroker_v0.9.83.zip": "53f56631731ad3cdc7be68df09bedd6570ed91ecda6fa57c39651098e15666c7",
-    "ShadowBroker_0.9.83_x64-setup.exe": "d62170af4b9df0b190832b7bb3ad6bfe8a7ac01472f2c7b39cf2a1b61edc7492",
-    "ShadowBroker_0.9.83_x64_en-US.msi": "b664cc0003a29f7ce88b04c2b425643dbe7ed897342fc6e9a2378bc1910c6850"
+    "Vincent OS_v0.9.83.zip": "53f56631731ad3cdc7be68df09bedd6570ed91ecda6fa57c39651098e15666c7",
+    "Vincent OS_0.9.83_x64-setup.exe": "d62170af4b9df0b190832b7bb3ad6bfe8a7ac01472f2c7b39cf2a1b61edc7492",
+    "Vincent OS_0.9.83_x64_en-US.msi": "b664cc0003a29f7ce88b04c2b425643dbe7ed897342fc6e9a2378bc1910c6850"
   },
   "v0.9.84": {
-    "ShadowBroker_v0.9.84.zip": "b9cf09754949febb85c9ea967e53c867627b85343b9391af1ff67eb8f129d479",
-    "ShadowBroker_0.9.84_x64-setup.exe": "37d5bcb087b7a669668b2eb85a37413242b4579efb4444a36df8f8515be4a5e4",
-    "ShadowBroker_0.9.84_x64_en-US.msi": "83edd9074469f034660d0ab81197c9a0bf3ba92b101693101217b2cd39444223"
+    "Vincent OS_v0.9.84.zip": "b9cf09754949febb85c9ea967e53c867627b85343b9391af1ff67eb8f129d479",
+    "Vincent OS_0.9.84_x64-setup.exe": "37d5bcb087b7a669668b2eb85a37413242b4579efb4444a36df8f8515be4a5e4",
+    "Vincent OS_0.9.84_x64_en-US.msi": "83edd9074469f034660d0ab81197c9a0bf3ba92b101693101217b2cd39444223"
   }
 }

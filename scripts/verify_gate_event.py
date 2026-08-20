@@ -14,9 +14,9 @@ code = (
 )
 
 hosts = [
-    ("local", None, "shadowbroker-backend"),
-    ("seed", "shadowbroker", "shadowbroker-relay"),
-    ("pete", "pete", "shadowbroker-backend"),
+    ("local", None, "vincent_os-backend"),
+    ("seed", "vincent_os", "vincent_os-relay"),
+    ("pete", "pete", "vincent_os-backend"),
 ]
 
 for label, ssh_host, container in hosts:

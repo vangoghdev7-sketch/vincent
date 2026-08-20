@@ -139,7 +139,7 @@ def _docker_json(method: str, path: str, body: dict | None = None, *, admin_key:
     payload = ["docker", "exec"]
     if use_stdin:
         payload.append("-i")
-    payload.extend(["shadowbroker-backend", "curl", "-s", "--max-time", str(timeout_s)])
+    payload.extend(["vincent_os-backend", "curl", "-s", "--max-time", str(timeout_s)])
     if admin_key:
         payload.extend(["-H", f"X-Admin-Key: {admin_key}"])
     if body is not None:
@@ -182,7 +182,7 @@ def _json(method: str, path: str, body: dict | None = None, *, admin_key: str = 
 
 def _docker_admin_key() -> str:
     proc = subprocess.run(
-        ["docker", "exec", "shadowbroker-backend", "printenv", "ADMIN_KEY"],
+        ["docker", "exec", "vincent_os-backend", "printenv", "ADMIN_KEY"],
         capture_output=True,
         text=True,
         check=True,
@@ -192,7 +192,7 @@ def _docker_admin_key() -> str:
 
 def _ssh_pete_admin_key() -> str:
     proc = subprocess.run(
-        ["ssh", "-o", "BatchMode=yes", SSH_PETE, "docker exec shadowbroker-backend printenv ADMIN_KEY"],
+        ["ssh", "-o", "BatchMode=yes", SSH_PETE, "docker exec vincent_os-backend printenv ADMIN_KEY"],
         capture_output=True,
         text=True,
         check=True,
@@ -334,7 +334,7 @@ print(json.dumps({{"ok": ok, "detail": reason, "sequence": seq, "meta": meta or 
 
 def _docker_python(code: str, *, timeout_s: int = 600) -> dict:
     proc = subprocess.run(
-        ["docker", "exec", "-i", "shadowbroker-backend", "python", "-"],
+        ["docker", "exec", "-i", "vincent_os-backend", "python", "-"],
         input=code,
         capture_output=True,
         text=True,
@@ -362,7 +362,7 @@ def _docker_python_contact_send(
         local_path = tmp.name
     try:
         subprocess.run(
-            ["docker", "cp", local_path, "shadowbroker-backend:/tmp/e2e_prekey_bundle.json"],
+            ["docker", "cp", local_path, "vincent_os-backend:/tmp/e2e_prekey_bundle.json"],
             check=True,
             capture_output=True,
             text=True,
@@ -438,7 +438,7 @@ def _wait_local_backend_healthy(*, timeout_s: int = 300) -> None:
             [
                 "docker",
                 "exec",
-                "shadowbroker-backend",
+                "vincent_os-backend",
                 "curl",
                 "-s",
                 "--max-time",
@@ -451,7 +451,7 @@ def _wait_local_backend_healthy(*, timeout_s: int = 300) -> None:
         )
         if probe.returncode == 0:
             mesh_only = subprocess.run(
-                ["docker", "exec", "shadowbroker-backend", "printenv", "MESH_ONLY"],
+                ["docker", "exec", "vincent_os-backend", "printenv", "MESH_ONLY"],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -1021,7 +1021,7 @@ def _local_api_health(*, timeout_s: int = 10) -> bool:
         [
             "docker",
             "exec",
-            "shadowbroker-backend",
+            "vincent_os-backend",
             "curl",
             "-s",
             "-o",
@@ -1084,7 +1084,7 @@ def _ensure_pete_api_responsive(pete_admin: str = "", *, reason: str = "") -> No
             "-o",
             "BatchMode=yes",
             SSH_PETE,
-            "cd /home/ubuntu/Shadowbroker && docker compose -f docker-compose.yml -f docker-compose.participant.yml restart backend",
+            "cd /home/ubuntu/Vincent OS && docker compose -f docker-compose.yml -f docker-compose.participant.yml restart backend",
         ],
         capture_output=True,
         text=True,
@@ -1580,7 +1580,7 @@ def _scrub_local_dm_state() -> None:
         [
             "docker",
             "exec",
-            "shadowbroker-backend",
+            "vincent_os-backend",
             "sh",
             "-c",
             "rm -f /app/data/private_outbox/sealed_private_outbox.json /app/data/dm_relay.json "
@@ -1655,12 +1655,12 @@ print(json.dumps({{"ok": True, "drained": drained}}))
 def _restart_pete_backend() -> None:
     if DEPLOY_FROM_GIT:
         remote_cmd = (
-            "cd /home/ubuntu/Shadowbroker && "
+            "cd /home/ubuntu/Vincent OS && "
             "git fetch origin && git reset --hard origin/main && "
             "docker compose -f docker-compose.yml -f docker-compose.participant.yml pull && "
             "docker compose -f docker-compose.yml -f docker-compose.participant.yml up -d && "
             "sleep 8 && "
-            "docker exec shadowbroker-backend sh -c "
+            "docker exec vincent_os-backend sh -c "
             "'rm -f /app/data/dm_relay.json /app/data/private_outbox/sealed_private_outbox.json "
             "/app/data/dm_alias/wormhole_dm_mls.json /app/data/dm_alias_rust/wormhole_dm_mls_rust.bin'"
         )
@@ -1697,21 +1697,21 @@ def _restart_pete_backend() -> None:
                 check=False,
             )
     remote_cmd = (
-        "cd /home/ubuntu/Shadowbroker && "
+        "cd /home/ubuntu/Vincent OS && "
         "cp /tmp/docker-compose.participant.yml docker-compose.participant.yml 2>/dev/null || true && "
         "docker compose -f docker-compose.yml -f docker-compose.participant.yml up -d backend && "
         "sleep 8 && "
-        "docker exec shadowbroker-backend sh -c "
+        "docker exec vincent_os-backend sh -c "
         "'rm -f /app/data/dm_relay.json /app/data/private_outbox/sealed_private_outbox.json "
         "/app/data/dm_alias/wormhole_dm_mls.json /app/data/dm_alias_rust/wormhole_dm_mls_rust.bin' && "
-        "docker cp /tmp/mesh_dm_relay.py shadowbroker-backend:/app/services/mesh/mesh_dm_relay.py 2>/dev/null || true; "
-        "docker cp /tmp/mesh_signed_events.py shadowbroker-backend:/app/services/mesh/mesh_signed_events.py 2>/dev/null || true; "
-        "docker cp /tmp/openclaw_infonet.py shadowbroker-backend:/app/services/openclaw_infonet.py 2>/dev/null || true; "
-        "docker cp /tmp/wormhole_supervisor.py shadowbroker-backend:/app/services/wormhole_supervisor.py 2>/dev/null || true; "
-        "docker cp /tmp/tor_hidden_service.py shadowbroker-backend:/app/services/tor_hidden_service.py 2>/dev/null || true; "
-        "docker cp /tmp/privacy_core_attestation.py shadowbroker-backend:/app/services/privacy_core_attestation.py 2>/dev/null || true; "
-        "docker cp /tmp/wormhole_router.py shadowbroker-backend:/app/routers/wormhole.py 2>/dev/null || true; "
-        "docker cp /tmp/main.py shadowbroker-backend:/app/main.py 2>/dev/null || true; "
+        "docker cp /tmp/mesh_dm_relay.py vincent_os-backend:/app/services/mesh/mesh_dm_relay.py 2>/dev/null || true; "
+        "docker cp /tmp/mesh_signed_events.py vincent_os-backend:/app/services/mesh/mesh_signed_events.py 2>/dev/null || true; "
+        "docker cp /tmp/openclaw_infonet.py vincent_os-backend:/app/services/openclaw_infonet.py 2>/dev/null || true; "
+        "docker cp /tmp/wormhole_supervisor.py vincent_os-backend:/app/services/wormhole_supervisor.py 2>/dev/null || true; "
+        "docker cp /tmp/tor_hidden_service.py vincent_os-backend:/app/services/tor_hidden_service.py 2>/dev/null || true; "
+        "docker cp /tmp/privacy_core_attestation.py vincent_os-backend:/app/services/privacy_core_attestation.py 2>/dev/null || true; "
+        "docker cp /tmp/wormhole_router.py vincent_os-backend:/app/routers/wormhole.py 2>/dev/null || true; "
+        "docker cp /tmp/main.py vincent_os-backend:/app/main.py 2>/dev/null || true; "
         "docker compose -f docker-compose.yml -f docker-compose.participant.yml restart backend"
     )
     proc = subprocess.run(
@@ -1756,7 +1756,7 @@ def _prime_remote_wormhole_join() -> dict:
             "BatchMode=yes",
             SSH_PETE,
             (
-                "docker exec shadowbroker-backend curl -s -X POST "
+                "docker exec vincent_os-backend curl -s -X POST "
                 "-H 'Content-Type: application/json' -d '{}' "
                 "http://127.0.0.1:8000/api/wormhole/join --max-time 120"
             ),
@@ -1783,7 +1783,7 @@ def _warmup_tor() -> None:
             [
                 "docker",
                 "exec",
-                "shadowbroker-backend",
+                "vincent_os-backend",
                 "curl",
                 "-s",
                 "-o",
@@ -1842,7 +1842,7 @@ def _warmup_tor_from_pete_to_local(local_onion: str, *, max_attempts: int = 0, r
                 "BatchMode=yes",
                 SSH_PETE,
                 (
-                    "docker exec shadowbroker-backend curl -s -o /dev/null -w '%{http_code}' "
+                    "docker exec vincent_os-backend curl -s -o /dev/null -w '%{http_code}' "
                     f"--max-time 120 --socks5-hostname 127.0.0.1:9050 http://{host}/api/health"
                 ),
             ],
@@ -1878,7 +1878,7 @@ def _ssh_pete_python(code: str, *, timeout_s: int = 120) -> dict:
             "-o",
             "BatchMode=yes",
             SSH_PETE,
-            "docker exec -i shadowbroker-backend python",
+            "docker exec -i vincent_os-backend python",
         ],
         input=code.encode("utf-8"),
         capture_output=True,
@@ -2923,7 +2923,7 @@ def _direct_tor_prekey_bundle(handle: str, lookup_peer_url: str) -> dict:
         [
             "docker",
             "exec",
-            "shadowbroker-backend",
+            "vincent_os-backend",
             "curl",
             "-s",
             "--max-time",

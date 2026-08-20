@@ -1,8 +1,8 @@
-"""ShadowBroker message signature system.
+"""Vincent OS message signature system.
 
-Every outbound message from the ShadowBroker AI co-pilot starts with a
+Every outbound message from the Vincent OS AI co-pilot starts with a
 branded emoji + text prefix so the user always knows:
-  1. It's from the ShadowBroker app
+  1. It's from the Vincent OS app
   2. What TYPE of action is being performed
 
 Usage:

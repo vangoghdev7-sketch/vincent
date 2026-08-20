@@ -1,14 +1,14 @@
-# ShadowBroker — Meshtastic MQTT Remediation
+# Vincent — Meshtastic MQTT Remediation
 
 **Version:** 0.9.6  
 **Date:** 2026-04-12  
-**Re:** [meshtastic/firmware#6131](https://github.com/meshtastic/firmware/issues/6131) — Excessive MQTT traffic from ShadowBroker clients
+**Re:** [meshtastic/firmware#6131](https://github.com/meshtastic/firmware/issues/6131) — Excessive MQTT traffic from Vincent clients
 
 ---
 
 ## What happened
 
-ShadowBroker is an open-source OSINT situational awareness platform that includes a Meshtastic MQTT listener for displaying mesh network activity on a global map. In prior versions, the MQTT bridge:
+Vincent is an open-source OSINT situational awareness platform that includes a Meshtastic MQTT listener for displaying mesh network activity on a global map. In prior versions, the MQTT bridge:
 
 - Subscribed to **28 wildcard topics** (`msh/{region}/#`) covering every known official and community root on startup
 - Used an aggressive reconnect policy (min 1s / max 30s backoff)
@@ -55,7 +55,7 @@ Inbound messages are capped at **100 messages per minute** using a sliding windo
 
 ### 5. Versioned client ID
 
-Client IDs changed from `sbmesh-{uuid}` to `sb096-{uuid}` so the Meshtastic team can identify ShadowBroker clients and track adoption of the fix by version.
+Client IDs changed from `sbmesh-{uuid}` to `sb096-{uuid}` so the Meshtastic team can identify Vincent clients and track adoption of the fix by version.
 
 ---
 
@@ -85,5 +85,5 @@ Client IDs changed from `sbmesh-{uuid}` to `sb096-{uuid}` so the Meshtastic team
 
 ## Contact
 
-Repository: [github.com/BigBodyCobain/Shadowbroker](https://github.com/BigBodyCobain/Shadowbroker)  
+Repository: [github.com/BigBodyCobain/Vincent](https://github.com/BigBodyCobain/Vincent)  
 Maintainer: BigBodyCobain

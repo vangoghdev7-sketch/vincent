@@ -194,7 +194,7 @@ const FOLDERS: Array<{ key: MailFolder; label: string; icon: React.ReactNode }> 
 const MAIL_POLL_BASE_MS = 12_000;
 const DM_LANE_BACKGROUND_PREP_TIMEOUT_MS = 5_000;
 const STORAGE_VERSION = 1;
-const SHADOWBROKER_WELCOME_ID = 'shadowbroker-welcome';
+const SHADOWBROKER_WELCOME_ID = 'vincent_os-welcome';
 const MAIL_SUBJECT_PREFIX = 'MAIL_SUBJECT:';
 
 function randomId(prefix: string): string {
@@ -221,14 +221,14 @@ function sortMessages(items: MailItem[]): MailItem[] {
   });
 }
 
-function createShadowbrokerWelcomeMail(): MailItem {
+function createVincent OSWelcomeMail(): MailItem {
   return {
     id: SHADOWBROKER_WELCOME_ID,
     msgId: SHADOWBROKER_WELCOME_ID,
     folder: 'inbox',
     kind: 'system',
     direction: 'local',
-    senderId: 'shadowbroker',
+    senderId: 'vincent_os',
     recipientId: 'local',
     subject: 'How secure mail works',
     body: [
@@ -251,7 +251,7 @@ function ensureSeedMail(items: MailItem[]): MailItem[] {
   if (items.some((item) => item.id === SHADOWBROKER_WELCOME_ID)) {
     return sortMessages(items);
   }
-  return sortMessages([createShadowbrokerWelcomeMail(), ...items]);
+  return sortMessages([createVincent OSWelcomeMail(), ...items]);
 }
 
 function loadMailbox(scopeId: string): MailItem[] {
@@ -419,7 +419,7 @@ function decodeMailPayload(plaintext: string): { subject: string; body: string }
 
 function displayNameForPeer(peerId: string, contacts: Record<string, Contact>): string {
   if (!peerId) return 'unknown';
-  if (peerId === 'shadowbroker') return 'shadowbroker';
+  if (peerId === 'vincent_os') return 'vincent_os';
   const contact = contacts[peerId];
   if (contact?.alias) return contact.alias;
   return peerId;
@@ -2354,7 +2354,7 @@ export default function MessagesView({ onBack, onOpenDeadDrop }: MessagesViewPro
       }
       const inviteBlob = JSON.stringify(
         {
-          type: 'shadowbroker.infonet.dm.invite',
+          type: 'vincent_os.infonet.dm.invite',
           version: 1,
           label,
           created_at: Math.floor(Date.now() / 1000),
@@ -2714,7 +2714,7 @@ export default function MessagesView({ onBack, onOpenDeadDrop }: MessagesViewPro
   );
 
   const handleReply = useCallback((mail: MailItem) => {
-    if (!mail.senderId || mail.senderId === 'shadowbroker' || mail.senderId === 'system') {
+    if (!mail.senderId || mail.senderId === 'vincent_os' || mail.senderId === 'system') {
       return;
     }
     setDraft({
@@ -3013,7 +3013,7 @@ export default function MessagesView({ onBack, onOpenDeadDrop }: MessagesViewPro
                   )}
 
                   <div className="mt-6 flex flex-wrap gap-3">
-                    {selectedMessage.kind === 'mail' && selectedMessage.senderId !== 'shadowbroker' && (
+                    {selectedMessage.kind === 'mail' && selectedMessage.senderId !== 'vincent_os' && (
                       <button
                         onClick={() => handleReply(selectedMessage)}
                         className="px-4 py-2 border border-cyan-500/40 bg-cyan-950/20 text-cyan-300 text-xs tracking-[0.18em] uppercase flex items-center"

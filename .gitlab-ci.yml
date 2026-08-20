@@ -1,4 +1,4 @@
-# GitLab CI/CD for Shadowbroker
+# GitLab CI/CD for Vincent OS
 #
 # Mirror of .github/workflows/docker-publish.yml — keeps the GitLab install
 # path (image registry + source) at parity with GitHub so users who prefer
@@ -7,8 +7,8 @@
 # What this does on every push to main:
 #   1. Builds multi-arch (amd64 + arm64) Docker images for the backend and
 #      frontend, pushes them to the project's GitLab Container Registry:
-#        registry.gitlab.com/bigbodycobain/shadowbroker/backend:latest
-#        registry.gitlab.com/bigbodycobain/shadowbroker/frontend:latest
+#        registry.gitlab.com/bigbodycobain/vincent_os/backend:latest
+#        registry.gitlab.com/bigbodycobain/vincent_os/frontend:latest
 #      Both also get a :$CI_COMMIT_SHORT_SHA tag for traceability.
 #   2. Reverse-mirrors main back to GitHub (only if commits land directly
 #      on GitLab) so the two sources stay in sync.
@@ -23,10 +23,10 @@
 #   - The reverse mirror authenticates to GitHub via a per-repo SSH
 #     deploy key. The private half is stored as the File-type GitLab
 #     CI/CD variable GITHUB_MIRROR_SSH_KEY (Protected). The matching
-#     public key is added to github.com/BigBodyCobain/Shadowbroker/
+#     public key is added to github.com/BigBodyCobain/Vincent OS/
 #     settings/keys with write access. This is a tighter-scoped
 #     replacement for a personal access token: it can ONLY push to
-#     Shadowbroker, never expires, and rotating it is a one-click
+#     Vincent OS, never expires, and rotating it is a one-click
 #     delete on GitHub's deploy-keys page. If the variable isn't set,
 #     the mirror job is skipped — image builds still run.
 
@@ -106,7 +106,7 @@ build-frontend:
         - .gitlab-ci.yml
 
 # ── Reverse mirror to GitHub ─────────────────────────────────────────────
-# Pushes refs/heads/main to github.com/BigBodyCobain/Shadowbroker via SSH
+# Pushes refs/heads/main to github.com/BigBodyCobain/Vincent OS via SSH
 # using a per-repo deploy key. Fast-forward-only by default — if GitLab
 # main and GitHub main have diverged, the push fails loudly rather than
 # silently overwriting either side.
@@ -145,7 +145,7 @@ mirror-to-github:
     - cd repo
     - >
       git push
-      "git@github.com:BigBodyCobain/Shadowbroker.git"
+      "git@github.com:BigBodyCobain/Vincent OS.git"
       "${CI_COMMIT_SHA}:refs/heads/main"
   rules:
     - if: $CI_COMMIT_BRANCH == "main" && $GITHUB_MIRROR_SSH_KEY

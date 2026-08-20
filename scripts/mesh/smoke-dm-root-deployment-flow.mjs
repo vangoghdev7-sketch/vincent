@@ -4,7 +4,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 
 const HELP_TEXT = `
-ShadowBroker DM root deployment smoke
+Vincent OS DM root deployment smoke
 
 Usage:
   node scripts/mesh/smoke-dm-root-deployment-flow.mjs [--keep] [--workspace PATH] [--base-url URL] [--require-current-external]

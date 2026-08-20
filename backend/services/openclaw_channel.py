@@ -1,7 +1,7 @@
 """OpenClaw Bidirectional Command Channel.
 
 Provides an authenticated command channel between OpenClaw agents and
-ShadowBroker. Supports both directions:
+Vincent OS. Supports both directions:
 
   Agent → SB:  Commands (get_telemetry, place_pin, etc.)
   SB → Agent:  Tasks/alerts pushed by the operator
@@ -282,7 +282,7 @@ class TaskEntry:
 # ---------------------------------------------------------------------------
 
 class CommandChannel:
-    """Bidirectional command channel between OpenClaw agent and ShadowBroker."""
+    """Bidirectional command channel between OpenClaw agent and Vincent OS."""
 
     def __init__(self) -> None:
         self._lock = threading.RLock()

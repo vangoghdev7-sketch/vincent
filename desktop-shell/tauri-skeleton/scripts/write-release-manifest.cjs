@@ -11,7 +11,7 @@ const bundleDir = path.resolve(process.argv[2]);
 const tauriConfigPath = path.resolve(__dirname, '..', 'src-tauri', 'tauri.conf.json');
 const updateBaseUrl = (
   process.env.SHADOWBROKER_UPDATE_BASE_URL ||
-  'https://github.com/BigBodyCobain/Shadowbroker/releases/latest/download'
+  'https://github.com/BigBodyCobain/Vincent OS/releases/latest/download'
 ).replace(/\/+$/, '');
 
 const releaseSuffixes = [
@@ -114,7 +114,7 @@ function writeUpdaterManifest(files) {
 
   const latest = {
     version: readReleaseVersion(),
-    notes: `ShadowBroker ${readReleaseVersion()}`,
+    notes: `Vincent OS ${readReleaseVersion()}`,
     pub_date: new Date().toISOString(),
     platforms,
   };

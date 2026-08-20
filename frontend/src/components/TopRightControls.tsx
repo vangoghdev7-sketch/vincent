@@ -60,11 +60,11 @@ type UpdateStatus =
   | 'update_error'
   | 'docker_update';
 
-const DEFAULT_RELEASES_URL = 'https://github.com/BigBodyCobain/Shadowbroker/releases/latest';
+const DEFAULT_RELEASES_URL = 'https://github.com/BigBodyCobain/Vincent OS/releases/latest';
 const AUTO_UPDATE_DETAIL =
   'This runtime can use the backend-managed update path. Docker deployments will show pull instructions instead of modifying files in place.';
 const DESKTOP_UPDATER_DETAIL =
-  'This packaged desktop app can install the signed update in place. It will restart ShadowBroker after the installer finishes.';
+  'This packaged desktop app can install the signed update in place. It will restart Vincent after the installer finishes.';
 
 function packagedUpdateDetail(ownsLocalBackend: boolean): string {
   if (ownsLocalBackend) {
@@ -402,7 +402,7 @@ export default function TopRightControls({
       const desktopContext = await getDesktopUpdateContext();
       const runtime = classifyUpdateRuntime(desktopContext);
       const res = await fetch(
-        'https://api.github.com/repos/BigBodyCobain/Shadowbroker/releases/latest',
+        'https://api.github.com/repos/BigBodyCobain/Vincent OS/releases/latest',
       );
       if (!res.ok) throw new Error('Failed to fetch');
       const data = (await res.json()) as GitHubLatestRelease;
@@ -504,7 +504,7 @@ export default function TopRightControls({
             : '';
         setErrorMessage(
           message === 'desktop_update_installed_restart_required'
-            ? 'Update installed. Restart ShadowBroker to finish applying it.'
+            ? 'Update installed. Restart Vincent to finish applying it.'
             : message || 'Desktop updater failed. Use manual download if this keeps happening.',
         );
         setUpdateStatus('update_error');
@@ -1169,6 +1169,17 @@ export default function TopRightControls({
             {(dmCount ?? 0) > 9 ? '9+' : dmCount}
           </span>
         )}
+      </button>
+
+      {/* Vincent / Vincent OS — opens the AI router UI (:20128) */}
+      <button
+        type="button"
+        onClick={() => window.open('http://localhost:20128', '_blank', 'noopener,noreferrer')}
+        className={`relative ${btnBase}`}
+        title="Open Vincent"
+      >
+        <ExternalLink size={11} className="text-cyan-400" />
+        <span className="tracking-wider">{t('controls.vincent')}</span>
       </button>
 
       {/* ── Update Available → opens confirmation ── */}

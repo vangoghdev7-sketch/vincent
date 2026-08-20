@@ -1,12 +1,12 @@
 """Round 7a: per-install operator handle threads through every outbound
 third-party API call.
 
-Background: before this change every Shadowbroker install identified
+Background: before this change every Vincent OS install identified
 itself to Wikipedia, Wikidata, Nominatim, GDELT, OpenMHz, Broadcastify,
-weather.gov, NUFORC, etc. with a single project-wide ``Shadowbroker``
+weather.gov, NUFORC, etc. with a single project-wide ``Vincent OS``
 User-Agent. From the upstream's perspective, every install in the world
 looked like one giant scraper. If one install misbehaved, the upstream's
-only recourse was to block ``Shadowbroker`` as a whole, taking out every
+only recourse was to block ``Vincent OS`` as a whole, taking out every
 other install.
 
 Fix: each install gets a stable pseudonymous handle (auto-generated like
@@ -143,9 +143,9 @@ class TestOutboundUserAgentString:
         handle = isolated_handle.get_operator_handle()
         assert ua == f"{handle} (purpose: wikipedia)"
 
-    def test_no_shadowbroker_product_token(self, isolated_handle):
+    def test_no_vincent_os_product_token(self, isolated_handle):
         ua = isolated_handle.outbound_user_agent("nominatim")
-        assert "shadowbroker" not in ua.lower()
+        assert "vincent_os" not in ua.lower()
 
 
 # ---------------------------------------------------------------------------
@@ -217,7 +217,7 @@ class TestWikimediaCallsAreNowPerOperator:
 
 
 class TestNoMonsterUserAgentRemains:
-    """The audit's underlying concern was that every Shadowbroker install
+    """The audit's underlying concern was that every Vincent OS install
     looked like one entity. This test scans the codebase for the OLD
     aggregate identifier patterns and fails if a new one sneaks back in.
 
@@ -230,17 +230,17 @@ class TestNoMonsterUserAgentRemains:
     """
 
     BANNED_LITERALS = (
-        "Shadowbroker/",
-        "ShadowBroker-OSINT/1.0",
-        "ShadowBroker-OSINT/0.9",
-        "ShadowBroker-FeedIngester/1.0",
-        "ShadowBroker/0.9.79 local Shodan connector",
-        "ShadowBroker/0.9.79 Finnhub connector",
-        "ShadowBroker/0.9.8 local Shodan connector",
-        "ShadowBroker/0.9.8 Finnhub connector",
-        "ShadowBroker/0.9.82 local Shodan connector",
-        "ShadowBroker/0.9.82 Finnhub connector",
-        "Mozilla/5.0 (compatible; ShadowBroker CCTV proxy)",
+        "Vincent OS/",
+        "Vincent OS-OSINT/1.0",
+        "Vincent OS-OSINT/0.9",
+        "Vincent OS-FeedIngester/1.0",
+        "Vincent OS/0.9.79 local Shodan connector",
+        "Vincent OS/0.9.79 Finnhub connector",
+        "Vincent OS/0.9.8 local Shodan connector",
+        "Vincent OS/0.9.8 Finnhub connector",
+        "Vincent OS/0.9.82 local Shodan connector",
+        "Vincent OS/0.9.82 Finnhub connector",
+        "Mozilla/5.0 (compatible; Vincent OS CCTV proxy)",
     )
 
     def test_no_banned_aggregate_user_agent_strings(self):
@@ -272,7 +272,7 @@ class TestNoMonsterUserAgentRemains:
                                 offenders.append(f"{rel}:{i}: {stripped[:120]}")
         assert not offenders, (
             "Round 7a regression: the following lines reintroduced an "
-            "aggregate Shadowbroker User-Agent. Use "
+            "aggregate Vincent OS User-Agent. Use "
             "outbound_user_agent('purpose') instead so the per-install "
             "operator handle is embedded.\n"
             + "\n".join(offenders)

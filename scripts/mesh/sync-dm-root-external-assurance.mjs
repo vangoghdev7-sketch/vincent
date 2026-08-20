@@ -5,7 +5,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 
 const HELP_TEXT = `
-ShadowBroker DM root external assurance sync
+Vincent OS DM root external assurance sync
 
 Usage:
   node scripts/mesh/sync-dm-root-external-assurance.mjs [--base-url URL] [--witness-file PATH] [--publish-transparency]

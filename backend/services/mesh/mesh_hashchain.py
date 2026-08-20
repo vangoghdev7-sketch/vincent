@@ -1,6 +1,6 @@
 """Infonet — append-only signed event ledger for decentralized consensus.
 
-The Infonet is ShadowBroker's consensus protocol. Every action on the mesh
+The Infonet is Vincent OS's consensus protocol. Every action on the mesh
 (message, vote, gate creation, oracle prediction) becomes a chain event.
 Each event references the previous event's hash, creating an immutable
 ordered sequence. No mining, no proof-of-work — just cryptographic linking
@@ -1477,7 +1477,7 @@ class ChainEvent:
 
 
 class Infonet:
-    """The Infonet — ShadowBroker's append-only signed event ledger.
+    """The Infonet — Vincent OS's append-only signed event ledger.
 
     The Infonet is the single source of truth. All actions go through here.
     The reputation ledger, gates, and oracle are computed views of Infonet state.

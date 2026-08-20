@@ -3,8 +3,8 @@
 # gitlab.com.
 #
 # Usage:
-#   helm install shadowbroker ./helm/chart \
-#     --create-namespace --namespace shadowbroker \
+#   helm install vincent_os ./helm/chart \
+#     --create-namespace --namespace vincent_os \
 #     -f helm/chart/values.yaml \
 #     -f helm/chart/values-gitlab.yaml
 #
@@ -12,19 +12,19 @@
 #   - .github/workflows/docker-publish.yml  → ghcr.io                  (default)
 #   - .gitlab-ci.yml                        → registry.gitlab.com      (this file)
 
-shadowbroker:
+vincent_os:
   controllers:
 
     backend:
       containers:
         main:
           image:
-            repository: registry.gitlab.com/bigbodycobain/shadowbroker/backend
+            repository: registry.gitlab.com/bigbodycobain/vincent_os/backend
             tag: latest
 
     frontend:
       containers:
         main:
           image:
-            repository: registry.gitlab.com/bigbodycobain/shadowbroker/frontend
+            repository: registry.gitlab.com/bigbodycobain/vincent_os/frontend
             tag: latest

@@ -96,7 +96,7 @@ function ShellIntro({ onAcknowledge }: { onAcknowledge: () => void }) {
 
         <p className="mt-3 text-[13px] font-mono text-[var(--text-secondary)] leading-[1.75] text-left">
 
-          The session opens in your Shadowbroker workspace by default. Use it for repo scripts, mesh
+          The session opens in your Vincent workspace by default. Use it for repo scripts, mesh
 
           tools, or any terminal workflow you already rely on.
 

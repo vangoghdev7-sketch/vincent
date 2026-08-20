@@ -1,5 +1,5 @@
-"""ShadowBroker OpenClaw skill package."""
+"""Vincent OS OpenClaw skill package."""
 from .sb_signatures import sig
-from .sb_query import ShadowBrokerClient
+from .sb_query import Vincent OSClient
 
-__all__ = ["sig", "ShadowBrokerClient"]
+__all__ = ["sig", "Vincent OSClient"]

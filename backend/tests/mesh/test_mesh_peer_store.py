@@ -102,7 +102,7 @@ def test_upsert_explicit_seed_clears_stale_cooldown(tmp_path):
     store = PeerStore(tmp_path / "peer_store.json")
     store.upsert(
         make_sync_peer_record(
-            peer_url="https://node.shadowbroker.info",
+            peer_url="https://node.vincent_os.info",
             transport="clearnet",
             role="seed",
             source="bundle",
@@ -110,7 +110,7 @@ def test_upsert_explicit_seed_clears_stale_cooldown(tmp_path):
         )
     )
     failed = store.mark_failure(
-        "https://node.shadowbroker.info",
+        "https://node.vincent_os.info",
         "sync",
         error="timed out",
         cooldown_s=120,
@@ -120,7 +120,7 @@ def test_upsert_explicit_seed_clears_stale_cooldown(tmp_path):
 
     refreshed = store.upsert(
         make_sync_peer_record(
-            peer_url="https://node.shadowbroker.info",
+            peer_url="https://node.vincent_os.info",
             transport="clearnet",
             role="seed",
             source="bundle",

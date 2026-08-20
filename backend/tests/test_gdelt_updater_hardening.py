@@ -50,7 +50,7 @@ class TestGdeltArticleUrlSafety:
 
 class TestUpdaterHardening:
     def test_validate_update_url_allows_github_codeload(self):
-        url = "https://codeload.github.com/BigBodyCobain/Shadowbroker/zip/refs/tags/v1.2.3"
+        url = "https://codeload.github.com/BigBodyCobain/Vincent OS/zip/refs/tags/v1.2.3"
 
         assert updater._validate_update_url(url) == url
 
@@ -79,9 +79,9 @@ class TestUpdaterHardening:
         assert "update exploded" in result["message"]
 
     def test_perform_update_surfaces_release_metadata(self, monkeypatch, tmp_path):
-        release_url = "https://github.com/BigBodyCobain/Shadowbroker/releases/tag/v1.2.3"
+        release_url = "https://github.com/BigBodyCobain/Vincent OS/releases/tag/v1.2.3"
         download_url = (
-            "https://api.github.com/repos/BigBodyCobain/Shadowbroker/zipball/v1.2.3"
+            "https://api.github.com/repos/BigBodyCobain/Vincent OS/zipball/v1.2.3"
         )
         backup_path = tmp_path / "backup.zip"
 
@@ -108,9 +108,9 @@ class TestUpdaterHardening:
         assert result["download_url"] == download_url
 
     def test_perform_update_returns_manual_for_non_source_runtime(self, monkeypatch, tmp_path):
-        release_url = "https://github.com/BigBodyCobain/Shadowbroker/releases/tag/v1.2.3"
+        release_url = "https://github.com/BigBodyCobain/Vincent OS/releases/tag/v1.2.3"
         download_url = (
-            "https://api.github.com/repos/BigBodyCobain/Shadowbroker/zipball/v1.2.3"
+            "https://api.github.com/repos/BigBodyCobain/Vincent OS/zipball/v1.2.3"
         )
 
         monkeypatch.setattr(

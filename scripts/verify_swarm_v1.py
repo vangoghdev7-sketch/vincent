@@ -31,7 +31,7 @@ def http_json(method: str, path: str, body: dict | None = None, *, timeout: int 
 
 def docker_python(code: str) -> str:
     proc = subprocess.run(
-        ["docker", "exec", "shadowbroker-backend", "python", "-c", code],
+        ["docker", "exec", "vincent_os-backend", "python", "-c", code],
         capture_output=True,
         text=True,
         timeout=300,

@@ -17,7 +17,7 @@ ALLOWED_TYPES = frozenset({"aircraft", "vessel", "company", "person", "ip", "cou
 _WD_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
 _WD_LOCK = threading.Lock()
 _WD_TTL = 24 * 60 * 60
-_WD_UA = "Shadowbroker-Intel/1.0 (ontology engine)"
+_WD_UA = "Vincent OS-Intel/1.0 (ontology engine)"
 
 
 def _dedup(nodes: list[dict], links: list[dict]) -> dict[str, Any]:

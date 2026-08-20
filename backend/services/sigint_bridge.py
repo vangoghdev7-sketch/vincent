@@ -289,7 +289,7 @@ class APRSBridge:
     HOST = "rotate.aprs2.net"
     PORT = 14580
     # Read-only login (no callsign needed for receive-only)
-    LOGIN = "user N0CALL pass -1 vers ShadowBroker 1.0 filter r/0/0/25000\r\n"
+    LOGIN = "user N0CALL pass -1 vers Vincent OS 1.0 filter r/0/0/25000\r\n"
     CONFIDENCE = 0.7
 
     def __init__(self):
@@ -518,10 +518,10 @@ class MeshtasticBridge:
 
         The public Meshtastic broker will drop an existing MQTT session when a
         second client connects with the same id. Using a fixed id made separate
-        ShadowBroker instances kick each other off the broker.
+        Vincent OS instances kick each other off the broker.
 
         This is deliberately not tied to the user's public mesh address or
-        ShadowBroker node identity; it is only an MQTT session handle.
+        Vincent OS node identity; it is only an MQTT session handle.
         """
         suffix = uuid.uuid4().hex[:8]
         return f"meshchat-{suffix}"
@@ -1400,7 +1400,7 @@ def send_aprs_message(callsign: str, passcode: str, target: str, message: str) -
 
     server = "rotate.aprs2.net"
     port = 14580
-    login = f"user {callsign} pass {passcode} vers ShadowBroker 1.0\r\n"
+    login = f"user {callsign} pass {passcode} vers Vincent OS 1.0\r\n"
     # APRS message format: SENDER>APRS,TCPIP*::TARGET   :MESSAGE
     # Target must be exactly 9 chars (padded with spaces)
     packet = f"{callsign}>APRS,TCPIP*::{target.ljust(9)}:{message}\r\n"

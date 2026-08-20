@@ -1,8 +1,8 @@
 {
-  "name": "@shadowbroker/desktop-shell",
+  "name": "@vincent_os/desktop-shell",
   "version": "0.9.84",
   "private": true,
-  "description": "ShadowBroker desktop shell packaging, runtime bridge, and release tooling",
+  "description": "Vincent OS desktop shell packaging, runtime bridge, and release tooling",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build:desktop": "node ./scripts/run-desktop-build.cjs",

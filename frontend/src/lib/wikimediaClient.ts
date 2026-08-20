@@ -91,7 +91,7 @@ export async function fetchWikidataSparql<T = Record<string, { value: string }>>
 /** @deprecated Browser no longer builds Wikimedia UA; kept for tests that import it. */
 export async function buildWikimediaUserAgent(purpose: string): Promise<string> {
   void purpose;
-  return 'Shadowbroker/1.0 (backend-proxied; purpose: wikimedia)';
+  return 'Vincent OS/1.0 (backend-proxied; purpose: wikimedia)';
 }
 
 export function _resetWikimediaClientCacheForTests() {

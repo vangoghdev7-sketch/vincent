@@ -209,7 +209,7 @@ def get_entity_trail(
             "datalink_hints": [],
             "notes": [
                 "No matching aircraft or vessel in live layers.",
-                "Trails accumulate while ShadowBroker is running; they are not pre-flight history.",
+                "Trails accumulate while Vincent is running; they are not pre-flight history.",
             ],
         }
 
@@ -251,7 +251,7 @@ def get_entity_trail(
         )
 
     notes = [
-        "Trail points are observed positions since this ShadowBroker instance started tracking the entity.",
+        "Trail points are observed positions since this Vincent instance started tracking the entity.",
         "Use Time Machine snapshots for longer historical playback when enabled.",
     ]
     if not trail:

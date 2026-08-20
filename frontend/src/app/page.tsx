@@ -578,10 +578,10 @@ export default function Dashboard() {
             >
               <div className="w-8 h-8 flex items-center justify-center">
                 {/* Target Reticle Icon */}
-                <div className="w-6 h-6 rounded-full border border-cyan-500 relative flex items-center justify-center">
-                  <div className="w-4 h-4 rounded-full bg-cyan-500/30"></div>
-                  <div className="absolute top-[-2px] bottom-[-2px] w-[1px] bg-cyan-500"></div>
-                  <div className="absolute left-[-2px] right-[-2px] h-[1px] bg-cyan-500"></div>
+                <div className="w-6 h-6 rounded-full border border-amber-400 relative flex items-center justify-center">
+                  <div className="w-4 h-4 rounded-full bg-amber-400/30"></div>
+                  <div className="absolute top-[-2px] bottom-[-2px] w-[1px] bg-amber-400"></div>
+                  <div className="absolute left-[-2px] right-[-2px] h-[1px] bg-amber-400"></div>
                 </div>
               </div>
               <div className="flex flex-col">
@@ -589,7 +589,7 @@ export default function Dashboard() {
                   className="text-2xl font-bold tracking-[0.4em] text-[var(--text-primary)] flex items-center gap-3 text-glow"
                   style={{ fontFamily: 'var(--font-roboto-mono), monospace' }}
                 >
-                  S H A D O W <span className="text-cyan-400">B R O K E R</span>
+                  V I N C E N T <span className="text-amber-400">OSINT</span>
                 </h1>
                 <span className="text-[11px] text-[var(--text-muted)] font-mono tracking-[0.3em] mt-1 ml-1">
                   {t('brand.subtitle')}

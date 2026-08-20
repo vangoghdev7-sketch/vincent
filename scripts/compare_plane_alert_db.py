@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare plane-alert-db CSVs to Shadowbroker tracked_names.json."""
+"""Compare plane-alert-db CSVs to Vincent OS tracked_names.json."""
 from __future__ import annotations
 
 import csv
@@ -111,11 +111,11 @@ def main() -> None:
         }
         new_by_cat.setdefault(cat, []).append(entry)
 
-    print("=== Shadowbroker tracked ===")
+    print("=== Vincent OS tracked ===")
     print(f"  names in details: {len(sb_names)}")
     print(f"  registrations: {len(sb_regs)}")
     print()
-    print("=== NEW celebrity/VIP-ish entries (not in Shadowbroker) ===")
+    print("=== NEW celebrity/VIP-ish entries (not in Vincent OS) ===")
 
     total = 0
     for cat in sorted(new_by_cat, key=lambda c: -len(new_by_cat[c])):

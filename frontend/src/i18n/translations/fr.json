@@ -19,6 +19,7 @@
     "checkFailed": "VÉRIFICATION ÉCHOUÉE",
     "node": "NŒUD",
     "terminal": "TERMINAL",
+    "vincent": "VINCENT",
     "coordinates": "COORDONNÉES",
     "location": "LOCALISATION",
     "style": "STYLE",
@@ -127,7 +128,7 @@
     "close": "Fermer"
   },
   "onboarding": {
-    "welcome": "Bienvenue dans ShadowBroker",
+    "welcome": "Bienvenue dans Vincent",
     "getStarted": "Commencer"
   },
   "news": {
@@ -216,7 +217,7 @@
   },
   "gtLean": {
     "title": "Activer l'OSINT dérivé sur un nœud limité ?",
-    "message": "Shadowbroker a détecté une limite de 1 vCPU. La couche carte peut s'afficher, mais activer le moteur backend peut ralentir les flux OSINT.",
+    "message": "Vincent a détecté une limite de 1 vCPU. La couche carte peut s'afficher, mais activer le moteur backend peut ralentir les flux OSINT.",
     "confirm": "Activer la couche",
     "cancel": "Annuler"
   },
@@ -308,7 +309,7 @@
     "results": "résultats"
   },
   "ai": {
-    "title": "Panneau d'infos IA",
+    "title": "Renseignement Vincent",
     "connected": "Connecté",
     "disconnected": "Déconnecté"
   },
@@ -342,7 +343,7 @@
     "coherence": "Changement de cohérence"
   },
   "telegram": {
-    "disclaimer": "AVERTISSEMENT : le contenu ci-dessous provient de canaux Telegram publics. Shadowbroker ne l'héberge pas, ne le vérifie pas et ne le cautionne pas. Vous le consultez à vos risques et cela n'a aucun lien avec Shadowbroker.",
+    "disclaimer": "AVERTISSEMENT : le contenu ci-dessous provient de canaux Telegram publics. Vincent ne l'héberge pas, ne le vérifie pas et ne le cautionne pas. Vous le consultez à vos risques et cela n'a aucun lien avec Vincent.",
     "loadMedia": "AFFICHER LE MÉDIA (TELEGRAM)",
     "openOriginal": "OUVRIR SUR TELEGRAM →",
     "embedTitle": "Intégration Telegram",

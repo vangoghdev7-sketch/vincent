@@ -15,7 +15,7 @@ from services.openclaw_routing import (
 def test_routing_manifest_has_agent_surface():
     manifest = routing_manifest()
     assert manifest["preferred_entry"] == "route_query"
-    assert manifest["client_wrapper"] == "ShadowBrokerClient.ask"
+    assert manifest["client_wrapper"] == "Vincent OSClient.ask"
     assert "search_telemetry" in manifest["expensive_commands"]
     assert "hot_snapshot" in manifest["playbooks"]
 

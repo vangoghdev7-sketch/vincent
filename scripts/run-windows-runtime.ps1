@@ -3,12 +3,12 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Host.UI.RawUI.WindowTitle = "ShadowBroker Runtime"
+$Host.UI.RawUI.WindowTitle = "Vincent OS Runtime"
 
 Set-Location -LiteralPath $Root
 
 Write-Host "==================================================="
-Write-Host "  ShadowBroker runtime"
+Write-Host "  Vincent OS runtime"
 Write-Host "  Dashboard: http://localhost:3000"
 Write-Host "  Close this window or press Ctrl+C to stop."
 Write-Host "==================================================="
@@ -25,7 +25,7 @@ try {
 
 Write-Host ""
 Write-Host "==================================================="
-Write-Host "  ShadowBroker has stopped. Exit code: $exitCode"
+Write-Host "  Vincent OS has stopped. Exit code: $exitCode"
 Write-Host "==================================================="
 Read-Host "Press Enter to close"
 exit $exitCode

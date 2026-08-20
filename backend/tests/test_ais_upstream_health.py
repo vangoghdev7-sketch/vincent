@@ -141,7 +141,7 @@ class TestHealthEndpointEscalation:
 
     def test_health_reports_aishub_configured_flag(self, client, monkeypatch):
         _reset_ais_module()
-        monkeypatch.setenv("AISHUB_USERNAME", "shadowbroker-test")
+        monkeypatch.setenv("AISHUB_USERNAME", "vincent_os-test")
         res = client.get("/api/health")
         assert res.status_code == 200
         assert res.json()["ais_proxy"]["aishub_configured"] is True

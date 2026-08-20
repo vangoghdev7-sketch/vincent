@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from '@/lib/motion';
 import { X, ExternalLink, Radar, Check, Zap, Globe } from 'lucide-react';
 import { API_BASE } from '@/lib/api';
 
-export const SAR_CHOICE_KEY = 'shadowbroker_sar_mode_choice';
+export const SAR_CHOICE_KEY = 'vincent_os_sar_mode_choice';
 export type SarChoice = 'a_only' | 'b_active' | null;
 
 interface SarModeChooserModalProps {
@@ -212,7 +212,7 @@ const SarModeChooserModal = React.memo(function SarModeChooserModal({
             <div className="p-5 space-y-5">
               <div className="text-sm text-cyan-200/90">
                 SAR (synthetic aperture radar) detects ground changes through cloud
-                cover, at night, anywhere on Earth. ShadowBroker offers two modes —
+                cover, at night, anywhere on Earth. Vincent offers two modes —
                 both free. Pick one.
               </div>
 

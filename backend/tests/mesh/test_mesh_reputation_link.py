@@ -140,7 +140,7 @@ def test_reputation_vote_direction_can_change_without_creating_duplicates(tmp_pa
 
 def test_reputation_vote_rotation_preserves_duplicate_detection(tmp_path, monkeypatch):
     _configure_reputation_storage(tmp_path, monkeypatch)
-    monkeypatch.setenv("MESH_PEER_PUSH_SECRET", "shadowbroker-peer-secret-rotation-test")
+    monkeypatch.setenv("MESH_PEER_PUSH_SECRET", "vincent_os-peer-secret-rotation-test")
     monkeypatch.setenv("MESH_VOTER_BLIND_SALT_ROTATE_DAYS", "30")
     monkeypatch.setenv("MESH_VOTER_BLIND_SALT_GRACE_DAYS", "30")
     _reset_reputation_vote_salt_state(monkeypatch)
@@ -167,7 +167,7 @@ def test_reputation_vote_rotation_preserves_duplicate_detection(tmp_path, monkey
 
 def test_reputation_vote_rotation_keeps_wallet_costs_visible_across_history(tmp_path, monkeypatch):
     _configure_reputation_storage(tmp_path, monkeypatch)
-    monkeypatch.setenv("MESH_PEER_PUSH_SECRET", "shadowbroker-peer-secret-wallet-test")
+    monkeypatch.setenv("MESH_PEER_PUSH_SECRET", "vincent_os-peer-secret-wallet-test")
     monkeypatch.setenv("MESH_VOTER_BLIND_SALT_ROTATE_DAYS", "30")
     monkeypatch.setenv("MESH_VOTER_BLIND_SALT_GRACE_DAYS", "30")
     _reset_reputation_vote_salt_state(monkeypatch)

@@ -1,13 +1,13 @@
 ---
 apiVersion: v2
-name: shadowbroker
+name: vincent_os
 version: 0.9.82
 appVersion: "0.9.82"
-description: simple shadowbroker installation
+description: simple vincent_os installation
 type: application
 
 dependencies:
   - name: app-template
-    alias: shadowbroker
+    alias: vincent_os
     version: ~4
     repository: https://bjw-s-labs.github.io/helm-charts/

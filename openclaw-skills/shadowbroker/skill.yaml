@@ -1,11 +1,11 @@
-name: shadowbroker
+name: vincent_os
 description: >-
-  ShadowBroker OSINT intelligence co-pilot.
+  Vincent OS OSINT intelligence co-pilot.
   Provides autonomous monitoring, map pinning, satellite imagery,
   news aggregation, proximity alerts, and full Wormhole/InfoNet participation.
 
 version: 1.0.0
-author: ShadowBroker AI Module
+author: Vincent OS AI Module
 
 # Heartbeat configuration — how often the autonomous monitor runs
 heartbeat:
@@ -15,7 +15,7 @@ heartbeat:
 
 # Skill entry points
 entry_points:
-  query: sb_query.ShadowBrokerClient
+  query: sb_query.Vincent OSClient
   signatures: sb_signatures
   briefing: sb_briefing
   monitor: sb_monitor
@@ -27,21 +27,21 @@ requirements:
 # Thin agent surface — expose only these to the LLM tool picker
 agent_surface:
   primary_reads:
-    - sb_query.ShadowBrokerClient.ask
-    - sb_query.ShadowBrokerClient.run_playbook
-    - sb_query.ShadowBrokerClient.send_batch
-    - sb_query.ShadowBrokerClient.channel_status
-    - sb_query.ShadowBrokerClient.infonet_status
-    - sb_query.ShadowBrokerClient.list_gates
-    - sb_query.ShadowBrokerClient.read_gate_messages
-    - sb_query.ShadowBrokerClient.poll_dms
+    - sb_query.Vincent OSClient.ask
+    - sb_query.Vincent OSClient.run_playbook
+    - sb_query.Vincent OSClient.send_batch
+    - sb_query.Vincent OSClient.channel_status
+    - sb_query.Vincent OSClient.infonet_status
+    - sb_query.Vincent OSClient.list_gates
+    - sb_query.Vincent OSClient.read_gate_messages
+    - sb_query.Vincent OSClient.poll_dms
   writes:
-    - sb_query.ShadowBrokerClient.place_pin
-    - sb_query.ShadowBrokerClient.place_pins_batch
-    - sb_query.ShadowBrokerClient.ensure_infonet_ready
-    - sb_query.ShadowBrokerClient.post_to_gate
-    - sb_query.ShadowBrokerClient.cast_vote
-    - sb_query.ShadowBrokerClient.send_encrypted_dm
+    - sb_query.Vincent OSClient.place_pin
+    - sb_query.Vincent OSClient.place_pins_batch
+    - sb_query.Vincent OSClient.ensure_infonet_ready
+    - sb_query.Vincent OSClient.post_to_gate
+    - sb_query.Vincent OSClient.cast_vote
+    - sb_query.Vincent OSClient.send_encrypted_dm
   blocked_without_confirm:
     - search_telemetry
     - get_telemetry
@@ -54,7 +54,7 @@ capabilities:
   - pin_placement           # Place custom pins on the map
   - satellite_imagery       # On-demand Sentinel-2 satellite photos
   - news_aggregation        # GDELT + news by location
-  - data_injection          # Inject data into native ShadowBroker layers
+  - data_injection          # Inject data into native Vincent OS layers
   - proximity_monitoring    # "Near Me" radius-based telemetry
   - anomaly_detection       # Spike detection, new entity tracking
   - geofencing              # Trip-wire zones with instant alerts

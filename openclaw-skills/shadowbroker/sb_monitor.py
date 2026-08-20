@@ -1,7 +1,7 @@
-"""ShadowBroker autonomous monitoring agent — heartbeat & anomaly detection.
+"""Vincent OS autonomous monitoring agent — heartbeat & anomaly detection.
 
 Runs on OpenClaw's scheduling system. On each heartbeat:
-  1. Pull telemetry from ShadowBroker
+  1. Pull telemetry from Vincent OS
   2. Run anomaly detection (new military activity, geofence breaches, etc.)
   3. Take time-machine snapshots at configured intervals
   4. Send alerts via the configured channel (Discord, Telegram, etc.)
@@ -626,7 +626,7 @@ def add_custom_feed(
     Args:
         name: Display name for the feed
         url: URL to poll (RSS, JSON API, etc.)
-        target_layer: ShadowBroker layer to inject into (cctv, ships, news, etc.)
+        target_layer: Vincent OS layer to inject into (cctv, ships, news, etc.)
         poll_minutes: How often to poll (default 15 min)
         feed_type: "rss", "json", or "auto" (auto-detect)
         transform: JSONPath-like selector for the data array inside JSON responses
@@ -707,7 +707,7 @@ async def _fetch_feed(feed: CustomFeed) -> list[dict]:
 
     async with httpx.AsyncClient(timeout=15) as client:
         resp = await client.get(feed.url, headers={
-            "User-Agent": "ShadowBroker-OSINT/1.0 (custom-feed)",
+            "User-Agent": "Vincent OS-OSINT/1.0 (custom-feed)",
         })
         resp.raise_for_status()
         content_type = resp.headers.get("content-type", "")

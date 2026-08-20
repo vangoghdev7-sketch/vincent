@@ -2789,7 +2789,7 @@ function SentinelTab({ onGoToApiKeys }: { onGoToApiKeys: () => void }) {
                 {' '}&rarr; <span className="text-white">User Settings</span>
                 {' '}&rarr; <span className="text-white">OAuth clients</span> tab &rarr;{' '}
                 click <span className="text-cyan-400">&quot;+ Create new&quot;</span>.
-                Give it any name (e.g. &quot;ShadowBroker&quot;). Copy the{' '}
+                Give it any name (e.g. &quot;Vincent&quot;). Copy the{' '}
                 <span className="text-white">Client ID</span> and{' '}
                 <span className="text-white">Client Secret</span> it shows you.
               </p>

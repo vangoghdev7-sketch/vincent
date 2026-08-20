@@ -17,7 +17,7 @@ import urllib.request
 
 IMAGE = os.environ.get(
     "SWARM_FRESH_IMAGE",
-    "ghcr.io/bigbodycobain/shadowbroker-backend:latest",
+    "ghcr.io/bigbodycobain/vincent_os-backend:latest",
 )
 CONTAINER = os.environ.get("SWARM_FRESH_CONTAINER", "swarm-fresh-smoke")
 VOLUME = os.environ.get("SWARM_FRESH_VOLUME", "swarm_fresh_smoke_data")

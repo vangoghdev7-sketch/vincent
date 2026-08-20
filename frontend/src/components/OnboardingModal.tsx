@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from '@/lib/motion';
 import { X, ExternalLink, Key, Shield, Radar, Globe, Satellite, Ship, Radio, Bot, Copy, Check, Network } from 'lucide-react';
 
 const CURRENT_ONBOARDING_VERSION = '0.9.81-agentic-onboarding-1';
-const STORAGE_KEY = `shadowbroker_onboarding_complete_v${CURRENT_ONBOARDING_VERSION}`;
-const LEGACY_STORAGE_KEY = 'shadowbroker_onboarding_complete';
+const STORAGE_KEY = `vincent_os_onboarding_complete_v${CURRENT_ONBOARDING_VERSION}`;
+const LEGACY_STORAGE_KEY = 'vincent_os_onboarding_complete';
 
 const API_GUIDES = [
   {
@@ -165,7 +165,7 @@ const OnboardingModal = React.memo(function OnboardingModal({
 
   const agentSnippet = [
     `SHADOWBROKER_URL=${agentEndpoint}`,
-    agentSecret ? `SHADOWBROKER_HMAC_SECRET=${agentSecret}` : 'SHADOWBROKER_HMAC_SECRET=<generate in ShadowBroker>',
+    agentSecret ? `SHADOWBROKER_HMAC_SECRET=${agentSecret}` : 'SHADOWBROKER_HMAC_SECRET=<generate in Vincent>',
     `SHADOWBROKER_ACCESS=${agentTier}`,
     '',
     '# FIRST: load available tools',
@@ -274,7 +274,7 @@ const OnboardingModal = React.memo(function OnboardingModal({
       setTorAddress(data.onion_address);
       setAgentMsg({
         type: 'ok',
-        text: 'Tor is ready. The remote agent link is private to your local ShadowBroker node.',
+        text: 'Tor is ready. The remote agent link is private to your local Vincent node.',
       });
     } catch (error) {
       setAgentMsg({
@@ -282,7 +282,7 @@ const OnboardingModal = React.memo(function OnboardingModal({
         text:
           error instanceof Error
             ? error.message
-            : 'ShadowBroker could not install or start Tor automatically. Check network access and try again.',
+            : 'Vincent could not install or start Tor automatically. Check network access and try again.',
       });
     } finally {
       setTorStarting(false);
@@ -450,7 +450,7 @@ const OnboardingModal = React.memo(function OnboardingModal({
                         Local
                       </p>
                       <p className="text-[10px] text-[var(--text-muted)] font-mono mt-1">
-                        Same machine as ShadowBroker
+                        Same machine as Vincent
                       </p>
                     </button>
                     <button
@@ -536,7 +536,7 @@ const OnboardingModal = React.memo(function OnboardingModal({
                             TOR REQUIRED FOR REMOTE AGENTS
                           </p>
                           <p className="text-[10px] text-[var(--text-muted)] font-mono mt-1 leading-relaxed">
-                            ShadowBroker will install or use Tor locally, then create a private .onion link for this backend.
+                            Vincent will install or use Tor locally, then create a private .onion link for this backend.
                           </p>
                         </div>
                         <button
@@ -592,7 +592,7 @@ const OnboardingModal = React.memo(function OnboardingModal({
                         START HERE
                       </p>
                       <p className="text-sm text-[var(--text-secondary)] font-mono leading-relaxed">
-                        OpenSky Network and AIS Stream are the free keys that make ShadowBroker
+                        OpenSky Network and AIS Stream are the free keys that make Vincent
                         useful immediately: live aircraft and vessel tracking. Optionally add an
                         AISHub username as a slow ships-layer backup when AISStream is silent.
                         Global Fishing Watch unlocks the fishing-activity layer. Paste them below
@@ -608,7 +608,7 @@ const OnboardingModal = React.memo(function OnboardingModal({
                       QUICK LOCAL SETUP
                     </p>
                     <p className="text-sm text-[var(--text-secondary)] font-mono leading-relaxed mt-1">
-                      Paste keys here once. ShadowBroker stores them server-side only and never
+                      Paste keys here once. Vincent stores them server-side only and never
                       displays the secret back in the browser.
                     </p>
                   </div>

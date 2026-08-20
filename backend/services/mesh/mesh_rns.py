@@ -32,8 +32,8 @@ logger = logging.getLogger("services.mesh_rns")
 # this prefix so real DM collection (which uses agent-derived keys) never
 # surfaces cover entries.
 _COVER_MAILBOX_PREFIX = "__cover_synthetic__:"
-_RNS_COVER_AUTH_INFO = b"shadowbroker|rns-cover-auth|v1"
-_RNS_COVER_AUTH_SALT = b"shadowbroker/rns-cover-auth/v1"
+_RNS_COVER_AUTH_INFO = b"vincent_os|rns-cover-auth|v1"
+_RNS_COVER_AUTH_SALT = b"vincent_os/rns-cover-auth/v1"
 _RNS_COVER_AUTH_NONCE_BYTES = 16
 _RNS_COVER_AUTH_MAC_BYTES = 32
 _RNS_COVER_AUTH_BLOCK_BYTES = 1 + 1 + 8 + _RNS_COVER_AUTH_NONCE_BYTES + _RNS_COVER_AUTH_MAC_BYTES

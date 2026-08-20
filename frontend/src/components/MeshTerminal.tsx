@@ -552,7 +552,7 @@ const GUIDE_TEXT: TermLine[] = [
   { text: '', type: 'dim' },
   { text: '  HOW THIS WORKS', type: 'header' },
   { text: '', type: 'dim' },
-  { text: '  ShadowBroker is a decentralized intelligence network.', type: 'dim' },
+  { text: '  Vincent is a decentralized intelligence network.', type: 'dim' },
   { text: '  It connects to live radio networks (APRS, Meshtastic, JS8Call)', type: 'dim' },
   { text: '  and runs the Infonet — a protocol where every action is', type: 'dim' },
   { text: '  signed, public, and reputation-scored.', type: 'dim' },
@@ -1138,7 +1138,7 @@ export default function MeshTerminal({ isOpen, launchToken = 0, onClose, onDmCou
           { text: '    APRS-IS      Amateur radio operators worldwide', type: 'output' as const },
           { text: '    Meshtastic   LoRa mesh network (off-grid comms)', type: 'output' as const },
           { text: '    JS8Call      HF weak-signal digital mode', type: 'output' as const },
-          { text: '    Infonet      ShadowBroker decentralized protocol', type: 'system' as const },
+          { text: '    Infonet      Vincent decentralized protocol', type: 'system' as const },
           { text: '', type: 'dim' as const },
         );
 

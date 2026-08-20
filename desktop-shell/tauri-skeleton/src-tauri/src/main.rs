@@ -404,7 +404,7 @@ fn main() {
                         }
                         Err(e) => {
                             return Err(format!(
-                                "ShadowBroker cannot start: the bundled local backend failed to launch.\n\n\
+                                "Vincent OS cannot start: the bundled local backend failed to launch.\n\n\
                                  This packaged desktop build now owns its backend runtime and cannot fall back \
                                  to an external service silently.\n\n\
                                  Technical detail: {e}"
@@ -414,7 +414,7 @@ fn main() {
                     }
                 } else if packaged_frontend_present {
                     return Err(
-                        "ShadowBroker cannot start: this packaged build is missing the bundled backend runtime."
+                        "Vincent OS cannot start: this packaged build is missing the bundled backend runtime."
                             .into(),
                     );
                 } else {
@@ -480,7 +480,7 @@ fn main() {
                         // path and the app is non-functional. Fail honestly
                         // rather than presenting a silently broken UI.
                         return Err(format!(
-                            "ShadowBroker cannot start: the packaged loopback server failed to bind.\n\n\
+                            "Vincent OS cannot start: the packaged loopback server failed to bind.\n\n\
                              This usually means another process is using all available loopback ports, \
                              or a firewall is blocking localhost listeners.\n\n\
                              Technical detail: {e}"
@@ -531,7 +531,7 @@ fn main() {
                 };
 
             WebviewWindowBuilder::new(app, "main", main_url)
-                .title("ShadowBroker")
+                .title("Vincent OS")
                 .inner_size(1600.0, 1000.0)
                 .resizable(true)
                 .initialization_script(DESKTOP_INIT_SCRIPT)
@@ -540,7 +540,7 @@ fn main() {
             Ok(())
         })
         .build(tauri::generate_context!())
-        .expect("failed to build shadowbroker tauri shell")
+        .expect("failed to build vincent_os tauri shell")
         .run(|app, event| {
             // macOS dock-icon reopen: restore/focus the main window when
             // the user clicks the dock icon while the app is hidden in the

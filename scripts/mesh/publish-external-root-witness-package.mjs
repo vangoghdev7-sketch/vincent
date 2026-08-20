@@ -15,7 +15,7 @@ const EXTERNAL_WITNESS_IDENTITY_TYPE = 'stable_dm_root_manifest_external_witness
 const ROOT_DISTRIBUTION_PATH = '/api/wormhole/dm/root-distribution';
 
 const HELP_TEXT = `
-ShadowBroker external root witness package publisher
+Vincent OS external root witness package publisher
 
 Usage:
   node scripts/mesh/publish-external-root-witness-package.mjs --init-witness PATH

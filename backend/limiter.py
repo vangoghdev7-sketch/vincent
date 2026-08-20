@@ -77,7 +77,7 @@ def _is_trusted_frontend_peer(host: str) -> bool:
     return host in trusted_ips
 
 
-def shadowbroker_rate_limit_key(request: Any) -> str:
+def vincent_os_rate_limit_key(request: Any) -> str:
     """slowapi key_func that is proxy-aware on trusted frontend peers only.
 
     Behaviour matrix:
@@ -105,4 +105,4 @@ def shadowbroker_rate_limit_key(request: Any) -> str:
     return get_remote_address(request)
 
 
-limiter = Limiter(key_func=shadowbroker_rate_limit_key)
+limiter = Limiter(key_func=vincent_os_rate_limit_key)

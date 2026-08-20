@@ -1,10 +1,10 @@
 # Data Attribution & Licensing
 
-ShadowBroker aggregates publicly available data from many third-party sources.
+Vincent aggregates publicly available data from many third-party sources.
 This file documents each source and its license so operators and users can
 comply with the terms under which we access that data.
 
-ShadowBroker itself is licensed under AGPL-3.0 (see `LICENSE`). **This file
+Vincent itself is licensed under AGPL-3.0 (see `LICENSE`). **This file
 concerns the *data* rendered by the dashboard, not the source code.**
 
 ---
@@ -21,7 +21,7 @@ derivative must also be offered under ODbL and must preserve attribution.
 | adsb.lol | https://adsb.lol | Military aircraft positions, regional commercial gap-fill, route enrichment |
 | OpenStreetMap contributors | https://www.openstreetmap.org/copyright | Nominatim geocoding (LOCATE bar), CARTO basemap tiles (OSM-derived) |
 
-**Attribution requirement:** the ShadowBroker map UI displays
+**Attribution requirement:** the Vincent map UI displays
 "© OpenStreetMap contributors" and "adsb.lol (ODbL)" in the map attribution
 control. Do not remove this attribution if you fork or redistribute the app.
 
@@ -67,7 +67,7 @@ These sources have their own terms; consult each link before redistributing.
 
 ## Contact
 
-If you represent a data provider and have concerns about how ShadowBroker
+If you represent a data provider and have concerns about how Vincent
 uses your data, please open an issue or contact the maintainer at
 `bigbodycobain@gmail.com`. We will respond promptly and, if needed, adjust
 usage or remove the source.

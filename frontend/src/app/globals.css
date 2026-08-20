@@ -1,22 +1,23 @@
 @import 'tailwindcss';
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #d1d5db;
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #080808;
-  --bg-tertiary: #0f0f0f;
-  --bg-panel: rgba(10, 10, 10, 0.92);
-  --border-primary: rgba(8, 145, 178, 0.30);
-  --border-secondary: rgba(8, 145, 178, 0.45);
-  --border-glow: rgba(6, 182, 212, 0.18);
-  --text-primary: rgb(209, 213, 219);
-  --text-secondary: rgb(34, 211, 238);
-  --text-muted: rgb(8, 145, 178);
-  --text-heading: rgb(207, 250, 254);
-  --hover-accent: rgba(8, 51, 68, 0.2);
-  --scrollbar-thumb: rgba(255, 255, 255, 0.15);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
+  /* Vincent — Starry Night cyber-impressionist palette (deep night indigo + star gold) */
+  --background: #0b1026;
+  --foreground: #e2e8f0;
+  --bg-primary: #0b1026;
+  --bg-secondary: #070b1c;
+  --bg-tertiary: #121a3a;
+  --bg-panel: rgba(11, 16, 38, 0.92);
+  --border-primary: rgba(245, 185, 66, 0.22);
+  --border-secondary: rgba(245, 185, 66, 0.40);
+  --border-glow: rgba(122, 162, 247, 0.22);
+  --text-primary: rgb(226, 232, 240);
+  --text-secondary: rgb(245, 185, 66);
+  --text-muted: rgb(122, 162, 247);
+  --text-heading: rgb(253, 230, 138);
+  --hover-accent: rgba(245, 185, 66, 0.10);
+  --scrollbar-thumb: rgba(245, 185, 66, 0.22);
+  --scrollbar-thumb-hover: rgba(245, 185, 66, 0.40);
   --font-geist-sans:
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, 'Noto Sans',
     sans-serif;
@@ -27,22 +28,23 @@
 
 /* Light theme: only the map basemap changes — UI stays dark */
 [data-theme='light'] {
-  --background: #0a0a0a;
-  --foreground: #d1d5db;
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #080808;
-  --bg-tertiary: #0f0f0f;
-  --bg-panel: rgba(10, 10, 10, 0.92);
-  --border-primary: rgba(8, 145, 178, 0.30);
-  --border-secondary: rgba(8, 145, 178, 0.45);
-  --border-glow: rgba(6, 182, 212, 0.18);
-  --text-primary: rgb(209, 213, 219);
-  --text-secondary: rgb(34, 211, 238);
-  --text-muted: rgb(8, 145, 178);
-  --text-heading: rgb(207, 250, 254);
-  --hover-accent: rgba(8, 51, 68, 0.2);
-  --scrollbar-thumb: rgba(255, 255, 255, 0.15);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
+  /* Vincent Starry Night — UI stays dark; only the map basemap changes */
+  --background: #0b1026;
+  --foreground: #e2e8f0;
+  --bg-primary: #0b1026;
+  --bg-secondary: #070b1c;
+  --bg-tertiary: #121a3a;
+  --bg-panel: rgba(11, 16, 38, 0.92);
+  --border-primary: rgba(245, 185, 66, 0.22);
+  --border-secondary: rgba(245, 185, 66, 0.40);
+  --border-glow: rgba(122, 162, 247, 0.22);
+  --text-primary: rgb(226, 232, 240);
+  --text-secondary: rgb(245, 185, 66);
+  --text-muted: rgb(122, 162, 247);
+  --text-heading: rgb(253, 230, 138);
+  --hover-accent: rgba(245, 185, 66, 0.10);
+  --scrollbar-thumb: rgba(245, 185, 66, 0.22);
+  --scrollbar-thumb-hover: rgba(245, 185, 66, 0.40);
 }
 
 @theme inline {

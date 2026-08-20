@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 const CURRENT_VERSION = '0.9.84';
-const STORAGE_KEY = `shadowbroker_changelog_v${CURRENT_VERSION}`;
+const STORAGE_KEY = `vincent_os_changelog_v${CURRENT_VERSION}`;
 const RELEASE_TITLE = 'GT Analytics + Telegram Translate + Full Telemetry + Saved Layout';
 
 const HEADLINE_FEATURES = [

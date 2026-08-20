@@ -26,8 +26,8 @@ if [ -f "$SCRIPT_DIR/docker-compose.yml" ] && grep -q '^\s*build:' "$SCRIPT_DIR/
     echo "  You will NOT receive updates this way."
     echo ""
     echo "  If you use Docker, re-clone the repository:"
-    echo "    git clone https://github.com/BigBodyCobain/Shadowbroker.git"
-    echo "    cd Shadowbroker && docker compose pull && docker compose up -d"
+    echo "    git clone https://github.com/BigBodyCobain/Vincent OS.git"
+    echo "    cd Vincent OS && docker compose pull && docker compose up -d"
     echo "================================================================"
     echo ""
 fi

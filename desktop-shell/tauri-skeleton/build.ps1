@@ -16,8 +16,8 @@ $iconsScript = Join-Path $scriptDir "scripts\generate-icons.cjs"
 $exportScript = Join-Path $scriptDir "scripts\build-frontend-export.cjs"
 $backendRuntimeScript = Join-Path $scriptDir "scripts\build-backend-runtime.cjs"
 $manifestScript = Join-Path $scriptDir "scripts\write-release-manifest.cjs"
-$localUpdaterKey = Join-Path $repoRoot "release-secrets\shadowbroker-updater.key"
-$localUpdaterKeyPassword = Join-Path $repoRoot "release-secrets\shadowbroker-updater.key.pass"
+$localUpdaterKey = Join-Path $repoRoot "release-secrets\vincent_os-updater.key"
+$localUpdaterKeyPassword = Join-Path $repoRoot "release-secrets\vincent_os-updater.key.pass"
 
 function Invoke-External {
   param(
@@ -136,7 +136,7 @@ try {
     }
   }
 
-  Write-Host "=== ShadowBroker Tauri Build ==="
+  Write-Host "=== Vincent OS Tauri Build ==="
   Write-Host "Frontend dist:    $frontendOut"
   Write-Host "Companion www:    $companionDir"
   Write-Host "Backend runtime:  $backendRuntimeDir"

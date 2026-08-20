@@ -1,6 +1,6 @@
 # Contributor Map
 
-ShadowBroker is a monorepo. The fastest way to contribute is to pick one
+Vincent is a monorepo. The fastest way to contribute is to pick one
 surface, keep the change small, and run the matching test slice before opening
 a pull request.
 

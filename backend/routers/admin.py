@@ -320,7 +320,7 @@ async def api_tor_status(request: Request):
 @router.post("/api/settings/tor/start", dependencies=[Depends(require_local_operator)])
 @limiter.limit("5/minute")
 async def api_tor_start(request: Request):
-    """Start Tor and provision a hidden service for this ShadowBroker instance.
+    """Start Tor and provision a hidden service for this Vincent instance.
 
     Also enables MESH_ARTI so the mesh/wormhole system can route traffic
     through the Tor SOCKS proxy (port 9050) automatically.

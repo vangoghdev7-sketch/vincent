@@ -16,7 +16,7 @@ export default function TrendingPosts() {
           <p className="mt-2">Type <span className="text-green-400 font-bold">gates</span> or <span className="text-green-400 font-bold">g/</span> to browse available rooms.</p>
         </div>
         <div className="mt-3 pt-3 border-t border-gray-800">
-          <p className="text-red-500 font-bold text-xs mb-1">SHADOWBROKER ADVISORY</p>
+          <p className="text-red-500 font-bold text-xs mb-1">VINCENT ADVISORY</p>
           <p className="text-[11px] text-red-400/70 leading-relaxed">
             This is a <span className="text-red-400 font-bold">testnet</span>. Treat all communications as <span className="text-red-400 font-bold">obfuscated, not encrypted</span>. Do not assume full privacy, anonymity, or end-to-end encryption. Transport security is experimental and unaudited. Use at your own risk.
           </p>

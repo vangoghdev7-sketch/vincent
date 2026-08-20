@@ -1,4 +1,4 @@
-"""ShadowBroker briefing engine — generates formatted intelligence digests.
+"""Vincent OS briefing engine — generates formatted intelligence digests.
 
 Produces branded proximity-based briefings, daily digests, and
 anomaly alerts that the user receives via Discord/Telegram/console.

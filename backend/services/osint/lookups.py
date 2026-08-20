@@ -164,7 +164,7 @@ def lookup_whois(domain: str) -> dict[str, Any]:
             results["sanctions_match"] = {"source": "OFAC SDN", "hits": sm}
 
     try:
-        res = safe_get(f"https://{domain}", timeout=5, headers={"User-Agent": "Shadowbroker-OSINT/1.0"})
+        res = safe_get(f"https://{domain}", timeout=5, headers={"User-Agent": "Vincent OS-OSINT/1.0"})
         headers = {}
         for h in (
             "server",
@@ -208,7 +208,7 @@ def lookup_certs(domain: str) -> dict[str, Any]:
     resp = fetch_with_curl(
         f"https://crt.sh/?q=%25.{quote(domain)}&output=json",
         timeout=10,
-        headers={"User-Agent": "Shadowbroker-OSINT/1.0"},
+        headers={"User-Agent": "Vincent OS-OSINT/1.0"},
     )
     if resp.status_code != 200:
         return {"domain": domain, "certificates": [], "error": "crt.sh unavailable"}

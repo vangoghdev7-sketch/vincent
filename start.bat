@@ -1,5 +1,5 @@
 @echo off
-title ShadowBroker - Global Threat Intercept
+title Vincent OS - Global Threat Intercept
 
 echo ===================================================
 echo     S H A D O W B R O K E R   --   STARTUP
@@ -23,8 +23,8 @@ if %errorlevel% equ 0 (
     echo   You will NOT receive updates this way.
     echo.
     echo   If you use Docker, re-clone the repository:
-    echo     git clone https://github.com/BigBodyCobain/Shadowbroker.git
-    echo     cd Shadowbroker
+    echo     git clone https://github.com/BigBodyCobain/Vincent OS.git
+    echo     cd Vincent OS
     echo     docker compose pull
     echo     docker compose up -d
     echo ================================================================
@@ -307,11 +307,11 @@ echo ===================================================
 echo   (Press Ctrl+C to stop)
 echo.
 
-start "ShadowBroker Runtime" powershell.exe -NoProfile -ExecutionPolicy Bypass -NoExit -File "%ROOT%\scripts\run-windows-runtime.ps1" -Root "%ROOT%"
+start "Vincent OS Runtime" powershell.exe -NoProfile -ExecutionPolicy Bypass -NoExit -File "%ROOT%\scripts\run-windows-runtime.ps1" -Root "%ROOT%"
 exit /b 0
 
 echo.
 echo ===================================================
-echo   ShadowBroker has stopped. Check errors above.
+echo   Vincent OS has stopped. Check errors above.
 echo ===================================================
 pause

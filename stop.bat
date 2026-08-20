@@ -3,7 +3,7 @@ echo ===================================================
 echo   S H A D O W B R O K E R   --   SHUTDOWN
 echo ===================================================
 echo.
-echo [*] Killing all ShadowBroker processes...
+echo [*] Killing all Vincent OS processes...
 
 :: Kill by port
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8000 "') do (

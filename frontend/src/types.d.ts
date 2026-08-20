@@ -20,6 +20,6 @@ declare module 'qrcode' {
 }
 
 interface Window {
-  __SHADOWBROKER_DESKTOP__?: import('@/lib/desktopBridge').ShadowbrokerDesktopRuntime;
-  __SHADOWBROKER_LOCAL_CONTROL__?: import('@/lib/localControlTransport').ShadowbrokerLocalControlBridge;
+  __SHADOWBROKER_DESKTOP__?: import('@/lib/desktopBridge').Vincent OSDesktopRuntime;
+  __SHADOWBROKER_LOCAL_CONTROL__?: import('@/lib/localControlTransport').Vincent OSLocalControlBridge;
 }

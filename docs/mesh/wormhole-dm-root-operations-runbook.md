@@ -44,4 +44,4 @@ node scripts/mesh/sync-dm-root-external-assurance.mjs
 2. Verify root transparency tests pass.
 3. Verify no runtime root, witness, Tor, key, or relay-state files are staged.
 4. Build release archives from the committed tree with `git archive`.
-5. Attach `ShadowBroker_v0.9.7.zip` to the GitHub release for v0.9.6 updater compatibility.
+5. Attach `Vincent OS_v0.9.7.zip` to the GitHub release for v0.9.6 updater compatibility.

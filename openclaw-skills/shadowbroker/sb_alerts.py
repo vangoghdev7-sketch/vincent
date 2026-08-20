@@ -1,4 +1,4 @@
-"""ShadowBroker alert delivery — webhook dispatch for Discord, Telegram, etc.
+"""Vincent OS alert delivery — webhook dispatch for Discord, Telegram, etc.
 
 Sends branded alerts from the AI co-pilot to external channels.
 Supports Discord webhooks, Telegram bots, and generic webhooks.
@@ -120,7 +120,7 @@ class AlertDispatcher:
         for chunk in chunks:
             payload: dict[str, Any] = {
                 "content": chunk,
-                "username": "ShadowBroker AI",
+                "username": "Vincent OS AI",
             }
 
             # Add embed if extra data provided
@@ -181,7 +181,7 @@ class AlertDispatcher:
     async def _send_webhook(self, channel: dict, message: str, **kwargs) -> dict:
         """Send via generic webhook (JSON POST)."""
         payload = {
-            "source": "shadowbroker",
+            "source": "vincent_os",
             "message": message,
             "timestamp": __import__("time").time(),
             **kwargs,

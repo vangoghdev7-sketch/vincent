@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const HELP_TEXT = `
-ShadowBroker root transparency publication smoke
+Vincent OS root transparency publication smoke
 
 Usage:
   node scripts/mesh/smoke-root-transparency-publication-flow.mjs [--keep] [--workspace PATH] [--base-url URL]

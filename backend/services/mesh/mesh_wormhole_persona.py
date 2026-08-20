@@ -115,7 +115,7 @@ def _default_state() -> dict[str, Any]:
 
 # Phase 2 HKDF parameters — locked. See runbook §"Phase 2 — Per-Alias DM
 # Identity Keys (HKDF-Derived)" for the full design rationale.
-_DM_ALIAS_HKDF_SALT = b"shadowbroker/dm-alias-keys/v1"
+_DM_ALIAS_HKDF_SALT = b"vincent_os/dm-alias-keys/v1"
 
 
 def _normalize_dm_alias_counter(counter: int | str | None) -> int:

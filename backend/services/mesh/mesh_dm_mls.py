@@ -146,13 +146,13 @@ def _seal_welcome_for_public_key(payload: bytes, public_key_text: str) -> bytes:
         algorithm=hashes.SHA256(),
         length=32,
         salt=None,
-        info=b"shadowbroker|dm-mls-welcome|v1",
+        info=b"vincent_os|dm-mls-welcome|v1",
     ).derive(shared_secret)
     nonce = secrets.token_bytes(12)
     ciphertext = AESGCM(key).encrypt(
         nonce,
         payload,
-        b"shadowbroker|dm-mls-welcome|v1",
+        b"vincent_os|dm-mls-welcome|v1",
     )
     return ephemeral_public + nonce + ciphertext
 
@@ -174,13 +174,13 @@ def _unseal_welcome_for_private_key(payload: bytes, private_key_text: str) -> by
         algorithm=hashes.SHA256(),
         length=32,
         salt=None,
-        info=b"shadowbroker|dm-mls-welcome|v1",
+        info=b"vincent_os|dm-mls-welcome|v1",
     ).derive(shared_secret)
     try:
         return AESGCM(key).decrypt(
             nonce,
             ciphertext,
-            b"shadowbroker|dm-mls-welcome|v1",
+            b"vincent_os|dm-mls-welcome|v1",
         )
     except Exception as exc:
         raise PrivacyCoreError("sealed DM welcome decrypt failed") from exc

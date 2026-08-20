@@ -5,9 +5,9 @@ import type {
   LocalControlInvokeMeta,
   LocalControlInvokeRequest,
 } from '@/lib/desktopControlContract';
-import type { ShadowbrokerLocalControlBridge } from '@/lib/localControlTransport';
+import type { Vincent OSLocalControlBridge } from '@/lib/localControlTransport';
 
-export interface ShadowbrokerDesktopRuntime {
+export interface Vincent OSDesktopRuntime {
   invokeLocalControl?<T = unknown>(
     command: DesktopControlCommand,
     payload?: unknown,
@@ -18,8 +18,8 @@ export interface ShadowbrokerDesktopRuntime {
 }
 
 function buildDesktopControlBridge(
-  runtime: ShadowbrokerDesktopRuntime,
-): ShadowbrokerLocalControlBridge | null {
+  runtime: Vincent OSDesktopRuntime,
+): Vincent OSLocalControlBridge | null {
   if (!runtime.invokeLocalControl) return null;
   return {
     invoke<T = unknown>(input: LocalControlInvokeRequest): Promise<T> {
@@ -28,7 +28,7 @@ function buildDesktopControlBridge(
   };
 }
 
-export function installDesktopControlBridge(runtime: ShadowbrokerDesktopRuntime): boolean {
+export function installDesktopControlBridge(runtime: Vincent OSDesktopRuntime): boolean {
   if (typeof window === 'undefined') return false;
   const bridge = buildDesktopControlBridge(runtime);
   if (!bridge) return false;

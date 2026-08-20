@@ -17,7 +17,7 @@ resolution-markers = [
 [manifest]
 members = [
     "backend",
-    "shadowbroker",
+    "vincent_os",
 ]
 
 [[package]]
@@ -3057,7 +3057,7 @@ wheels = [
 ]
 
 [[package]]
-name = "shadowbroker"
+name = "vincent_os"
 version = "0.9.84"
 source = { virtual = "." }
 

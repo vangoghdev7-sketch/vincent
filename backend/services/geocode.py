@@ -25,7 +25,7 @@ _local_search_lock = threading.Lock()
 # call. NOMINATIM_USER_AGENT env override is still honored for operators
 # who run a custom relay / known good identity, but the default uses the
 # per-install handle so OpenStreetMap can rate-limit per install instead
-# of treating "Shadowbroker" as one big offender.
+# of treating "Vincent OS" as one big offender.
 def _nominatim_user_agent() -> str:
     override = os.environ.get("NOMINATIM_USER_AGENT", "").strip()
     if override:

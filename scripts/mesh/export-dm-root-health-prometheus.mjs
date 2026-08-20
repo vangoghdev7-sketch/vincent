@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const HELP_TEXT = `
-ShadowBroker DM root health Prometheus exporter
+Vincent OS DM root health Prometheus exporter
 
 Usage:
   node scripts/mesh/export-dm-root-health-prometheus.mjs [--stdout] [--output PATH] [--base-url URL] [--health-path PATH]
@@ -15,7 +15,7 @@ Environment:
   SB_DM_ROOT_AUTH_HEADER=X-Admin-Key: change-me
   SB_DM_ROOT_AUTH_COOKIE=operator_session=...
   SB_DM_ROOT_TIMEOUT_MS=10000
-  SB_DM_ROOT_PROMETHEUS_OUTPUT=/var/lib/node_exporter/textfile_collector/shadowbroker_dm_root.prom
+  SB_DM_ROOT_PROMETHEUS_OUTPUT=/var/lib/node_exporter/textfile_collector/vincent_os_dm_root.prom
 
 Flags:
   --stdout            Print Prometheus metrics to stdout
@@ -152,182 +152,182 @@ function buildMetrics(payload, errorDetail = '') {
   const lines = [];
   appendMetric(
     lines,
-    'shadowbroker_dm_root_health_scrape_success',
+    'vincent_os_dm_root_health_scrape_success',
     'Whether the DM root health scrape succeeded.',
     'gauge',
     errorDetail ? 0 : 1,
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_checked_at_unixtime',
+    'vincent_os_dm_root_checked_at_unixtime',
     'Unix timestamp for the most recent DM root health check represented in this export.',
     'gauge',
     checkedAt,
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_summary_state_code',
+    'vincent_os_dm_root_summary_state_code',
     'DM root operator summary state (0=local_cached_only, 1=current_external, 2=stale_external, -1=unknown).',
     'gauge',
     summaryStateCode,
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_health_state_code',
+    'vincent_os_dm_root_health_state_code',
     'DM root rolled-up health state (0=ok, 1=warning, 2=stale, 3=error, -1=unknown).',
     'gauge',
     healthStateCode,
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_monitor_state_code',
+    'vincent_os_dm_root_monitor_state_code',
     'Monitoring severity for DM root health (0=ok, 1=warning, 2=critical, -1=unknown).',
     'gauge',
     monitorStateCode,
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_strong_trust_blocked',
+    'vincent_os_dm_root_strong_trust_blocked',
     'Whether strong DM trust is currently blocked by external assurance state.',
     'gauge',
     boolGauge(Boolean(payload?.strong_trust_blocked)),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_external_assurance_current',
+    'vincent_os_dm_root_external_assurance_current',
     'Whether configured external witness and transparency assurances are both current.',
     'gauge',
     boolGauge(Boolean(payload?.external_assurance_current)),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_requires_attention',
+    'vincent_os_dm_root_requires_attention',
     'Whether DM root external assurance currently requires operator attention.',
     'gauge',
     boolGauge(Boolean(payload?.requires_attention)),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_independent_quorum_met',
+    'vincent_os_dm_root_independent_quorum_met',
     'Whether the current witness state satisfies independent quorum.',
     'gauge',
     boolGauge(Boolean(payload?.independent_quorum_met)),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_alert_count',
+    'vincent_os_dm_root_alert_count',
     'Number of active DM root health alerts.',
     'gauge',
     safeInt(payload?.alert_count, 0),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_blocking_alert_count',
+    'vincent_os_dm_root_blocking_alert_count',
     'Number of active blocking DM root health alerts.',
     'gauge',
     safeInt(payload?.blocking_alert_count, 0),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_warning_alert_count',
+    'vincent_os_dm_root_warning_alert_count',
     'Number of active warning-level DM root health alerts.',
     'gauge',
     safeInt(payload?.warning_alert_count, 0),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_witness_state_code',
+    'vincent_os_dm_root_witness_state_code',
     'Witness operator state (0=not_configured, 1=descriptors_only, 2=current, 3=stale, 4=error, -1=unknown).',
     'gauge',
     witnessStateCode,
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_witness_health_state_code',
+    'vincent_os_dm_root_witness_health_state_code',
     'Witness health state (0=ok, 1=warning, 2=stale, 3=error, -1=unknown).',
     'gauge',
     stateCode(String(payload?.witness?.health_state || '').trim().toLowerCase(), { ok: 0, warning: 1, stale: 2, error: 3 }, -1),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_witness_age_seconds',
+    'vincent_os_dm_root_witness_age_seconds',
     'Age in seconds of the current external witness package.',
     'gauge',
     safeInt(payload?.witness?.age_s, 0),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_witness_warning_window_seconds',
+    'vincent_os_dm_root_witness_warning_window_seconds',
     'Configured warning threshold for external witness freshness.',
     'gauge',
     safeInt(payload?.witness?.warning_window_s, 0),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_witness_freshness_window_seconds',
+    'vincent_os_dm_root_witness_freshness_window_seconds',
     'Configured maximum freshness window for external witness material.',
     'gauge',
     safeInt(payload?.witness?.freshness_window_s, 0),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_witness_reacquire_required',
+    'vincent_os_dm_root_witness_reacquire_required',
     'Whether external witness receipt reacquisition is currently required.',
     'gauge',
     boolGauge(Boolean(payload?.witness?.reacquire_required)),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_witness_manifest_matches_current',
+    'vincent_os_dm_root_witness_manifest_matches_current',
     'Whether the external witness material matches the current manifest fingerprint.',
     'gauge',
     boolGauge(Boolean(payload?.witness?.manifest_matches_current)),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_witness_independent_quorum_met',
+    'vincent_os_dm_root_witness_independent_quorum_met',
     'Whether the witness side independently satisfies quorum.',
     'gauge',
     boolGauge(Boolean(payload?.witness?.independent_quorum_met)),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_transparency_state_code',
+    'vincent_os_dm_root_transparency_state_code',
     'Transparency operator state (0=not_configured, 1=current, 2=stale, 3=error, -1=unknown).',
     'gauge',
     transparencyStateCode,
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_transparency_health_state_code',
+    'vincent_os_dm_root_transparency_health_state_code',
     'Transparency health state (0=ok, 1=warning, 2=stale, 3=error, -1=unknown).',
     'gauge',
     stateCode(String(payload?.transparency?.health_state || '').trim().toLowerCase(), { ok: 0, warning: 1, stale: 2, error: 3 }, -1),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_transparency_age_seconds',
+    'vincent_os_dm_root_transparency_age_seconds',
     'Age in seconds of the current external transparency ledger readback.',
     'gauge',
     safeInt(payload?.transparency?.age_s, 0),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_transparency_warning_window_seconds',
+    'vincent_os_dm_root_transparency_warning_window_seconds',
     'Configured warning threshold for external transparency freshness.',
     'gauge',
     safeInt(payload?.transparency?.warning_window_s, 0),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_transparency_freshness_window_seconds',
+    'vincent_os_dm_root_transparency_freshness_window_seconds',
     'Configured maximum freshness window for external transparency readback.',
     'gauge',
     safeInt(payload?.transparency?.freshness_window_s, 0),
   );
   appendMetric(
     lines,
-    'shadowbroker_dm_root_transparency_verification_required',
+    'vincent_os_dm_root_transparency_verification_required',
     'Whether transparency verification refresh is currently required.',
     'gauge',
     boolGauge(Boolean(payload?.transparency?.verification_required)),
@@ -335,7 +335,7 @@ function buildMetrics(payload, errorDetail = '') {
 
   appendMetric(
     lines,
-    'shadowbroker_dm_root_summary_info',
+    'vincent_os_dm_root_summary_info',
     'State labels for the current DM root operator summary.',
     'gauge',
     1,
@@ -350,7 +350,7 @@ function buildMetrics(payload, errorDetail = '') {
   if (nextAction) {
     appendMetric(
       lines,
-      'shadowbroker_dm_root_next_action_info',
+      'vincent_os_dm_root_next_action_info',
       'Suggested next DM root operator action.',
       'gauge',
       1,
@@ -360,7 +360,7 @@ function buildMetrics(payload, errorDetail = '') {
   if (errorDetail) {
     appendMetric(
       lines,
-      'shadowbroker_dm_root_health_scrape_error_info',
+      'vincent_os_dm_root_health_scrape_error_info',
       'Reason for the most recent DM root health scrape failure.',
       'gauge',
       1,
@@ -372,7 +372,7 @@ function buildMetrics(payload, errorDetail = '') {
     if (!code) continue;
     appendMetric(
       lines,
-      'shadowbroker_dm_root_alert_active',
+      'vincent_os_dm_root_alert_active',
       'Active DM root health alerts.',
       'gauge',
       1,

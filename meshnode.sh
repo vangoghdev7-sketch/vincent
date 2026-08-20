@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ShadowBroker Mesh Node — lightweight, headless
+# Vincent OS Mesh Node — lightweight, headless
 # Syncs the Infonet chain only. No map, no frontend, no data feeds.
 
 set -e

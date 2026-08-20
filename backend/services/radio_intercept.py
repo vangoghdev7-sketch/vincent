@@ -15,7 +15,7 @@ _OPENMHZ_AUDIO_HOSTS = {"media.openmhz.com", "media2.openmhz.com", "media3.openm
 # Round 7a / Issues #289, #290, #291 (tg12 audit):
 # We previously sent a spoofed Chrome User-Agent and (for OpenMHz) used
 # cloudscraper to bypass anti-bot challenges. Both are dishonest and ToS-
-# unfriendly. We now send the per-install Shadowbroker UA — the upstream
+# unfriendly. We now send the per-install Vincent OS UA — the upstream
 # can identify us, rate-limit us per install, and contact us if needed.
 #
 # If the upstream actively blocks our honest UA, the feature degrades
@@ -43,7 +43,7 @@ def get_top_broadcastify_feeds():
     logger.info("Scraping Broadcastify Top Feeds (Cache Miss)")
     headers = {
         # Issue #289 (tg12) + Round 7a: identify ourselves honestly as a
-        # per-install Shadowbroker scraper. Broadcastify can rate-limit
+        # per-install Vincent OS scraper. Broadcastify can rate-limit
         # us per install or block us; either way we stop pretending to be
         # a browser. If they block, the panel degrades gracefully.
         "User-Agent": _broadcastify_user_agent(),
@@ -116,7 +116,7 @@ def get_openmhz_systems():
     """Fetches the full directory of OpenMHZ systems.
 
     Issue #290 (tg12) + Round 7a: replaced cloudscraper-based Chrome
-    impersonation with an honest per-install Shadowbroker User-Agent.
+    impersonation with an honest per-install Vincent OS User-Agent.
     If OpenMHz's Cloudflare layer blocks honest traffic, we accept
     that degradation (return empty list) rather than spoof a browser.
     """
@@ -204,7 +204,7 @@ def openmhz_audio_response(target_url: str):
                 headers={
                     # Issue #291 (tg12) + Round 7a: drop spoofed Mozilla
                     # UA and the fake first-party Referer. Identify as
-                    # the per-install Shadowbroker proxy honestly.
+                    # the per-install Vincent OS proxy honestly.
                     "User-Agent": _openmhz_user_agent(),
                     "Accept": "audio/mpeg,audio/*,*/*;q=0.8",
                 },

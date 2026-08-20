@@ -1,6 +1,6 @@
 """LiveUAMap provider settings and operator-consent state.
 
-Global Incidents is a broader Shadowbroker feature backed by GDELT regardless
+Global Incidents is a broader Vincent OS feature backed by GDELT regardless
 of whether LiveUAMap enrichment is available. The browser provider keeps the
 historical platform behavior (automatic on POSIX, opt-in on Windows) while a
 configured supported API can satisfy LiveUAMap enrichment without Chromium.

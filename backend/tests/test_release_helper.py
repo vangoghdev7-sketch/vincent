@@ -24,7 +24,7 @@ def test_normalize_version_rejects_non_semver_triplet():
 
 def test_expected_release_names():
     assert release_helper.expected_tag("0.9.6") == "v0.9.6"
-    assert release_helper.expected_asset("0.9.6") == "ShadowBroker_v0.9.6.zip"
+    assert release_helper.expected_asset("0.9.6") == "Vincent OS_v0.9.6.zip"
 
 
 def test_set_version_updates_package_json(monkeypatch, tmp_path):
@@ -41,7 +41,7 @@ def test_set_version_updates_package_json(monkeypatch, tmp_path):
 
 def test_sha256_file(tmp_path):
     payload = tmp_path / "payload.zip"
-    payload.write_bytes(b"shadowbroker")
+    payload.write_bytes(b"vincent_os")
 
     digest = release_helper.sha256_file(payload)
 

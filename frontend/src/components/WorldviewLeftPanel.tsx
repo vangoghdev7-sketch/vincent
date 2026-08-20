@@ -781,7 +781,7 @@ const WorldviewLeftPanel = React.memo(function WorldviewLeftPanel({
   // layer, remembers the choice, and auto-detects server-side Mode B.
   const [sarChoice, setSarChoice] = useState<import('./SarModeChooserModal').SarChoice>(() => {
     try {
-      const stored = localStorage.getItem('shadowbroker_sar_mode_choice');
+      const stored = localStorage.getItem('vincent_os_sar_mode_choice');
       if (stored === 'a_only' || stored === 'b_active') return stored;
     } catch {
       // localStorage unavailable
@@ -867,14 +867,14 @@ const WorldviewLeftPanel = React.memo(function WorldviewLeftPanel({
         if (cancelled) return;
         if (modeBOn && sarChoice !== 'b_active') {
           try {
-            localStorage.setItem('shadowbroker_sar_mode_choice', 'b_active');
+            localStorage.setItem('vincent_os_sar_mode_choice', 'b_active');
           } catch {
             // ignore
           }
           setSarChoice('b_active');
         } else if (!modeBOn && sarChoice === 'b_active') {
           try {
-            localStorage.removeItem('shadowbroker_sar_mode_choice');
+            localStorage.removeItem('vincent_os_sar_mode_choice');
           } catch {
             // ignore
           }
@@ -2271,7 +2271,7 @@ const WorldviewLeftPanel = React.memo(function WorldviewLeftPanel({
     <ConfirmDialog
       open={liveuamapModalOpen}
       title="Enable LiveUAMap on this server?"
-      message="Global Incidents includes LiveUAMap pins fetched by your Shadowbroker backend (Playwright). LiveUAMap will see this install's server IP. GDELT headlines load without this step. You can still disable the layer later; revoke server contact via Settings or SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER=false."
+      message="Global Incidents includes LiveUAMap pins fetched by your Vincent backend (Playwright). LiveUAMap will see this install's server IP. GDELT headlines load without this step. You can still disable the layer later; revoke server contact via Settings or SHADOWBROKER_ENABLE_LIVEUAMAP_SCRAPER=false."
       confirmLabel="Enable & turn on layer"
       cancelLabel="Cancel"
       danger={false}

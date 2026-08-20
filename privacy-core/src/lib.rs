@@ -1,4 +1,4 @@
-//! Privacy Core skeleton for the ShadowBroker / Infonet migration.
+//! Privacy Core skeleton for the Vincent OS / Infonet migration.
 //!
 //! Sprint 1 scope is intentionally narrow:
 //! - keep private protocol state opaque to Python

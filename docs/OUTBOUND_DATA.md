@@ -1,6 +1,6 @@
 # Outbound data and third-party exposure
 
-Shadowbroker is **self-hosted**: each install uses its own backend egress IP. This document is the operator-facing record for GitHub audit issues **#348–#366** (tg12): what contacts third parties, why, and how to opt out without losing unrelated features.
+Vincent is **self-hosted**: each install uses its own backend egress IP. This document is the operator-facing record for GitHub audit issues **#348–#366** (tg12): what contacts third parties, why, and how to opt out without losing unrelated features.
 
 ## Architecture
 
@@ -26,7 +26,7 @@ Shadowbroker is **self-hosted**: each install uses its own backend egress IP. Th
 | **#349** | Accepted + documented | Agency-required Referer on backend proxy only |
 | **#350** | Mitigated | Callsign in UA **off by default**; opt-in `MESHTASTIC_SEND_CALLSIGN_HEADER=true` |
 | **#354** | Accepted + documented | Default basemap CDN; optional self-hosted tiles |
-| **#361** | Mitigated | UA is **install handle only** (`operator-…`), not shared `Shadowbroker/` token |
+| **#361** | Mitigated | UA is **install handle only** (`operator-…`), not shared `Vincent OS/` token |
 | **#366** | Accepted + documented | Honest per-install scrape; feature degrades if blocked |
 
 ---
@@ -35,7 +35,7 @@ Shadowbroker is **self-hosted**: each install uses its own backend egress IP. Th
 
 - **Code:** `backend/services/network_utils.py` — `outbound_user_agent()`, `OPERATOR_HANDLE`
 - **Sent:** `operator-7f3a92` or `your-handle (purpose: nominatim)` — **no** shared app product name
-- **Why:** Upstreams can rate-limit **one install**; a block on `operator-abc123` does not require blocking every Shadowbroker user
+- **Why:** Upstreams can rate-limit **one install**; a block on `operator-abc123` does not require blocking every Vincent user
 - **Override:** `SHADOWBROKER_USER_AGENT` replaces the entire string
 - **Note:** The same handle across Wikipedia, Broadcastify, etc. still correlates **your** traffic across those sites — that is intentional per-install attribution, not anonymity
 

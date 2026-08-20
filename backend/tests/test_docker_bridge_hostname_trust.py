@@ -10,7 +10,7 @@ intended.
 The fix narrows trust to source IPs that forward-resolve from one of the
 configured frontend container hostnames (default: the compose service
 name ``frontend`` plus the explicit ``container_name``
-``shadowbroker-frontend``). Operators with renamed containers can list
+``vincent_os-frontend``). Operators with renamed containers can list
 the new names in ``SHADOWBROKER_TRUSTED_FRONTEND_HOSTS``.
 
 These tests exercise the resolution helpers directly so that we don't
@@ -36,7 +36,7 @@ class TestTrustedHostnameParsing:
             # Make sure the env var is not set so we exercise the default.
             import os
             os.environ.pop("SHADOWBROKER_TRUSTED_FRONTEND_HOSTS", None)
-            assert self._fn()() == ["frontend", "shadowbroker-frontend"]
+            assert self._fn()() == ["frontend", "vincent_os-frontend"]
 
     def test_custom_list_via_env(self):
         with patch.dict(
@@ -83,7 +83,7 @@ class TestResolveTrustedBridgeIps:
         def fake_gethostbyname_ex(host):
             mapping = {
                 "frontend": ("frontend", [], ["172.18.0.3"]),
-                "shadowbroker-frontend": ("shadowbroker-frontend", [], ["172.18.0.3", "172.18.0.4"]),
+                "vincent_os-frontend": ("vincent_os-frontend", [], ["172.18.0.3", "172.18.0.4"]),
             }
             if host not in mapping:
                 raise socket.gaierror("no such host")

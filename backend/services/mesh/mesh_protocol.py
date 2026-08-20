@@ -6,7 +6,7 @@ import hashlib
 from typing import Any
 PROTOCOL_VERSION = "infonet/2"
 NETWORK_ID = "sb-testnet-0"
-SIGNED_CONTEXT_PROTOCOL = "shadowbroker"
+SIGNED_CONTEXT_PROTOCOL = "vincent_os"
 SIGNED_CONTEXT_VERSION = 1
 SIGNED_CONTEXT_FIELD = "signed_context"
 

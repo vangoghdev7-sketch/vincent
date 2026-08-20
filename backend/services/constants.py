@@ -1,4 +1,4 @@
-# ─── ShadowBroker Backend Constants ──────────────────────────────────────────
+# ─── Vincent OS Backend Constants ──────────────────────────────────────────
 # Centralized magic numbers. Import from here instead of hardcoding.
 
 # ─── Flight Trails ──────────────────────────────────────────────────────────

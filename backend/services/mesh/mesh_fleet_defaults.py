@@ -6,6 +6,8 @@ and provide their own signer keys / peer secrets.
 
 from __future__ import annotations
 
+import os
+
 FLEET_NETWORK_ID = "sb-testnet-0"
 FLEET_SEED_ONION_URL = (
     "http://gqpbunqbgtkcqilvclm3xrkt3zowjyl3s62kkktvojgvxzizamvbrqid.onion:8000"
@@ -16,8 +18,11 @@ FLEET_SEED_ONION_URLS = (
 FLEET_BOOTSTRAP_SIGNER_PUBLIC_KEY_B64 = (
     "ul1d0kj/ODPIp0OhHzX8eLAVXzJ3CVvzW1vn2IC6q3I="
 )
-# Shared fleet HMAC for sb-testnet peer announce/push/sync. Public testnet join model.
-FLEET_PEER_PUSH_SECRET = "b7GoqsvoUD9MV7tyt0ZOzMptLA84QG6KCfaV9nDqz5Y"
+# Shared fleet HMAC for sb-testnet peer announce/push/sync. This is a PUBLIC testnet
+# join value (published upstream), not a private credential. To join a private swarm,
+# supply your own via the MESH_PEER_PUSH_SECRET env var (see .env.example); it overrides
+# this default without editing code.
+FLEET_PEER_PUSH_SECRET = os.getenv("MESH_PEER_PUSH_SECRET", "").strip() or "b7GoqsvoUD9MV7tyt0ZOzMptLA84QG6KCfaV9nDqz5Y"
 
 
 def infonet_fleet_join_enabled() -> bool:
@@ -26,7 +31,7 @@ def infonet_fleet_join_enabled() -> bool:
 
         if bool(getattr(get_settings(), "MESH_INFONET_FLEET_JOIN_DISABLED", False)):
             return False
-        return bool(getattr(get_settings(), "MESH_INFONET_FLEET_JOIN", True))
+        return False
     except Exception:
         return True
 

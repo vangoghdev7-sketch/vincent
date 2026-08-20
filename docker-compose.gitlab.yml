@@ -12,7 +12,7 @@
 
 services:
   backend:
-    image: registry.gitlab.com/bigbodycobain/shadowbroker/backend:latest
+    image: registry.gitlab.com/bigbodycobain/vincent_os/backend:latest
 
   frontend:
-    image: registry.gitlab.com/bigbodycobain/shadowbroker/frontend:latest
+    image: registry.gitlab.com/bigbodycobain/vincent_os/frontend:latest

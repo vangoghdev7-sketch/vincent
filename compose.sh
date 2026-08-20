@@ -60,8 +60,8 @@ if grep -q '^\s*build:' "$COMPOSE_FILE" 2>/dev/null; then
     echo ""
     echo "  Fix: re-clone the repository:"
     echo "    cd .. && rm -rf $(basename "$SCRIPT_DIR")"
-    echo "    git clone https://github.com/BigBodyCobain/Shadowbroker.git"
-    echo "    cd Shadowbroker && docker compose pull && docker compose up -d"
+    echo "    git clone https://github.com/BigBodyCobain/Vincent OS.git"
+    echo "    cd Vincent OS && docker compose pull && docker compose up -d"
     echo "================================================================"
     echo ""
 fi

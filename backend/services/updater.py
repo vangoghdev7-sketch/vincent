@@ -25,8 +25,8 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-GITHUB_RELEASES_URL = "https://api.github.com/repos/BigBodyCobain/Shadowbroker/releases/latest"
-GITHUB_RELEASES_PAGE_URL = "https://github.com/BigBodyCobain/Shadowbroker/releases/latest"
+GITHUB_RELEASES_URL = "https://api.github.com/repos/BigBodyCobain/Vincent OS/releases/latest"
+GITHUB_RELEASES_PAGE_URL = "https://github.com/BigBodyCobain/Vincent OS/releases/latest"
 DOCKER_UPDATE_COMMANDS = (
     "docker compose pull && docker compose up -d"
 )
@@ -40,7 +40,7 @@ _RELEASE_DIGESTS_FILE = (
 # SHA256SUMS.txt is still useful as a consistency check, but because both are
 # delivered by the same release channel it is not sufficient by itself to
 # authorize executable source replacement.
-_SOURCE_ASSET_PATTERN = re.compile(r"^ShadowBroker_v\d", re.IGNORECASE)
+_SOURCE_ASSET_PATTERN = re.compile(r"^Vincent OS_v\d", re.IGNORECASE)
 _SHA256SUMS_ASSET_NAME = "SHA256SUMS.txt"
 
 
@@ -134,7 +134,7 @@ def _download_release(temp_dir: str) -> tuple:
     """Fetch latest release info and download the source zip archive.
 
     Prefer the maintainer's named release asset (matching
-    ``ShadowBroker_v*.zip``) over the auto-generated ``zipball_url`` so a
+    ``Vincent OS_v*.zip``) over the auto-generated ``zipball_url`` so a
     stable filename can be matched against a pre-pinned digest.
 
     Returns (zip_path, version_tag, download_url, release_url, asset_name,
@@ -179,7 +179,7 @@ def _download_release(temp_dir: str) -> tuple:
         if not zip_url:
             raise RuntimeError("Latest release is missing a source archive URL")
         logger.warning(
-            "Release does not publish a ShadowBroker_v*.zip asset — falling "
+            "Release does not publish a Vincent OS_v*.zip asset — falling "
             "back to auto-generated zipball_url. In-place installation will "
             "still require an explicit MESH_UPDATE_SHA256 pin or a matching "
             "baked-in digest."

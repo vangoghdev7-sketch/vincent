@@ -32,9 +32,9 @@ export default function AIQueryView({ onBack }: AIQueryViewProps) {
   const [messages, setMessages] = useState<AIMessage[]>([
     {
       role: 'system',
-      content: `🌍📡 SHADOWBROKER AI CO-PILOT ONLINE
+      content: `🌍📡 VINCENT AI CO-PILOT ONLINE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Connected to ShadowBroker OSINT platform.
+Connected to Vincent OSINT platform.
 I can query telemetry, place pins on the map,
 search satellite imagery, aggregate news,
 and access all 30+ data layers.
@@ -127,7 +127,7 @@ SYSTEM:
         const resp = await fetch(`${base}/status`);
         const data = await resp.json();
         return {
-          content: `🌍✅ SHADOWBROKER AI STATUS:
+          content: `🌍✅ VINCENT AI STATUS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Status: ${data.status || 'ONLINE'}
 Capabilities: ${(data.capabilities || []).join(', ')}
@@ -178,7 +178,7 @@ ${data.report || JSON.stringify(data, null, 2)}`,
             });
             const data = await resp.json();
             return {
-              content: `🌍📌 SHADOWBROKER PINNING:
+              content: `🌍📌 VINCENT PINNING:
 Pin placed successfully!
   📍 ${lat.toFixed(4)}°, ${lng.toFixed(4)}°
   🏷️ ${label}
@@ -208,7 +208,7 @@ ${pinList || '  No pins placed yet.'}`,
 
       if (lowerQuery === 'clear pins') {
         await fetch(`${base}/pins`, { method: 'DELETE' });
-        return { content: '🌍❌ SHADOWBROKER CLEARING:\nAll AI intel pins cleared.' };
+        return { content: '🌍❌ VINCENT CLEARING:\nAll AI intel pins cleared.' };
       }
 
       if (lowerQuery === 'snapshot' || lowerQuery === 'take snapshot') {
@@ -219,7 +219,7 @@ ${pinList || '  No pins placed yet.'}`,
         });
         const data = await resp.json();
         return {
-          content: `🌍🕰️ SHADOWBROKER TIMEMACHINE:
+          content: `🌍🕰️ VINCENT TIMEMACHINE:
 Snapshot taken!
   🆔 ${data.snapshot_id}
   🕐 ${data.timestamp}
@@ -320,7 +320,7 @@ ${alerts}`,
 
       // Generic fallback — try summary
       return {
-        content: `🌍🔍 SHADOWBROKER SEARCHING:
+        content: `🌍🔍 VINCENT SEARCHING:
 Processing query: "${query}"
 
 I can directly execute these commands:
@@ -338,9 +338,9 @@ Type "help" for the full command list.`,
       };
     } catch (error) {
       return {
-        content: `🌍⚠️ SHADOWBROKER WARNING:
+        content: `🌍⚠️ VINCENT WARNING:
 Query failed: ${error instanceof Error ? error.message : 'Unknown error'}
-Make sure the ShadowBroker backend is running on localhost:8000.`,
+Make sure the Vincent backend is running on localhost:8000.`,
       };
     }
   }, []);
@@ -434,7 +434,7 @@ Make sure the ShadowBroker backend is running on localhost:8000.`,
           <div className="space-y-3 text-sm font-mono">
             {/* API Endpoint */}
             <div>
-              <div className="text-[11px] text-gray-500 uppercase tracking-widest mb-1">Your ShadowBroker API Endpoint</div>
+              <div className="text-[11px] text-gray-500 uppercase tracking-widest mb-1">Your Vincent API Endpoint</div>
               <div className="flex items-center gap-2">
                 <code className="flex-1 bg-black/60 border border-purple-800/40 px-3 py-2 text-purple-300 text-sm rounded-sm select-all">
                   {apiEndpoint}
@@ -453,8 +453,8 @@ Make sure the ShadowBroker backend is running on localhost:8000.`,
             <div>
               <div className="text-[11px] text-gray-500 uppercase tracking-widest mb-1">Setup Instructions</div>
               <div className="bg-black/60 border border-gray-800/40 rounded-sm p-3 space-y-2 text-[13px] leading-relaxed">
-                <p className="text-cyan-400 font-bold">Step 1: Install the ShadowBroker Skill</p>
-                <p className="text-gray-400">Copy the <code className="text-purple-300 bg-purple-900/30 px-1">openclaw-skills/shadowbroker/</code> folder into your OpenClaw&apos;s skills directory.</p>
+                <p className="text-cyan-400 font-bold">Step 1: Install the Vincent Skill</p>
+                <p className="text-gray-400">Copy the <code className="text-purple-300 bg-purple-900/30 px-1">openclaw-skills/vincent_os/</code> folder into your OpenClaw&apos;s skills directory.</p>
 
                 <p className="text-cyan-400 font-bold mt-2">Step 2: Configure the API Endpoint</p>
                 <p className="text-gray-400">Tell your OpenClaw agent to connect to:</p>
@@ -465,7 +465,7 @@ Make sure the ShadowBroker backend is running on localhost:8000.`,
                 <p className="text-cyan-400 font-bold mt-2">Step 3: Tell Your Agent</p>
                 <p className="text-gray-400">Paste this into your OpenClaw&apos;s system prompt or instructions:</p>
                 <div className="relative">
-                  <pre className="bg-purple-950/40 border border-purple-800/30 px-2 py-2 text-[12px] text-purple-200 rounded-sm overflow-x-auto whitespace-pre-wrap">{`You have a skill called "shadowbroker" that connects you to a real-time global OSINT intelligence platform. Use it to:
+                  <pre className="bg-purple-950/40 border border-purple-800/30 px-2 py-2 text-[12px] text-purple-200 rounded-sm overflow-x-auto whitespace-pre-wrap">{`You have a skill called "vincent_os" that connects you to a real-time global OSINT intelligence platform. Use it to:
 - Query military flights, ships, satellites, SIGINT, earthquakes, and 30+ data layers
 - Place intelligence pins on a live map
 - Fetch satellite imagery from Sentinel-2
@@ -475,9 +475,9 @@ Make sure the ShadowBroker backend is running on localhost:8000.`,
 - Send/receive InfoNet messages via decentralized feed
 
 API: ${apiEndpoint}
-Skill docs: openclaw-skills/shadowbroker/SKILL.md`}</pre>
+Skill docs: openclaw-skills/vincent_os/SKILL.md`}</pre>
                   <button
-                    onClick={() => handleCopy(`You have a skill called "shadowbroker" that connects you to a real-time global OSINT intelligence platform. Use it to:\n- Query military flights, ships, satellites, SIGINT, earthquakes, and 30+ data layers\n- Place intelligence pins on a live map\n- Fetch satellite imagery from Sentinel-2\n- Aggregate news by region via GDELT\n- Take telemetry snapshots (Time Machine)\n- Participate in the Wormhole encrypted mesh network\n- Send/receive InfoNet messages via decentralized feed\n\nAPI: ${apiEndpoint}\nSkill docs: openclaw-skills/shadowbroker/SKILL.md`)}
+                    onClick={() => handleCopy(`You have a skill called "vincent_os" that connects you to a real-time global OSINT intelligence platform. Use it to:\n- Query military flights, ships, satellites, SIGINT, earthquakes, and 30+ data layers\n- Place intelligence pins on a live map\n- Fetch satellite imagery from Sentinel-2\n- Aggregate news by region via GDELT\n- Take telemetry snapshots (Time Machine)\n- Participate in the Wormhole encrypted mesh network\n- Send/receive InfoNet messages via decentralized feed\n\nAPI: ${apiEndpoint}\nSkill docs: openclaw-skills/vincent_os/SKILL.md`)}
                     className="absolute top-1 right-1 p-1 bg-purple-900/50 text-purple-400 hover:text-purple-200 transition-colors rounded-sm"
                     title="Copy instructions"
                   >

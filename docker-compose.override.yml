@@ -22,8 +22,10 @@ services:
       MESH_DEFAULT_SYNC_PEERS: ""
       MESH_BOOTSTRAP_SIGNER_PUBLIC_KEY: "ul1d0kj/ODPIp0OhHzX8eLAVXzJ3CVvzW1vn2IC6q3I="
       MESH_SWARM_MANIFEST_PULL_INTERVAL_S: "300"
-      # Fleet testnet HMAC — overrides stale per-node .env so announce/push auth matches seed.
-      MESH_PEER_PUSH_SECRET: "b7GoqsvoUD9MV7tyt0ZOzMptLA84QG6KCfaV9nDqz5Y"
+      # Fleet peer-push HMAC — intentionally NOT set here (no secret baked into the repo).
+      # To join a private swarm, add MESH_PEER_PUSH_SECRET to a gitignored .env (see
+      # .env.example). If left unset, the public sb-testnet default in
+      # backend/services/mesh/mesh_fleet_defaults.py applies out of the box.
       # Dev fleet: allow wormhole child agent to start without release attestation.
       PRIVACY_CORE_DEV_OVERRIDE: "true"
 

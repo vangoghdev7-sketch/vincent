@@ -15,8 +15,8 @@ from pathlib import Path
 
 def _load_env() -> None:
     for path in (
-        Path.home() / ".openclaw" / "workspace" / ".env.shadowbroker",
-        Path(__file__).resolve().parent.parent.parent / ".env.shadowbroker",
+        Path.home() / ".openclaw" / "workspace" / ".env.vincent_os",
+        Path(__file__).resolve().parent.parent.parent / ".env.vincent_os",
     ):
         if not path.is_file():
             continue
@@ -30,15 +30,15 @@ def _load_env() -> None:
 
 
 async def main() -> None:
-    parser = argparse.ArgumentParser(description="ShadowBroker GT analytics report")
+    parser = argparse.ArgumentParser(description="Vincent OS GT analytics report")
     parser.add_argument("--region", default="", help="Optional region for gt_analyze dossier")
     parser.add_argument("--tune", action="store_true", help="Grid-search backtest threshold")
     args = parser.parse_args()
 
     _load_env()
-    from sb_query import ShadowBrokerClient
+    from sb_query import Vincent OSClient
 
-    sb = ShadowBrokerClient()
+    sb = Vincent OSClient()
     report: dict[str, object] = {
         "benchmark_note": (
             "Backtest accuracy is on curated pre-crisis snippets vs cheap-talk controls. "

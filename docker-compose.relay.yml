@@ -1,8 +1,8 @@
 # Minimal relay-node compose — backend only, no frontend needed.
 services:
   backend:
-    image: ghcr.io/bigbodycobain/shadowbroker-backend:latest
-    container_name: shadowbroker-relay
+    image: ghcr.io/bigbodycobain/vincent_os-backend:latest
+    container_name: vincent_os-relay
     ports:
       - "127.0.0.1:8000:8000"
     env_file: .env

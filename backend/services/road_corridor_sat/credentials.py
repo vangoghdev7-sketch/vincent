@@ -1,4 +1,4 @@
-"""Reuse Shadowbroker Sentinel Hub / Copernicus CDSE credentials."""
+"""Reuse Vincent OS Sentinel Hub / Copernicus CDSE credentials."""
 from __future__ import annotations
 
 import os

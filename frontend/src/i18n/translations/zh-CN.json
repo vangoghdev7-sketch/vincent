@@ -19,6 +19,7 @@
     "checkFailed": "检查失败",
     "node": "节点",
     "terminal": "终端",
+    "vincent": "VINCENT",
     "coordinates": "坐标",
     "location": "位置",
     "style": "样式",
@@ -127,7 +128,7 @@
     "close": "关闭"
   },
   "onboarding": {
-    "welcome": "欢迎使用 ShadowBroker",
+    "welcome": "欢迎使用 Vincent",
     "getStarted": "开始使用"
   },
   "news": {
@@ -216,7 +217,7 @@
   },
   "gtLean": {
     "title": "在低配节点上启用衍生 OSINT？",
-    "message": "Shadowbroker 检测到该节点 CPU 上限为 1 vCPU。开启地图图层通常安全，但启用后端引擎可能会拖慢 Telegram、GDELT 等 OSINT 抓取。",
+    "message": "Vincent 检测到该节点 CPU 上限为 1 vCPU。开启地图图层通常安全，但启用后端引擎可能会拖慢 Telegram、GDELT 等 OSINT 抓取。",
     "confirm": "仍要开启图层",
     "cancel": "取消"
   },
@@ -308,7 +309,7 @@
     "results": "结果"
   },
   "ai": {
-    "title": "AI 情报面板",
+    "title": "Vincent 情报",
     "connected": "已连接",
     "disconnected": "未连接"
   },
@@ -342,7 +343,7 @@
     "coherence": "相干变化"
   },
   "telegram": {
-    "disclaimer": "警告：以下内容来自公开 Telegram 频道。Shadowbroker 不托管、不核实、不背书该内容。您自行承担一切风险，与 Shadowbroker 无关。",
+    "disclaimer": "警告：以下内容来自公开 Telegram 频道。Vincent 不托管、不核实、不背书该内容。您自行承担一切风险，与 Vincent 无关。",
     "loadMedia": "查看媒体（Telegram）",
     "openOriginal": "在 Telegram 打开 →",
     "embedTitle": "Telegram 帖子嵌入",

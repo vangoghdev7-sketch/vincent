@@ -16,7 +16,7 @@ describe('viewport fast refetch wiring', () => {
   });
 
   it('VIEWPORT_COMMITTED_EVENT is a stable custom event name', () => {
-    expect(VIEWPORT_COMMITTED_EVENT).toBe('shadowbroker:viewport-committed');
+    expect(VIEWPORT_COMMITTED_EVENT).toBe('vincent_os:viewport-committed');
     const handler = vi.fn();
     window.addEventListener(VIEWPORT_COMMITTED_EVENT, handler);
     window.dispatchEvent(new CustomEvent(VIEWPORT_COMMITTED_EVENT));

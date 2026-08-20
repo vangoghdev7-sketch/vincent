@@ -228,7 +228,7 @@ def get_shodan_connector_status() -> dict[str, Any]:
         "attribution": "Data from Shodan",
         "warning": (
             "Shodan is a paid API. Searches use your local SHODAN_API_KEY, results stay local to "
-            "your ShadowBroker session by default, and any downstream use is your responsibility."
+            "your Vincent session by default, and any downstream use is your responsibility."
         ),
         "limits": {
             "default_pages_per_search": _DEFAULT_SEARCH_PAGES,
@@ -256,7 +256,7 @@ def search_shodan(query: str, page: int = 1, facets: list[str] | None = None) ->
         "total": int(raw.get("total") or 0),
         "matches": matches,
         "facets": _normalize_facets(raw.get("facets")),
-        "note": "Operator-triggered Shodan results. Not part of ShadowBroker core feeds.",
+        "note": "Operator-triggered Shodan results. Not part of Vincent core feeds.",
     }
 
 
@@ -274,7 +274,7 @@ def count_shodan(query: str, facets: list[str] | None = None) -> dict[str, Any]:
         "query": cleaned_query,
         "total": int(raw.get("total") or 0),
         "facets": _normalize_facets(raw.get("facets")),
-        "note": "Count/facets query only. No persistent ShadowBroker storage.",
+        "note": "Count/facets query only. No persistent Vincent storage.",
     }
 
 
@@ -316,5 +316,5 @@ def lookup_shodan_host(ip: str, history: bool = False) -> dict[str, Any]:
         "attribution": "Data from Shodan",
         "host": host,
         "history": bool(history),
-        "note": "Operator-triggered Shodan host lookup. Not merged into ShadowBroker datasets.",
+        "note": "Operator-triggered Shodan host lookup. Not merged into Vincent datasets.",
     }

@@ -22,7 +22,7 @@ _sentinel_cache = TTLCache(maxsize=200, ttl=3600)
 def _planetary_user_agent() -> str:
     # Round 7a: per-install handle so Microsoft Planetary Computer can
     # attribute requests to the specific operator rather than treating
-    # the whole Shadowbroker user base as one entity.
+    # the whole Vincent OS user base as one entity.
     return outbound_user_agent("sentinel2-planetary-computer")
 
 

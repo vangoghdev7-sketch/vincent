@@ -20,9 +20,9 @@ _nominatim_last_call = 0.0
 # a contact path.
 #
 # Round 7a: the original fix in PR #284 used a single project-wide
-# identifier, which from Wikimedia's perspective made every Shadowbroker
+# identifier, which from Wikimedia's perspective made every Vincent OS
 # install in the world look like one giant scraper. If one install
-# misbehaved, their only recourse was to block "Shadowbroker" as a
+# misbehaved, their only recourse was to block "Vincent OS" as a
 # whole. We now build the headers from ``outbound_user_agent('wikimedia')``
 # which embeds the per-install operator handle (auto-generated or
 # operator-chosen), so Wikimedia can rate-limit / contact the specific

@@ -1,4 +1,4 @@
-"""Normalize Shadowbroker feed records into GT analytics feed items."""
+"""Normalize Vincent OS feed records into GT analytics feed items."""
 
 from __future__ import annotations
 

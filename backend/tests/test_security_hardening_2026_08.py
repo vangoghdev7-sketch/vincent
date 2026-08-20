@@ -89,7 +89,7 @@ def test_agent_shell_token_store_stays_bounded_without_recursive_locking() -> No
 
 
 def test_updater_refuses_same_release_checksum_as_sole_trust_root(tmp_path, monkeypatch) -> None:
-    archive = tmp_path / "ShadowBroker_v9.9.9.zip"
+    archive = tmp_path / "Vincent OS_v9.9.9.zip"
     archive.write_bytes(b"archive-under-test")
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
 
@@ -105,13 +105,13 @@ def test_updater_refuses_same_release_checksum_as_sole_trust_root(tmp_path, monk
         updater._validate_zip_hash(
             str(archive),
             asset_name=archive.name,
-            sha256sums_url="https://github.com/BigBodyCobain/Shadowbroker/releases/download/v9.9.9/SHA256SUMS.txt",
+            sha256sums_url="https://github.com/BigBodyCobain/Vincent OS/releases/download/v9.9.9/SHA256SUMS.txt",
             release_tag="v9.9.9",
         )
 
 
 def test_updater_accepts_preinstalled_baked_digest(tmp_path, monkeypatch) -> None:
-    archive = tmp_path / "ShadowBroker_v9.9.9.zip"
+    archive = tmp_path / "Vincent OS_v9.9.9.zip"
     archive.write_bytes(b"trusted-archive")
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
 

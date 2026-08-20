@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Verify OpenClaw HMAC auth against a running ShadowBroker backend.
+"""Verify OpenClaw HMAC auth against a running Vincent OS backend.
 
 Usage:
     export SHADOWBROKER_URL=http://127.0.0.1:8000
     export SHADOWBROKER_HMAC_SECRET=<from Connect OpenClaw modal>
     python verify_hmac.py
 
-Signs the same canonical JSON body as openclaw-skills/shadowbroker/sb_query.py.
+Signs the same canonical JSON body as openclaw-skills/vincent_os/sb_query.py.
 """
 
 from __future__ import annotations

@@ -93,8 +93,8 @@ Expected bundle types vary by platform:
 ## Tauri updater notes
 
 The updater public key is baked into `src-tauri/tauri.conf.json`. Keep the
-private key in `release-secrets/shadowbroker-updater.key` and its local
-password file in `release-secrets/shadowbroker-updater.key.pass`, or provide
+private key in `release-secrets/vincent_os-updater.key` and its local
+password file in `release-secrets/vincent_os-updater.key.pass`, or provide
 the same values through `TAURI_SIGNING_PRIVATE_KEY` and
 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` at build time. The local
 `release-secrets/` folder is gitignored.
@@ -102,7 +102,7 @@ the same values through `TAURI_SIGNING_PRIVATE_KEY` and
 The production updater endpoint is:
 
 ```text
-https://github.com/BigBodyCobain/Shadowbroker/releases/latest/download/latest.json
+https://github.com/BigBodyCobain/Vincent OS/releases/latest/download/latest.json
 ```
 
 For GitHub releases, upload `latest.json`, the installer (`.msi` / `.exe`), and

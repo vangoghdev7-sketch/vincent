@@ -1125,7 +1125,7 @@ class AsfinagIngestor(BaseCCTVIngestor):
 
     API_URL = "https://odo.asfinag.at/odo/rest/sec/resource/001/json/webcams?language=atDE"
     HEADERS = {
-        "User-Agent": "Shadowbroker-CCTV/1.0",
+        "User-Agent": "Vincent OS-CCTV/1.0",
         "Accept": "application/json",
         "Referer": "https://www.asfinag.at/",
         "Authorization": "Basic bWFwX3dpZGdldDp0ZWdkaXc=",

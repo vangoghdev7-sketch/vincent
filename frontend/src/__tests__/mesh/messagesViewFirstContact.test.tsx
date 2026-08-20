@@ -676,7 +676,7 @@ describe('MessagesView first-contact trust UX', () => {
     await waitFor(() => expect(mocks.writeClipboard).toHaveBeenCalledWith('handle-123'));
     const copied = String(mocks.writeClipboard.mock.calls.at(-1)?.[0] || '');
     expect(copied).toBe('handle-123');
-    expect(screen.queryByText(/shadowbroker\.infonet\.dm\.invite/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/vincent_os\.infonet\.dm\.invite/i)).not.toBeInTheDocument();
   });
 
   it('does not advertise legacy handle-only addresses as copyable contact addresses', async () => {
@@ -734,7 +734,7 @@ describe('MessagesView first-contact trust UX', () => {
 
   it('hides pasted signed address JSON until advanced details are opened', async () => {
     const signedAddress = JSON.stringify({
-      type: 'shadowbroker.infonet.dm.invite',
+      type: 'vincent_os.infonet.dm.invite',
       version: 1,
       invite: { event_type: 'dm_invite', payload: {} },
     });
@@ -751,7 +751,7 @@ describe('MessagesView first-contact trust UX', () => {
     });
 
     expect(screen.getByDisplayValue(/Copied address received\. Ready to import\./i)).toBeInTheDocument();
-    expect(screen.queryByDisplayValue(/shadowbroker\.infonet\.dm\.invite/i)).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue(/vincent_os\.infonet\.dm\.invite/i)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Advanced Details' }));
 

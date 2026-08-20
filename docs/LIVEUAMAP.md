@@ -1,13 +1,13 @@
 # LiveUAMap enrichment
 
-Shadowbroker's **Global Incidents** layer does not depend on LiveUAMap. GDELT
+Vincent's **Global Incidents** layer does not depend on LiveUAMap. GDELT
 remains the baseline incident source; LiveUAMap adds optional map-pin enrichment
 when one of the providers below is available.
 
 ## Provider order
 
 1. **Supported LiveUAMap API (optional)** — preferred when an operator has a
-   paid/contracted API endpoint. Shadowbroker does not require this service.
+   paid/contracted API endpoint. Vincent does not require this service.
 2. **Browser provider (best effort)** — the existing Playwright integration.
    This remains enabled by default on Linux/macOS/Docker when Global Incidents
    is active, preserving existing behavior. Windows asks once before allowing
@@ -21,7 +21,7 @@ feature.
 ## Supported API configuration
 
 Because LiveUAMap API endpoint/auth details are supplied under the operator's
-service agreement, Shadowbroker does not hard-code a vendor account endpoint.
+service agreement, Vincent does not hard-code a vendor account endpoint.
 Configure the HTTPS JSON/GeoJSON URL you were given:
 
 ```env
@@ -44,7 +44,7 @@ the operator separately opted into browser contact.
 ## Browser-provider behavior
 
 The browser provider is **best effort** because it consumes an undocumented web
-page representation rather than a stable public schema. Shadowbroker therefore:
+page representation rather than a stable public schema. Vincent therefore:
 
 - treats strings, wrapped objects, keyed objects, double-encoded JSON, legacy
   base64 payloads, and GeoJSON as bounded parser inputs;
@@ -88,5 +88,5 @@ configured.
 LiveUAMap data is enrichment. If Chromium is missing, the upstream schema drifts,
 the site presents an access challenge, the paid API is unavailable, or every
 region returns malformed data, the provider returns no new pins and the error is
-contained. GDELT fetching and the rest of the Shadowbroker data pipeline continue
+contained. GDELT fetching and the rest of the Vincent data pipeline continue
 independently.

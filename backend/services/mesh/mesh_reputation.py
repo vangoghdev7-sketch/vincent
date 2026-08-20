@@ -198,13 +198,13 @@ def _vote_storage_window_seconds(grace_seconds: int) -> int:
 def _derive_legacy_secret_vote_salt(secret: str) -> bytes:
     return hmac.new(
         secret.encode("utf-8"),
-        b"shadowbroker|reputation|voter-blind|v1",
+        b"vincent_os|reputation|voter-blind|v1",
         hashlib.sha256,
     ).digest()
 
 
 def _derive_rotated_secret_vote_salt(secret: str, epoch_index: int) -> bytes:
-    material = f"shadowbroker|reputation|voter-blind|v2|{epoch_index}".encode("utf-8")
+    material = f"vincent_os|reputation|voter-blind|v2|{epoch_index}".encode("utf-8")
     return hmac.new(secret.encode("utf-8"), material, hashlib.sha256).digest()
 
 

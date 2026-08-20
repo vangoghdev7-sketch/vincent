@@ -246,7 +246,7 @@ class MeshEnvelope:
     # Identity
     sender_id: str  # Node ID or callsign of sender
     destination: str  # Target node ID, callsign, or "broadcast"
-    channel: str = "LongFast"  # Channel name (LongFast, Shadowbroker, etc.)
+    channel: str = "LongFast"  # Channel name (LongFast, Vincent OS, etc.)
 
     # Routing metadata
     priority: Priority = Priority.NORMAL

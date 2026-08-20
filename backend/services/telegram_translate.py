@@ -146,7 +146,7 @@ def _google_translate(clean: str, target: str, source: str | None = None) -> tup
     resp = requests.get(
         url,
         timeout=8,
-        headers={"User-Agent": "Mozilla/5.0 (compatible; Shadowbroker-Telegram-Translate/1.0)"},
+        headers={"User-Agent": "Mozilla/5.0 (compatible; Vincent OS-Telegram-Translate/1.0)"},
     )
     resp.raise_for_status()
     data = resp.json()

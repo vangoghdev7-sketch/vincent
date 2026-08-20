@@ -1,17 +1,17 @@
-"""ShadowBroker query functions - core API interaction for OpenClaw.
+"""Vincent OS query functions - core API interaction for OpenClaw.
 
 This module provides all the functions OpenClaw needs to interact with
-the ShadowBroker OSINT platform.
+the Vincent OS OSINT platform.
 
 For local access (same machine), no authentication is needed.
 For remote access, set SHADOWBROKER_HMAC_SECRET to enable HMAC-signed requests.
-Older ShadowBroker UI snippets used SHADOWBROKER_KEY; this client still accepts
+Older Vincent OS UI snippets used SHADOWBROKER_KEY; this client still accepts
 that value as an HMAC signing secret for compatibility. Never send either value
 as a raw bearer token, X-Admin-Key, query parameter, or unsigned header.
 
 Usage (inside an OpenClaw skill):
-    from sb_query import ShadowBrokerClient
-    sb = ShadowBrokerClient()
+    from sb_query import Vincent OSClient
+    sb = Vincent OSClient()
     data = await sb.get_telemetry()
     await sb.place_pin(34.05, -118.24, "UAP Sighting", category="anomaly")
 
@@ -19,7 +19,7 @@ Remote usage:
     import os
     os.environ["SHADOWBROKER_URL"] = "https://your-server.com:8000"
     os.environ["SHADOWBROKER_HMAC_SECRET"] = "your-hmac-secret-here"
-    sb = ShadowBrokerClient()
+    sb = Vincent OSClient()
 """
 
 import asyncio
@@ -41,8 +41,8 @@ except ImportError:
 SB_BASE = os.environ.get("SHADOWBROKER_URL", "http://127.0.0.1:8000")
 
 
-class ShadowBrokerClient:
-    """Client for the ShadowBroker REST API.
+class Vincent OSClient:
+    """Client for the Vincent OS REST API.
 
     Supports both local (no auth) and remote (HMAC-signed) connections.
     Set SHADOWBROKER_HMAC_SECRET env var to enable remote authentication.
@@ -113,7 +113,7 @@ class ShadowBrokerClient:
             "X-SB-Signature": signature,
         }
 
-    # Patterns that look like LLM API keys — never send these to ShadowBroker.
+    # Patterns that look like LLM API keys — never send these to Vincent OS.
     _SENSITIVE_KEY_PREFIXES = (
         "sk-",       # OpenAI
         "key-",      # Generic
@@ -131,7 +131,7 @@ class ShadowBrokerClient:
 
     @classmethod
     def _sanitize_payload(cls, data: dict) -> dict:
-        """Scrub LLM API keys from payloads before sending to ShadowBroker.
+        """Scrub LLM API keys from payloads before sending to Vincent OS.
 
         If the LLM is tricked via prompt injection into including its own
         API credentials in a data payload, this filter catches it.
@@ -251,7 +251,7 @@ class ShadowBrokerClient:
         return r.json()
 
     async def poll_channel(self) -> dict:
-        """Poll for command responses and tasks from ShadowBroker.
+        """Poll for command responses and tasks from Vincent OS.
 
         Returns:
             {ok, commands: [...], tasks: [...], commands_count, tasks_count}
@@ -699,7 +699,7 @@ class ShadowBrokerClient:
         items: list[dict],
         mode: str = "append",
     ) -> dict:
-        """Inject custom data into a native ShadowBroker layer."""
+        """Inject custom data into a native Vincent OS layer."""
         r = await self._post("/api/ai/inject", json={
             "layer": layer,
             "items": items,
@@ -818,7 +818,7 @@ class ShadowBrokerClient:
     async def get_full_telemetry(self) -> dict:
         """Get ALL telemetry: fast-tier + slow-tier merged into one dict.
 
-        This gives the agent access to every layer ShadowBroker tracks:
+        This gives the agent access to every layer Vincent OS tracks:
         flights, ships, SIGINT, satellites, GDELT, CrowdThreat, LiveUAMap,
         UAP sightings, wastewater, FIRMS fires, earthquakes, weather, etc.
         """
@@ -1434,7 +1434,7 @@ class ShadowBrokerClient:
         """Open the SSE stream and yield events as they arrive.
 
         This is the preferred way to receive real-time updates from
-        ShadowBroker.  The server pushes:
+        Vincent OS.  The server pushes:
 
           layer_changed — which layers updated and their new version/count.
                           Internally updates ``self._layer_versions`` so

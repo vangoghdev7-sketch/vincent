@@ -1,5 +1,11 @@
-# shadowbroker .gitignore
+# vincent_os .gitignore
 # ----------------------
+
+# ── Unified workspace (host-specific; never commit) ──
+# ./vincent/ is a symlink index pointing at absolute $HOME paths, some holding
+# secrets; unified.sh embeds a host-specific nvm fallback path.
+/vincent/
+/unified.sh
 
 # Dependencies
 node_modules/
@@ -179,7 +185,7 @@ local-artifacts/
 release-secrets/
 release-staging/
 .tmp-release-inspect/
-shadowbroker_repo/
+vincent_os_repo/
 frontend/src/components.bak/
 frontend/src/components/map/icons/backups/
 

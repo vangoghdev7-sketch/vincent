@@ -2,7 +2,7 @@
 name = "privacy-core"
 version = "0.1.0"
 edition = "2021"
-description = "Rust privacy core for ShadowBroker / Infonet private messaging primitives"
+description = "Rust privacy core for Vincent OS / Infonet private messaging primitives"
 license = "MIT"
 publish = false
 

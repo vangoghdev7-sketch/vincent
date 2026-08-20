@@ -1,4 +1,4 @@
-"""ShadowBroker SAR (Synthetic Aperture Radar) layer.
+"""Vincent OS SAR (Synthetic Aperture Radar) layer.
 
 Two operating modes:
 

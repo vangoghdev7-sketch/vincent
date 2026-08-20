@@ -1,15 +1,18 @@
 ## Default registry is GHCR because the GitHub release workflow publishes:
-##   ghcr.io/bigbodycobain/shadowbroker-backend:latest
-##   ghcr.io/bigbodycobain/shadowbroker-frontend:latest
+##   ghcr.io/bigbodycobain/vincent_os-backend:latest
+##   ghcr.io/bigbodycobain/vincent_os-frontend:latest
 ##
 ## GitLab mirror images can still be used by swapping the image lines to:
-##   registry.gitlab.com/bigbodycobain/shadowbroker/backend:latest
-##   registry.gitlab.com/bigbodycobain/shadowbroker/frontend:latest
+##   registry.gitlab.com/bigbodycobain/vincent_os/backend:latest
+##   registry.gitlab.com/bigbodycobain/vincent_os/frontend:latest
 
 services:
   backend:
-    image: ghcr.io/bigbodycobain/shadowbroker-backend:latest
-    container_name: shadowbroker-backend
+    image: localhost/vincent-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vincent_os-backend
     ports:
       - "${BIND:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
     environment:
@@ -84,10 +87,10 @@ services:
       # Treat that bridge as local operator access while ports remain bound to 127.0.0.1 by default.
       - SHADOWBROKER_TRUST_DOCKER_BRIDGE_LOCAL_OPERATOR=${SHADOWBROKER_TRUST_DOCKER_BRIDGE_LOCAL_OPERATOR:-1}
       # Issue #250: bridge trust is now bound to specific container hostnames
-      # (default: 'frontend' compose service + 'shadowbroker-frontend' container
+      # (default: 'frontend' compose service + 'vincent_os-frontend' container
       # name). If you rename the frontend service or run with a different
       # container_name, list the hostnames here (comma-separated, no spaces).
-      - SHADOWBROKER_TRUSTED_FRONTEND_HOSTS=${SHADOWBROKER_TRUSTED_FRONTEND_HOSTS:-frontend,shadowbroker-frontend}
+      - SHADOWBROKER_TRUSTED_FRONTEND_HOSTS=${SHADOWBROKER_TRUSTED_FRONTEND_HOSTS:-frontend,vincent_os-frontend}
       # Third-party fetcher opt-ins. Default OFF — these phone home to
       # politically/commercially sensitive upstreams (Polymarket, Kalshi,
       # Yahoo Finance, EU disinfo trackers, NUFORC dataset host, etc.).
@@ -129,8 +132,10 @@ services:
           cpus: '2'
 
   frontend:
-    image: ghcr.io/bigbodycobain/shadowbroker-frontend:latest
-    container_name: shadowbroker-frontend
+    # Vincent-branded frontend built from local source (see docker-compose.override.yml
+    # for the from-source build). Pinned so a plain `up` never reverts to the upstream image.
+    image: localhost/vincent-frontend:latest
+    container_name: vincent_os-frontend
     ports:
       - "${BIND:-127.0.0.1}:${FRONTEND_PORT:-3000}:3000"
     environment:

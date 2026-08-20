@@ -120,8 +120,8 @@ describe('proxy CSRF guard on admin-key injection (#249/#254)', () => {
       method: 'GET',
       headers: {
         host: 'frontend:3000',
-        origin: 'https://shadowbroker.example',
-        'x-forwarded-host': 'shadowbroker.example',
+        origin: 'https://vincent_os.example',
+        'x-forwarded-host': 'vincent_os.example',
       },
     });
     await proxyGet(req, {
@@ -141,8 +141,8 @@ describe('proxy CSRF guard on admin-key injection (#249/#254)', () => {
       method: 'GET',
       headers: {
         host: '172.18.0.3:3000',
-        origin: 'https://shadowbroker.example',
-        'x-forwarded-host': 'shadowbroker.example',
+        origin: 'https://vincent_os.example',
+        'x-forwarded-host': 'vincent_os.example',
       },
     });
     await proxyGet(req, {
@@ -162,8 +162,8 @@ describe('proxy CSRF guard on admin-key injection (#249/#254)', () => {
       method: 'GET',
       headers: {
         host: 'frontend:3000',
-        origin: 'https://shadowbroker.example',
-        forwarded: 'for=172.18.0.1;proto=https;host="shadowbroker.example"',
+        origin: 'https://vincent_os.example',
+        forwarded: 'for=172.18.0.1;proto=https;host="vincent_os.example"',
       },
     });
     await proxyGet(req, {
@@ -179,10 +179,10 @@ describe('proxy CSRF guard on admin-key injection (#249/#254)', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    const req = new NextRequest('https://shadowbroker.example/api/settings/api-keys', {
+    const req = new NextRequest('https://vincent_os.example/api/settings/api-keys', {
       method: 'GET',
       headers: {
-        host: 'shadowbroker.example',
+        host: 'vincent_os.example',
         origin: 'https://evil.example',
         'x-forwarded-host': 'evil.example',
       },

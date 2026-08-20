@@ -213,7 +213,7 @@ async def agent_shell_websocket(
             json.dumps(
                 {
                     "type": "error",
-                    "message": "Host PTY is not available on Windows backend builds yet. Use the ShadowBroker desktop app or run the backend in Docker/Linux for an embedded shell.",
+                    "message": "Host PTY is not available on Windows backend builds yet. Use the Vincent desktop app or run the backend in Docker/Linux for an embedded shell.",
                 }
             )
         )

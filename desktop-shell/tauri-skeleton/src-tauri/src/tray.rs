@@ -12,7 +12,7 @@
 //!
 //! Platform behavior:
 //! - **Windows**: Tray icon in system notification area. Left-click opens
-//!   the menu; "Show ShadowBroker" restores the window. "Quit" exits fully.
+//!   the menu; "Show Vincent OS" restores the window. "Quit" exits fully.
 //! - **macOS**: Menu bar icon. Click opens menu (macOS convention).
 //! - **Linux**: Appindicator tray icon (requires libayatana-appindicator3).
 //!   Click opens menu. Behavior depends on the desktop environment —
@@ -94,13 +94,13 @@ pub fn should_hide_on_close() -> bool {
 /// On failure (e.g. missing appindicator on Linux), returns an error string
 /// and `TRAY_READY` remains `false`.
 pub fn setup_tray(app: &AppHandle) -> Result<TrayIcon, String> {
-    let show_item = MenuItem::with_id(app, MENU_ID_SHOW, "Show ShadowBroker", true, None::<&str>)
+    let show_item = MenuItem::with_id(app, MENU_ID_SHOW, "Show Vincent OS", true, None::<&str>)
         .map_err(|e| format!("tray_menu_show:{e}"))?;
     let hide_item = MenuItem::with_id(app, MENU_ID_HIDE, "Hide to Background", true, None::<&str>)
         .map_err(|e| format!("tray_menu_hide:{e}"))?;
     let separator =
         PredefinedMenuItem::separator(app).map_err(|e| format!("tray_menu_separator:{e}"))?;
-    let quit_item = MenuItem::with_id(app, MENU_ID_QUIT, "Quit ShadowBroker", true, None::<&str>)
+    let quit_item = MenuItem::with_id(app, MENU_ID_QUIT, "Quit Vincent OS", true, None::<&str>)
         .map_err(|e| format!("tray_menu_quit:{e}"))?;
 
     let menu = Menu::with_items(app, &[&show_item, &hide_item, &separator, &quit_item])
@@ -111,7 +111,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<TrayIcon, String> {
 
     let tray = TrayIconBuilder::new()
         .icon(icon)
-        .tooltip("ShadowBroker")
+        .tooltip("Vincent OS")
         .menu(&menu)
         .show_menu_on_left_click(true)
         .on_menu_event(|app, event| {
@@ -169,7 +169,7 @@ pub fn hide_main_window(app: &AppHandle) {
 
 /// Handle a window close request. Behavior depends on tray availability:
 /// - **Tray alive** (`should_hide_on_close()` = true): prevent close, hide to
-///   background. The user can restore via tray menu or quit via "Quit ShadowBroker".
+///   background. The user can restore via tray menu or quit via "Quit Vincent OS".
 /// - **No tray** (`should_hide_on_close()` = false): allow the close to proceed
 ///   normally so the app exits. Never strand the user with a hidden window and
 ///   no visible restore path.

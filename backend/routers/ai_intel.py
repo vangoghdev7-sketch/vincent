@@ -142,7 +142,7 @@ async def ai_status(request: Request):
     counts = pin_count()
     return {
         "ok": True,
-        "service": "ShadowBroker AI Intel",
+        "service": "Vincent AI Intel",
         "version": "1.0.0",
         "pin_count": sum(counts.values()),
         "pin_categories": counts,
@@ -711,7 +711,7 @@ async def generate_report(request: Request):
     report = {
         "ok": True,
         "generated_at": now.isoformat() + "Z",
-        "title": f"ShadowBroker Intelligence Report — {now.strftime('%Y-%m-%d %H:%M')} UTC",
+        "title": f"Vincent Intelligence Report — {now.strftime('%Y-%m-%d %H:%M')} UTC",
         "summary": {
             "military_flights": len(mil_flights),
             "tracked_aircraft": len(tracked),
@@ -1720,7 +1720,7 @@ async def agent_tool_manifest(request: Request):
             {
                 "name": "get_entity_trail",
                 "type": "read",
-                "description": "Resolve an aircraft or vessel and return its observed movement trail, route enrichment (from entity fields or route database), bearing/heading, and optional ACARS datalink hints. Trails accumulate while ShadowBroker is running.",
+                "description": "Resolve an aircraft or vessel and return its observed movement trail, route enrichment (from entity fields or route database), bearing/heading, and optional ACARS datalink hints. Trails accumulate while Vincent is running.",
                 "parameters": {
                     "query": {"type": "string", "required": False, "description": "Natural-language name, owner, callsign, tail, MMSI, or vessel name"},
                     "entity_type": {"type": "string", "required": False, "description": "Optional type hint: aircraft or ship"},
@@ -2314,8 +2314,8 @@ async def agent_tool_manifest(request: Request):
             "INCREMENTAL polling: get_layer_slice accepts since_layer_versions (preferred) or since_version. Pass {layer: version} from the previous response's layer_versions field — only layers that actually changed are serialized. Combined with SSE layer_changed events, the agent knows exactly which layers to fetch.",
             "Start with get_summary to understand data volume before pulling full datasets.",
             "Prefer compact lookups first: search_telemetry, find_flights, find_ships, search_news, entities_near, get_layer_slice. Use get_telemetry/get_slow_telemetry/get_report only when focused commands are insufficient.",
-            "ShadowBroker does expose UAP sightings, wastewater, and tracked_flights/VIP aircraft when those layers are populated. Verify with get_summary or get_layer_slice before claiming a layer is absent.",
-            "ShadowBroker also exposes fishing_activity, which is the fishing-vessel activity layer backed by Global Fishing Watch data when GFW_API_TOKEN is configured. Do not confuse it with the AIS ships layer.",
+            "Vincent does expose UAP sightings, wastewater, and tracked_flights/VIP aircraft when those layers are populated. Verify with get_summary or get_layer_slice before claiming a layer is absent.",
+            "Vincent also exposes fishing_activity, which is the fishing-vessel activity layer backed by Global Fishing Watch data when GFW_API_TOKEN is configured. Do not confuse it with the AIS ships layer.",
             "telegram_osint, malware_threats, cyber_threats, and scm_suppliers are live map layers. Use get_summary or get_layer_slice(['telegram_osint']) before claiming they are absent. Aliases: telegram, malware/botnet, cyber/cisa/kev, scm/suppliers.",
             "search_telemetry and search_news both index Telegram OSINT posts. For malware C2, botnet IPs, CISA KEV CVEs, or semiconductor suppliers, use search_telemetry or get_layer_slice on the matching layer.",
             "The Recon toolkit is available via osint_lookup: IP geolocation, DNS, WHOIS, certs, BGP, sanctions, CVE, MAC vendor, GitHub, breach checks, threat feeds. Call osint_tools first to list supported tools.",
@@ -2426,8 +2426,8 @@ async def api_capabilities(request: Request):
                 "Heartbeat keeps connection alive through proxies and Tor",
             ],
             "python_example": (
-                "from sb_query import ShadowBrokerClient\n"
-                "sb = ShadowBrokerClient()\n"
+                "from sb_query import Vincent OSClient\n"
+                "sb = Vincent OSClient()\n"
                 "async for event in sb.stream_updates():\n"
                 "    if event['event'] == 'layer_changed':\n"
                 "        changed = list(event['data']['layers'].keys())\n"

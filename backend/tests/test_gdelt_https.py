@@ -2,7 +2,7 @@
 
 The previous code fetched ``http://data.gdeltproject.org/gdeltv2/lastupdate.txt``
 and ~48 export archives over plaintext HTTP, which let a passive observer
-identify Shadowbroker nodes by their fetch pattern and let an active MITM
+identify Vincent OS nodes by their fetch pattern and let an active MITM
 inject doctored export records into the global incident map.
 
 These tests assert the URL constants and outbound URL constructor in

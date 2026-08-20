@@ -51,7 +51,7 @@ class TestGating:
 
     def test_username_set_means_enabled(self, monkeypatch):
         from services.fetchers.aishub_fallback import aishub_fallback_enabled
-        monkeypatch.setenv("AISHUB_USERNAME", "shadowbroker-test")
+        monkeypatch.setenv("AISHUB_USERNAME", "vincent_os-test")
 
         assert aishub_fallback_enabled() is True
 
@@ -61,7 +61,7 @@ class TestGating:
         from services.fetchers import aishub_fallback
         from services import ais_stream as ais
 
-        monkeypatch.setenv("AISHUB_USERNAME", "shadowbroker-test")
+        monkeypatch.setenv("AISHUB_USERNAME", "vincent_os-test")
 
         # Force "connected" state in the ais_stream module.
         with ais._vessels_lock:

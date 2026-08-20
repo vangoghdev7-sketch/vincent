@@ -5,7 +5,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 
 const HELP_TEXT = `
-ShadowBroker external root witness flow smoke
+Vincent OS external root witness flow smoke
 
 Usage:
   node scripts/mesh/smoke-external-root-witness-flow.mjs [--keep] [--workspace PATH] [--base-url URL]

@@ -285,7 +285,7 @@ def fetch_weather_alerts():
     try:
         # weather.gov requires a User-Agent per their API policy. Round 7a:
         # send the per-install operator handle so they can rate-limit per
-        # operator instead of treating "Shadowbroker" as one entity.
+        # operator instead of treating "Vincent OS" as one entity.
         from services.network_utils import outbound_user_agent
         url = "https://api.weather.gov/alerts/active?status=actual"
         headers = {

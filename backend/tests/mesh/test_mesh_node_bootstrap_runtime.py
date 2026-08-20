@@ -132,7 +132,7 @@ def test_refresh_node_peer_store_adds_bootstrap_seed_as_pull_only_peer(tmp_path,
     peer_store_path = tmp_path / "peer_store.json"
     monkeypatch.setattr(peer_store_mod, "DEFAULT_PEER_STORE_PATH", peer_store_path)
     monkeypatch.setenv("MESH_RELAY_PEERS", "")
-    monkeypatch.setenv("MESH_BOOTSTRAP_SEED_PEERS", "https://node.shadowbroker.info")
+    monkeypatch.setenv("MESH_BOOTSTRAP_SEED_PEERS", "https://node.vincent_os.info")
     monkeypatch.setenv("MESH_DEFAULT_SYNC_PEERS", "")
     monkeypatch.setenv("MESH_INFONET_ALLOW_CLEARNET_SYNC", "true")
     monkeypatch.setenv("MESH_BOOTSTRAP_SIGNER_PUBLIC_KEY", "")
@@ -153,10 +153,10 @@ def test_refresh_node_peer_store_adds_bootstrap_seed_as_pull_only_peer(tmp_path,
     assert snapshot["sync_peer_count"] == 1
     assert snapshot["push_peer_count"] == 0
     assert [record.peer_url for record in store.records_for_bucket("bootstrap")] == [
-        "https://node.shadowbroker.info"
+        "https://node.vincent_os.info"
     ]
     assert [record.peer_url for record in store.records_for_bucket("sync")] == [
-        "https://node.shadowbroker.info"
+        "https://node.vincent_os.info"
     ]
     assert store.records_for_bucket("sync")[0].source == "bundle"
 
@@ -169,7 +169,7 @@ def test_refresh_node_peer_store_suppresses_clearnet_seed_by_default(tmp_path, m
     peer_store_path = tmp_path / "peer_store.json"
     monkeypatch.setattr(peer_store_mod, "DEFAULT_PEER_STORE_PATH", peer_store_path)
     monkeypatch.setenv("MESH_RELAY_PEERS", "")
-    monkeypatch.setenv("MESH_BOOTSTRAP_SEED_PEERS", "https://node.shadowbroker.info")
+    monkeypatch.setenv("MESH_BOOTSTRAP_SEED_PEERS", "https://node.vincent_os.info")
     monkeypatch.setenv("MESH_DEFAULT_SYNC_PEERS", "")
     monkeypatch.delenv("MESH_INFONET_ALLOW_CLEARNET_SYNC", raising=False)
     monkeypatch.setenv("MESH_BOOTSTRAP_SIGNER_PUBLIC_KEY", "")
@@ -202,16 +202,16 @@ def test_refresh_node_peer_store_prunes_persisted_clearnet_records_in_private_mo
     store = peer_store_mod.PeerStore(peer_store_path)
     store.upsert(
         peer_store_mod.make_bootstrap_peer_record(
-            peer_url="https://node.shadowbroker.info",
+            peer_url="https://node.vincent_os.info",
             transport="clearnet",
             role="seed",
-            signer_id="shadowbroker-default",
+            signer_id="vincent_os-default",
             now=1_749_999_900,
         )
     )
     store.upsert(
         peer_store_mod.make_sync_peer_record(
-            peer_url="https://node.shadowbroker.info",
+            peer_url="https://node.vincent_os.info",
             transport="clearnet",
             role="seed",
             source="bundle",
@@ -220,7 +220,7 @@ def test_refresh_node_peer_store_prunes_persisted_clearnet_records_in_private_mo
     )
     store.upsert(
         peer_store_mod.make_push_peer_record(
-            peer_url="https://node.shadowbroker.info",
+            peer_url="https://node.vincent_os.info",
             transport="clearnet",
             role="relay",
             now=1_749_999_900,
@@ -260,7 +260,7 @@ def test_infonet_peer_url_filter_excludes_clearnet_in_private_mode(monkeypatch):
     try:
         assert main._filter_infonet_peer_urls(
             [
-                "https://node.shadowbroker.info",
+                "https://node.vincent_os.info",
                 "http://gqpbunqbgtkcqilvclm3xrkt3zowjyl3s62kkktvojgvxzizamvbrqid.onion:8000",
             ]
         ) == ["http://gqpbunqbgtkcqilvclm3xrkt3zowjyl3s62kkktvojgvxzizamvbrqid.onion:8000"]
@@ -446,7 +446,7 @@ def test_sync_from_peer_explains_stale_genesis_chain(monkeypatch):
     monkeypatch.setattr(main, "_hydrate_gate_store_from_chain", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(main, "_hydrate_dm_relay_from_chain", lambda *_args, **_kwargs: None)
 
-    ok, error, forked, retry_after_s = main._sync_from_peer("https://node.shadowbroker.info")
+    ok, error, forked, retry_after_s = main._sync_from_peer("https://node.vincent_os.info")
 
     assert ok is False
     assert forked is False

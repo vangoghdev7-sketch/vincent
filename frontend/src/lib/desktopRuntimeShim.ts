@@ -8,9 +8,9 @@ import {
   type LocalControlInvokeMeta,
 } from '@/lib/desktopControlContract';
 import { commandToHttpRequest } from '@/lib/desktopControlRouting';
-import type { ShadowbrokerDesktopRuntime } from '@/lib/desktopBridge';
+import type { Vincent OSDesktopRuntime } from '@/lib/desktopBridge';
 
-export function createHttpBackedDesktopRuntime(): ShadowbrokerDesktopRuntime {
+export function createHttpBackedDesktopRuntime(): Vincent OSDesktopRuntime {
   const auditEntries: DesktopControlAuditRecord[] = [];
   let totalRecorded = 0;
   const recordAudit = (entry: Omit<DesktopControlAuditRecord, 'recordedAt'>) => {

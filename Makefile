@@ -8,7 +8,7 @@ LAN_IP := $(shell ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2
 ## Default target — print help
 help:
 	@echo ""
-	@echo "Shadowbroker taskrunner"
+	@echo "Vincent OS taskrunner"
 	@echo ""
 	@echo "Usage: make <target>"
 	@echo ""
@@ -34,7 +34,7 @@ up-lan:
 	@echo "Detected LAN IP: $(LAN_IP)"
 	BIND=0.0.0.0 CORS_ORIGINS=http://$(LAN_IP):3000 $(COMPOSE) up -d
 	@echo ""
-	@echo "Shadowbroker is now running and can be accessed by LAN devices at http://$(LAN_IP):3000"
+	@echo "Vincent OS is now running and can be accessed by LAN devices at http://$(LAN_IP):3000"
 
 ## Stop all containers
 down:

@@ -345,6 +345,65 @@ function ChannelStatusSection() {
   );
 }
 
+/* ─── Vincent Local Brain Status ──────────────────────────────────── */
+
+/**
+ * Live indicator for Vincent, the default LOCAL brain (Vincent OS on the
+ * host at :20128, zero-key). Liveness is probed same-origin via the Next
+ * server route /api/vincent/status — the browser can't reach :20128
+ * directly (CSP connect-src + container-vs-host localhost).
+ */
+function VincentBrainStatus() {
+  const [connected, setConnected] = React.useState<boolean | null>(null);
+
+  const checkStatus = React.useCallback(async () => {
+    try {
+      const res = await fetch('/api/vincent/status');
+      if (res.ok) {
+        const data = await res.json();
+        setConnected(!!data.connected);
+      } else {
+        setConnected(false);
+      }
+    } catch {
+      setConnected(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    void checkStatus();
+    const tid = setInterval(checkStatus, 15_000);
+    return () => clearInterval(tid);
+  }, [checkStatus]);
+
+  const online = connected === true;
+
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 bg-violet-950/20 border border-violet-500/20">
+      <Brain size={13} className="text-violet-400" />
+      <span
+        className={`w-2 h-2 rounded-full ${
+          online ? 'bg-emerald-400 animate-pulse' : 'bg-gray-600'
+        }`}
+      />
+      <span
+        className={`text-[11px] font-mono tracking-wider ${
+          online ? 'text-emerald-300' : 'text-gray-500'
+        }`}
+      >
+        {connected === null
+          ? 'Vincent · checking...'
+          : online
+            ? 'Vincent · connected (:20128)'
+            : 'Vincent · offline'}
+      </span>
+      <span className="ml-auto text-[9px] font-mono text-violet-500/70 uppercase tracking-widest">
+        local brain
+      </span>
+    </div>
+  );
+}
+
 /* ─── Connect OpenClaw Modal Body ─────────────────────────────────── */
 
 interface ConnectModalBodyProps {
@@ -639,17 +698,17 @@ function ConnectModalBody({ apiEndpoint, handleCopy, copied }: ConnectModalBodyP
     lines.push('# AUTH DIRECTIVE:');
     lines.push('# SHADOWBROKER_HMAC_SECRET is a shared HMAC signing secret, not a raw API key.');
     lines.push('# Never send it as X-Admin-Key, Authorization: Bearer, a query parameter, or a plain request header.');
-    lines.push('# Every direct ShadowBroker API request must be HMAC-SHA256 signed with:');
+    lines.push('# Every direct Vincent API request must be HMAC-SHA256 signed with:');
     lines.push('#   X-SB-Timestamp, X-SB-Nonce, X-SB-Signature');
     lines.push('# Signature input: METHOD|path|timestamp|nonce|sha256(body)');
-    lines.push('# Use the ShadowBrokerClient/openclaw skill helper so requests are signed automatically.');
+    lines.push('# Use the Vincent OSClient/openclaw skill helper so requests are signed automatically.');
     lines.push('');
     lines.push('# OPERATING DIRECTIVE:');
-    lines.push('# You are a remote OpenClaw agent connected to ShadowBroker.');
-    lines.push('# ShadowBroker is a live intelligence and telemetry platform, not a narrow single-purpose API.');
+    lines.push('# You are a remote OpenClaw agent connected to Vincent.');
+    lines.push('# Vincent is a live intelligence and telemetry platform, not a narrow single-purpose API.');
     lines.push('# Treat the platform as having broad live telemetry unless a focused check proves otherwise.');
     lines.push("# Do not claim a layer, entity type, or capability is unavailable until you verify it from live data.");
-    lines.push("# If something is absent, say 'not found in current telemetry' or 'not present in the current dataset' rather than saying ShadowBroker cannot track it.");
+    lines.push("# If something is absent, say 'not found in current telemetry' or 'not present in the current dataset' rather than saying Vincent cannot track it.");
     lines.push('# Full access means you MAY place pins, create layers, inject data, set watches, and trigger displays, but do not perform write actions unless the user asks or the task clearly requires it.');
     lines.push('# For ordinary questions, prefer read commands and concise answers grounded in live results.');
 
@@ -684,7 +743,7 @@ function ConnectModalBody({ apiEndpoint, handleCopy, copied }: ConnectModalBodyP
     // SAR (Synthetic Aperture Radar) ground-change layer
     lines.push('');
     lines.push('# SAR GROUND-CHANGE LAYER:');
-    lines.push('# ShadowBroker has a full SAR (Synthetic Aperture Radar) layer that detects ground changes through cloud cover, at night, anywhere on Earth.');
+    lines.push('# Vincent has a full SAR (Synthetic Aperture Radar) layer that detects ground changes through cloud cover, at night, anywhere on Earth.');
     lines.push('# Two modes — both free:');
     lines.push('#   Mode A (Catalog): Free Sentinel-1 scene metadata from Alaska Satellite Facility. No account needed. Shows radar passes over AOIs and next-pass timing.');
     lines.push('#   Mode B (Anomalies): Pre-processed ground-change alerts from NASA OPERA (DISP deformation, DSWx water, DIST-ALERT vegetation), Copernicus EGMS, GFM floods, UNOSAT/EMS damage. Requires free Earthdata token.');
@@ -775,6 +834,11 @@ function ConnectModalBody({ apiEndpoint, handleCopy, copied }: ConnectModalBodyP
   return (
     <div className="px-6 py-5 space-y-5">
 
+      {/* ── Vincent already runs locally ─────────────────── */}
+      <p className="text-[11px] font-mono text-gray-500 leading-relaxed border-b border-gray-800/50 pb-3">
+        Vincent already runs locally as your default operator brain over loopback &mdash; this wizard is only for connecting ADDITIONAL remote OpenClaw agents.
+      </p>
+
       {/* ── Risk acceptance ──────────────────────────────── */}
       {!riskAccepted && (
         <div className="bg-amber-950/40 border border-amber-600/50 px-4 py-3.5">
@@ -785,7 +849,7 @@ function ConnectModalBody({ apiEndpoint, handleCopy, copied }: ConnectModalBodyP
                 Heads Up
               </div>
               <p className="text-xs font-mono text-amber-200/80 leading-relaxed">
-                Connecting an AI agent gives it access to your ShadowBroker data.
+                Connecting an AI agent gives it access to your Vincent data.
                 You control what it can do (read-only or full access). You&apos;re
                 responsible for what your agent does with it.
               </p>
@@ -822,7 +886,7 @@ function ConnectModalBody({ apiEndpoint, handleCopy, copied }: ConnectModalBodyP
                   Local
                 </div>
                 <p className="text-[10px] font-mono text-gray-500 mt-1">
-                  Same machine as ShadowBroker
+                  Same machine as Vincent
                 </p>
               </button>
               <button
@@ -1436,6 +1500,9 @@ export default function AIIntelPanel({
             className="overflow-hidden border-x border-b border-violet-500/20 bg-[var(--bg-elevated)]"
           >
             <div className="p-3 space-y-3 max-h-[60vh] overflow-y-auto styled-scrollbar">
+
+              {/* ── Vincent local brain status ───────────────────── */}
+              <VincentBrainStatus />
 
               {/* ── Connect OpenClaw Button ──────────────────────── */}
               <button

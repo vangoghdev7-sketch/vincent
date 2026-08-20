@@ -14,8 +14,8 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'WORLDVIEW // ORBITAL TRACKING',
-  description: 'Advanced Geopolitical Risk Dashboard',
+  title: 'VINCENT // OSINT COMMAND',
+  description: 'Vincent — Starry Night cyber-impressionist OSINT intelligence command center',
 };
 
 // The dashboard is a live local runtime, not a static landing page. If Next

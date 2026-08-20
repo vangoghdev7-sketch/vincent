@@ -13,7 +13,7 @@ import urllib.error
 import urllib.request
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-SKILL_DIR = os.path.join(ROOT, "openclaw-skills", "shadowbroker")
+SKILL_DIR = os.path.join(ROOT, "openclaw-skills", "vincent_os")
 API = os.environ.get("SHADOWBROKER_API", "http://127.0.0.1:8000")
 MARKER = os.environ.get("E2E_MARKER", f"OPENCLAW-AGENT-E2E-{int(time.time())}")
 
@@ -34,7 +34,7 @@ def _json_request(method: str, path: str, body: dict | None = None, *, inside_do
 
 def docker_python(code: str) -> str:
     proc = subprocess.run(
-        ["docker", "exec", "shadowbroker-backend", "python", "-c", code],
+        ["docker", "exec", "vincent_os-backend", "python", "-c", code],
         capture_output=True,
         text=True,
         timeout=300,
@@ -69,10 +69,10 @@ print(secret)
 
 async def agent_post(secret: str, message: str) -> dict:
     sys.path.insert(0, SKILL_DIR)
-    from sb_query import ShadowBrokerClient
+    from sb_query import Vincent OSClient
 
     os.environ["SHADOWBROKER_HMAC_SECRET"] = secret
-    client = ShadowBrokerClient(base_url=API)
+    client = Vincent OSClient(base_url=API)
     try:
         ready = await client.ensure_infonet_ready(join_swarm=True)
         print("ensure_infonet_ready:", json.dumps(ready, indent=2)[:2000])
@@ -98,13 +98,13 @@ print('yes' if evt else 'no')
 
 
 REMOTE_CONTAINERS = {
-    "shadowbroker": "shadowbroker-relay",  # seed VPS
-    "pete": "shadowbroker-backend",
+    "vincent_os": "vincent_os-relay",  # seed VPS
+    "pete": "vincent_os-backend",
 }
 
 
 def peer_gate_has_event(host: str, event_id: str) -> bool:
-    container = REMOTE_CONTAINERS.get(host, "shadowbroker-backend")
+    container = REMOTE_CONTAINERS.get(host, "vincent_os-backend")
     remote_code = (
         "from services.mesh.mesh_hashchain import gate_store; "
         f"print('yes' if gate_store.get_event({event_id!r}) else 'no')"
@@ -133,7 +133,7 @@ def wait_for_propagation(event_id: str, *, seconds: int = 90) -> dict[str, bool]
     results = {"local": False, "seed": False, "pete": False}
     while time.time() < deadline:
         results["local"] = local_gate_has_event(event_id)
-        results["seed"] = peer_gate_has_event("shadowbroker", event_id)
+        results["seed"] = peer_gate_has_event("vincent_os", event_id)
         results["pete"] = peer_gate_has_event("pete", event_id)
         if all(results.values()):
             break

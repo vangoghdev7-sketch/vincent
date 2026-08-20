@@ -1,7 +1,7 @@
 """OpenClaw Agent Bridge - Identity management and command routing.
 
 This module manages the OpenClaw agent's cryptographic identity and provides
-a secure command bridge between the agent and ShadowBroker's AI Intel subsystem.
+a secure command bridge between the agent and Vincent OS's AI Intel subsystem.
 
 The agent gets its own Ed25519 keypair, separate from the operator's identity.
 The private key never leaves this server - the agent's commands are validated

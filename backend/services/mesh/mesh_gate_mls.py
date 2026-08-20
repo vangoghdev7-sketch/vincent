@@ -86,7 +86,7 @@ def _gate_envelope_key_shared(gate_id: str, gate_secret: str) -> bytes:
     return HKDF(
         algorithm=hashes.SHA256(),
         length=32,
-        salt=b"shadowbroker-gate-envelope-v1",
+        salt=b"vincent_os-gate-envelope-v1",
         info=info,
     ).derive(ikm)
 
@@ -112,7 +112,7 @@ def _gate_envelope_key_scoped(gate_id: str, gate_secret: str, *, message_nonce: 
     return HKDF(
         algorithm=hashes.SHA256(),
         length=32,
-        salt=b"shadowbroker-gate-envelope-v2",
+        salt=b"vincent_os-gate-envelope-v2",
         info=info,
     ).derive(ikm)
 

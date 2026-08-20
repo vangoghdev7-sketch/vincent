@@ -1,5 +1,5 @@
 [project]
-name = "shadowbroker"
+name = "vincent_os"
 version = "0.9.84"
 readme = "README.md"
 requires-python = ">=3.10"

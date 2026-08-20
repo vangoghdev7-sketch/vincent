@@ -148,18 +148,18 @@ describe('proxy matcher and privileged API boundary', () => {
       method: 'GET',
       headers: {
         host: 'frontend:3000',
-        origin: 'https://shadowbroker.example',
-        forwarded: 'for=172.18.0.1;proto=https;host="shadowbroker.example"',
+        origin: 'https://vincent_os.example',
+        forwarded: 'for=172.18.0.1;proto=https;host="vincent_os.example"',
       },
     });
     expect(proxy(req).status).not.toBe(403);
   });
 
   it('does not trust spoofed X-Forwarded-Host on a public direct Host', () => {
-    const req = new NextRequest('https://shadowbroker.example/api/settings/api-keys', {
+    const req = new NextRequest('https://vincent_os.example/api/settings/api-keys', {
       method: 'GET',
       headers: {
-        host: 'shadowbroker.example',
+        host: 'vincent_os.example',
         origin: 'https://evil.example',
         'x-forwarded-host': 'evil.example',
       },

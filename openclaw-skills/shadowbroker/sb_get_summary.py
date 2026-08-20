@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One-shot get_summary for OpenClaw exec — loads .env.shadowbroker automatically."""
+"""One-shot get_summary for OpenClaw exec — loads .env.vincent_os automatically."""
 from __future__ import annotations
 
 import asyncio
@@ -10,8 +10,8 @@ from pathlib import Path
 
 def _load_env() -> None:
     candidates = [
-        Path.home() / ".openclaw" / "workspace" / ".env.shadowbroker",
-        Path(__file__).resolve().parent.parent.parent / ".env.shadowbroker",
+        Path.home() / ".openclaw" / "workspace" / ".env.vincent_os",
+        Path(__file__).resolve().parent.parent.parent / ".env.vincent_os",
     ]
     for path in candidates:
         if not path.is_file():
@@ -27,9 +27,9 @@ def _load_env() -> None:
 
 async def main() -> None:
     _load_env()
-    from sb_query import ShadowBrokerClient
+    from sb_query import Vincent OSClient
 
-    sb = ShadowBrokerClient()
+    sb = Vincent OSClient()
     try:
         resp = await sb.send_command("get_summary", {"compact": True})
         print(json.dumps(resp, indent=2))

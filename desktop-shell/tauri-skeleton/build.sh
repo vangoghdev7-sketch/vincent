@@ -44,8 +44,8 @@ ICON_SCRIPT="$SCRIPT_DIR/scripts/generate-icons.cjs"
 EXPORT_SCRIPT="$SCRIPT_DIR/scripts/build-frontend-export.cjs"
 BACKEND_RUNTIME_SCRIPT="$SCRIPT_DIR/scripts/build-backend-runtime.cjs"
 MANIFEST_SCRIPT="$SCRIPT_DIR/scripts/write-release-manifest.cjs"
-LOCAL_UPDATER_KEY="$REPO_ROOT/release-secrets/shadowbroker-updater.key"
-LOCAL_UPDATER_KEY_PASSWORD="$REPO_ROOT/release-secrets/shadowbroker-updater.key.pass"
+LOCAL_UPDATER_KEY="$REPO_ROOT/release-secrets/vincent_os-updater.key"
+LOCAL_UPDATER_KEY_PASSWORD="$REPO_ROOT/release-secrets/vincent_os-updater.key.pass"
 CLEAN=0
 
 for arg in "$@"; do
@@ -138,7 +138,7 @@ if [ -z "${TAURI_SIGNING_PRIVATE_KEY:-}" ] && [ -z "${TAURI_SIGNING_PRIVATE_KEY_
     fi
 fi
 
-echo "=== ShadowBroker Tauri Build ==="
+echo "=== Vincent OS Tauri Build ==="
 echo "Frontend dist:    $FRONTEND_OUT"
 echo "Companion www:    $SCRIPT_DIR/src-tauri/companion-www"
 echo "Backend runtime:  $SCRIPT_DIR/src-tauri/backend-runtime"

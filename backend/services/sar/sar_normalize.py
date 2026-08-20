@@ -104,7 +104,7 @@ class SarAnomaly:
 
 
 def _kind_to_pin_category(kind: str, default: str) -> str:
-    """Map SAR anomaly kind to ShadowBroker pin category color."""
+    """Map SAR anomaly kind to Vincent OS pin category color."""
     return {
         "ground_deformation": "infrastructure",
         "surface_water_change": "weather",

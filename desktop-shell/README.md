@@ -1,6 +1,6 @@
 # Desktop Shell
 
-Native-side scaffold for the ShadowBroker desktop boundary.
+Native-side scaffold for the Vincent desktop boundary.
 
 ## Purpose
 

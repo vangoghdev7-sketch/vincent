@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const HELP_TEXT = `
-ShadowBroker DM root health poller
+Vincent OS DM root health poller
 
 Usage:
   node scripts/mesh/poll-dm-root-health-alerts.mjs [--once] [--base-url URL] [--alerts-path PATH]
@@ -207,7 +207,7 @@ async function postWebhook(targetUrl, summary, config) {
     Accept: 'application/json',
   };
   const payload = {
-    source: 'shadowbroker_dm_root_health_bridge',
+    source: 'vincent_os_dm_root_health_bridge',
     sent_at: new Date().toISOString(),
     severity: summary.severity,
     monitoring_state: summary.state,

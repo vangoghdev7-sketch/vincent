@@ -354,7 +354,7 @@ def get_flight_trail(icao24: str) -> list:
 # Route enrichment is now served from services.fetchers.route_database, which
 # bulk-loads vrs-standing-data.adsb.lol/routes.csv.gz once per day and looks up
 # callsigns from an in-memory index. Replaces the legacy /api/0/routeset POST,
-# which was both blocked under the ShadowBroker UA (HTTP 451) and broken
+# which was both blocked under the Vincent OS UA (HTTP 451) and broken
 # upstream (returning 201 with empty body even for unblocked clients).
 
 

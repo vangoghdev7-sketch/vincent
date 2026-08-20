@@ -1,6 +1,6 @@
 """Tor hidden-service auto-provisioner.
 
-Manages a Tor hidden service that points to the local ShadowBroker backend.
+Manages a Tor hidden service that points to the local Vincent OS backend.
 Tor is started as a subprocess with a generated torrc. Windows source installs
 can download the Tor Expert Bundle into backend/data without admin rights.
 Docker images should already include the `tor` package.

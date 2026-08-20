@@ -19,6 +19,7 @@
     "checkFailed": "CHECK FAILED",
     "node": "NODE",
     "terminal": "TERMINAL",
+    "vincent": "VINCENT",
     "coordinates": "COORDINATES",
     "location": "LOCATION",
     "style": "STYLE",
@@ -127,7 +128,7 @@
     "close": "Close"
   },
   "onboarding": {
-    "welcome": "Welcome to ShadowBroker",
+    "welcome": "Welcome to Vincent",
     "getStarted": "Get Started"
   },
   "news": {
@@ -216,7 +217,7 @@
   },
   "gtLean": {
     "title": "Enable Derived OSINT on a lean node?",
-    "message": "Shadowbroker detected a 1 vCPU cap on this node. Turning on the Strategic Risk map layer is safe for display, but enabling the backend engine (GT_ANALYTICS_ENABLED) may slow Telegram, GDELT, and other OSINT fetches. Use OpenClaw watchdog alerts without the full engine on fleet nodes.",
+    "message": "Vincent detected a 1 vCPU cap on this node. Turning on the Strategic Risk map layer is safe for display, but enabling the backend engine (GT_ANALYTICS_ENABLED) may slow Telegram, GDELT, and other OSINT fetches. Use OpenClaw watchdog alerts without the full engine on fleet nodes.",
     "confirm": "Turn on layer anyway",
     "cancel": "Cancel"
   },
@@ -308,7 +309,7 @@
     "results": "results"
   },
   "ai": {
-    "title": "AI Intel Panel",
+    "title": "Vincent Intel",
     "connected": "Connected",
     "disconnected": "Disconnected"
   },
@@ -342,7 +343,7 @@
     "coherence": "Coherence Change"
   },
   "telegram": {
-    "disclaimer": "WARNING: Content below is loaded from public Telegram channels. Shadowbroker does not host, verify, or endorse it. What you view is entirely at your own risk and has nothing to do with Shadowbroker.",
+    "disclaimer": "WARNING: Content below is loaded from public Telegram channels. Vincent does not host, verify, or endorse it. What you view is entirely at your own risk and has nothing to do with Vincent.",
     "loadMedia": "VIEW MEDIA (TELEGRAM)",
     "openOriginal": "OPEN ON TELEGRAM →",
     "embedTitle": "Telegram post embed",

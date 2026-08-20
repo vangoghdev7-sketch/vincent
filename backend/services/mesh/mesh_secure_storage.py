@@ -99,15 +99,15 @@ def _stable_json(value: Any) -> bytes:
 
 
 def _envelope_aad(path: Path) -> bytes:
-    return f"shadowbroker|secure-json|v{_ENVELOPE_VERSION}|{path.name}".encode("utf-8")
+    return f"vincent_os|secure-json|v{_ENVELOPE_VERSION}|{path.name}".encode("utf-8")
 
 
 def _master_aad() -> bytes:
-    return f"shadowbroker|master-key|v{_MASTER_VERSION}".encode("utf-8")
+    return f"vincent_os|master-key|v{_MASTER_VERSION}".encode("utf-8")
 
 
 def _domain_key_aad(domain: str) -> bytes:
-    return f"shadowbroker|domain-key|v{_DOMAIN_KEY_VERSION}|{domain}".encode("utf-8")
+    return f"vincent_os|domain-key|v{_DOMAIN_KEY_VERSION}|{domain}".encode("utf-8")
 
 
 def _storage_root(base_dir: str | Path | None = None) -> Path:
@@ -128,7 +128,7 @@ def _normalize_domain_name(domain: str) -> str:
 
 
 def _domain_aad(domain: str, filename: str) -> bytes:
-    return f"shadowbroker|domain-json|v{_ENVELOPE_VERSION}|{domain}|{filename}".encode("utf-8")
+    return f"vincent_os|domain-json|v{_ENVELOPE_VERSION}|{domain}|{filename}".encode("utf-8")
 
 
 def _master_envelope_for_windows(protected_key: bytes, *, provider: str) -> dict[str, Any]:
@@ -289,7 +289,7 @@ def _passphrase_wrap(raw_key: bytes, secret: str, salt: bytes | None = None) -> 
         salt = os.urandom(32)
     derived = hashlib.pbkdf2_hmac("sha256", secret.encode("utf-8"), salt, _PASSPHRASE_PBKDF2_ITERATIONS)
     nonce = os.urandom(12)
-    ciphertext = AESGCM(derived).encrypt(nonce, raw_key, b"shadowbroker|passphrase-wrap")
+    ciphertext = AESGCM(derived).encrypt(nonce, raw_key, b"vincent_os|passphrase-wrap")
     return {
         "salt": _b64(salt),
         "nonce": _b64(nonce),
@@ -303,7 +303,7 @@ def _passphrase_unwrap(envelope: dict[str, Any], secret: str) -> bytes:
     nonce = _unb64(envelope.get("nonce"))
     ciphertext = _unb64(envelope.get("protected_key"))
     derived = hashlib.pbkdf2_hmac("sha256", secret.encode("utf-8"), salt, _PASSPHRASE_PBKDF2_ITERATIONS)
-    return AESGCM(derived).decrypt(nonce, ciphertext, b"shadowbroker|passphrase-wrap")
+    return AESGCM(derived).decrypt(nonce, ciphertext, b"vincent_os|passphrase-wrap")
 
 
 def _master_envelope_for_passphrase(raw_key: bytes, secret: str) -> dict[str, Any]:
@@ -381,7 +381,7 @@ if _is_windows():
             flags |= _CRYPTPROTECT_LOCAL_MACHINE
         if not _crypt32.CryptProtectData(
             ctypes.byref(in_blob),
-            "ShadowBroker Wormhole",
+            "Vincent OS Wormhole",
             None,
             None,
             None,

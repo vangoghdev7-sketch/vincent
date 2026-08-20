@@ -535,7 +535,7 @@ mod tests {
     }
 
     fn tmp_file(name: &str) -> std::path::PathBuf {
-        let root = std::env::temp_dir().join(format!("shadowbroker-local-custody-{name}"));
+        let root = std::env::temp_dir().join(format!("vincent_os-local-custody-{name}"));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(&root).unwrap();
         root.join("state.json")

@@ -126,8 +126,8 @@ class TestDefaultCompatibility:
         assert first._client_id.startswith("sb096-")
         assert second._client_id.startswith("sb096-")
         assert first._client_id != second._client_id
-        assert first._client_id != "shadowbroker-mesh"
-        assert second._client_id != "shadowbroker-mesh"
+        assert first._client_id != "vincent_os-mesh"
+        assert second._client_id != "vincent_os-mesh"
 
 
 # ---------------------------------------------------------------------------

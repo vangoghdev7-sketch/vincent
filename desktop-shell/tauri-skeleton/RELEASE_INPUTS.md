@@ -73,8 +73,8 @@ does not require your government name.
 For local builds, keep this ignored file safe:
 
 ```text
-release-secrets/shadowbroker-updater.key
-release-secrets/shadowbroker-updater.key.pass
+release-secrets/vincent_os-updater.key
+release-secrets/vincent_os-updater.key.pass
 ```
 
 For CI/release builds, set the same key through these environment variables or

@@ -158,7 +158,7 @@ def routing_manifest() -> dict[str, Any]:
     return {
         "default_read": "find_entity",
         "preferred_entry": "route_query",
-        "client_wrapper": "ShadowBrokerClient.ask",
+        "client_wrapper": "Vincent OSClient.ask",
         "batch_playbook": "run_playbook",
         "last_resort": "search_telemetry",
         "expensive_commands": sorted(EXPENSIVE_COMMANDS),
@@ -173,7 +173,7 @@ def routing_manifest() -> dict[str, Any]:
         "recipes": [
             {
                 "intent": "natural language question",
-                "use": "route_query → recommended cmd, or ShadowBrokerClient.ask()",
+                "use": "route_query → recommended cmd, or Vincent OSClient.ask()",
             },
             {
                 "intent": "known person/aircraft",

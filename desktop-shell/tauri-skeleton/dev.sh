@@ -36,7 +36,7 @@ cd "$SCRIPT_DIR/src-tauri"
 
 export SHADOWBROKER_BACKEND_URL="${SHADOWBROKER_BACKEND_URL:-http://127.0.0.1:8000}"
 
-echo "=== ShadowBroker Tauri Dev Shell ==="
+echo "=== Vincent OS Tauri Dev Shell ==="
 echo "Backend URL: $SHADOWBROKER_BACKEND_URL"
 echo "Admin key:   ${SHADOWBROKER_ADMIN_KEY:+(set)}"
 echo ""

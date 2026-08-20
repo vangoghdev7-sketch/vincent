@@ -47,7 +47,7 @@ def expected_tag(version: str) -> str:
 
 def expected_asset(version: str) -> str:
     normalized = _normalize_version(version)
-    return f"ShadowBroker_v{normalized}.zip"
+    return f"Vincent OS_v{normalized}.zip"
 
 
 def sha256_file(path: Path) -> str:
@@ -201,7 +201,7 @@ def cmd_write_attestation(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Helper for ShadowBroker release version/tag/asset consistency."
+        description="Helper for Vincent OS release version/tag/asset consistency."
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 

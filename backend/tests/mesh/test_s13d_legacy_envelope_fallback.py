@@ -33,7 +33,7 @@ def _make_phase1_envelope(gate_id: str) -> str:
     key = HKDF(
         algorithm=hashes.SHA256(),
         length=32,
-        salt=b"shadowbroker-gate-envelope-v1",
+        salt=b"vincent_os-gate-envelope-v1",
         info=info,
     ).derive(ikm)
     nonce = os.urandom(12)
@@ -54,7 +54,7 @@ def _make_phase2_envelope(gate_id: str, gate_secret: str) -> str:
     key = HKDF(
         algorithm=hashes.SHA256(),
         length=32,
-        salt=b"shadowbroker-gate-envelope-v1",
+        salt=b"vincent_os-gate-envelope-v1",
         info=info,
     ).derive(ikm)
     nonce = os.urandom(12)

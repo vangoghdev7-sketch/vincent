@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ShadowbrokerDesktopRuntime } from '@/lib/desktopBridge';
+import type { Vincent OSDesktopRuntime } from '@/lib/desktopBridge';
 
 describe('desktopBridgeBootstrapPreference', () => {
   beforeEach(() => {
@@ -11,7 +11,7 @@ describe('desktopBridgeBootstrapPreference', () => {
 
   it('prefers a pre-installed native runtime over the HTTP shim', async () => {
     const nativeInvoke = vi.fn().mockResolvedValue({ ok: true });
-    const nativeRuntime: ShadowbrokerDesktopRuntime = {
+    const nativeRuntime: Vincent OSDesktopRuntime = {
       invokeLocalControl: nativeInvoke,
       getNativeControlAuditReport: () => ({
         totalEvents: 0,
@@ -82,7 +82,7 @@ describe('desktopBridgeBootstrapPreference', () => {
       recent: [],
       byOutcome: { allowed: 5 },
     };
-    const nativeRuntime: ShadowbrokerDesktopRuntime = {
+    const nativeRuntime: Vincent OSDesktopRuntime = {
       invokeLocalControl: vi.fn().mockResolvedValue({}),
       getNativeControlAuditReport: () => auditReport,
       clearNativeControlAuditReport: vi.fn(),
@@ -101,7 +101,7 @@ describe('desktopBridgeBootstrapPreference', () => {
     const nativeInvoke = vi
       .fn()
       .mockResolvedValue({ ok: true, status: 'connected' });
-    const nativeRuntime: ShadowbrokerDesktopRuntime = {
+    const nativeRuntime: Vincent OSDesktopRuntime = {
       invokeLocalControl: nativeInvoke,
     };
     window.__SHADOWBROKER_DESKTOP__ = nativeRuntime;
@@ -160,7 +160,7 @@ describe('desktopBridgeBootstrapPreference', () => {
 
   it('native runtime forwards meta to invokeLocalControl', async () => {
     const nativeInvoke = vi.fn().mockResolvedValue({ ok: true });
-    const nativeRuntime: ShadowbrokerDesktopRuntime = {
+    const nativeRuntime: Vincent OSDesktopRuntime = {
       invokeLocalControl: nativeInvoke,
     };
     window.__SHADOWBROKER_DESKTOP__ = nativeRuntime;
@@ -197,7 +197,7 @@ describe('desktopBridgeBootstrapPreference', () => {
     const auditEntries: unknown[] = [];
 
     // Simulate a Tauri-like runtime that checks capability mismatch
-    const nativeRuntime: ShadowbrokerDesktopRuntime = {
+    const nativeRuntime: Vincent OSDesktopRuntime = {
       invokeLocalControl: async (command, payload, meta) => {
         const expectedCap = controlCommandCapability(command!);
         if (meta?.capability && meta.capability !== expectedCap) {
@@ -255,7 +255,7 @@ describe('desktopBridgeBootstrapPreference', () => {
     const auditEntries: unknown[] = [];
 
     // Simulate a Tauri-like runtime that enforces session profiles
-    const nativeRuntime: ShadowbrokerDesktopRuntime = {
+    const nativeRuntime: Vincent OSDesktopRuntime = {
       invokeLocalControl: async (command, payload, meta) => {
         const expectedCap = controlCommandCapability(command!);
         const profile = meta?.sessionProfileHint;
@@ -317,7 +317,7 @@ describe('desktopBridgeBootstrapPreference', () => {
   it('native runtime audit report populates on allowed invocations', async () => {
     let auditCallCount = 0;
     const nativeInvoke = vi.fn().mockResolvedValue({ ok: true });
-    const nativeRuntime: ShadowbrokerDesktopRuntime = {
+    const nativeRuntime: Vincent OSDesktopRuntime = {
       invokeLocalControl: async (command, payload, meta) => {
         auditCallCount++;
         return nativeInvoke(command, payload, meta);

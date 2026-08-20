@@ -1,6 +1,6 @@
-# ShadowBroker InfoNet Threat Model
+# Vincent OS InfoNet Threat Model
 
-ShadowBroker v0.9.7 ships InfoNet and Wormhole as an experimental testnet.
+Vincent OS v0.9.7 ships InfoNet and Wormhole as an experimental testnet.
 This document is the release-facing threat model for those systems. It is
 intended to keep README, UI, and release claims aligned with the implementation.
 

@@ -1,4 +1,4 @@
-shadowbroker:
+vincent_os:
   controllers:
 
     backend:
@@ -14,21 +14,21 @@ shadowbroker:
           image:
             pullPolicy: Always
             # GHCR (primary, public, auto-built on every push to main).
-            # GitLab fallback: registry.gitlab.com/bigbodycobain/shadowbroker/backend (requires auth + currently no CI builds it).
-            repository: ghcr.io/bigbodycobain/shadowbroker-backend
+            # GitLab fallback: registry.gitlab.com/bigbodycobain/vincent_os/backend (requires auth + currently no CI builds it).
+            repository: ghcr.io/bigbodycobain/vincent_os-backend
             tag: latest
           env:
             AIS_API_KEY:
               secretKeyRef:
-                name: shadowbroker-env
+                name: vincent_os-env
                 key: AIS_API_KEY
             OPENSKY_CLIENT_ID:
               secretKeyRef:
-                name: shadowbroker-env
+                name: vincent_os-env
                 key: OPENSKY_CLIENT_ID
             OPENSKY_CLIENT_SECRET:
               secretKeyRef:
-                name: shadowbroker-env
+                name: vincent_os-env
                 key: OPENSKY_CLIENT_SECRET
 
     frontend:
@@ -44,12 +44,12 @@ shadowbroker:
           image:
             pullPolicy: Always
             # GHCR (primary, public, auto-built on every push to main).
-            # GitLab fallback: registry.gitlab.com/bigbodycobain/shadowbroker/frontend (requires auth + currently no CI builds it).
-            repository: ghcr.io/bigbodycobain/shadowbroker-frontend
+            # GitLab fallback: registry.gitlab.com/bigbodycobain/vincent_os/frontend (requires auth + currently no CI builds it).
+            repository: ghcr.io/bigbodycobain/vincent_os-frontend
             tag: latest
 
           env:
-            BACKEND_URL: 'http://shadowbroker-backend.shadowbroker.svc.cluster.local:8000'
+            BACKEND_URL: 'http://vincent_os-backend.vincent_os.svc.cluster.local:8000'
 
   service:
     backend:

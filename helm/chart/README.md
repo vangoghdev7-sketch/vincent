@@ -1,6 +1,6 @@
-# ShadowBroker Helm Chart
+# Vincent OS Helm Chart
 
-A Helm chart for deploying ShadowBroker services (backend and frontend).
+A Helm chart for deploying Vincent OS services (backend and frontend).
 
 ## Prerequisites
 
@@ -27,14 +27,14 @@ helm repo update
 ### Install the chart
 
 ```bash
-helm install shadowbroker ./chart --create-namespace
+helm install vincent_os ./chart --create-namespace
 ```
 
 Or use the repository:
 
 ```bash
-helm install shadowbroker bjw-s-labs/app-template \
-  --namespace shadowbroker \
+helm install vincent_os bjw-s-labs/app-template \
+  --namespace vincent_os \
   -f values.yaml
 ```
 
@@ -51,7 +51,7 @@ The backend deployment runs with the following settings by default:
 | `controllers.backend.rollingUpdate.unavailable` | Max unavailable during update | `1` |
 | `controllers.backend.containers.main.runAsUser` | Security context user | `1001` |
 | `controllers.backend.containers.main.runAsGroup` | Security context group | `1001` |
-| `controllers.backend.containers.main.image.repository` | Container image | `registry.gitlab.com/bigbodycobain/shadowbroker/backend` (or `ghcr.io/bigbodycobain/shadowbroker-backend`) |
+| `controllers.backend.containers.main.image.repository` | Container image | `registry.gitlab.com/bigbodycobain/vincent_os/backend` (or `ghcr.io/bigbodycobain/vincent_os-backend`) |
 | `controllers.backend.containers.main.image.tag` | Container tag | `latest` |
 | `controllers.backend.service.type` | Service type | `ClusterIP` |
 | `controllers.backend.service.ports.http.port` | HTTP port | `8000` |
@@ -77,7 +77,7 @@ The frontend deployment configuration:
 | `controllers.frontend.rollingUpdate.unavailable` | Max unavailable during update | `1` |
 | `controllers.frontend.containers.main.runAsUser` | Security context user | `1001` |
 | `controllers.frontend.containers.main.runAsGroup` | Security context group | `1001` |
-| `controllers.frontend.containers.main.image.repository` | Container image | `registry.gitlab.com/bigbodycobain/shadowbroker/frontend` (or `ghcr.io/bigbodycobain/shadowbroker-frontend`) |
+| `controllers.frontend.containers.main.image.repository` | Container image | `registry.gitlab.com/bigbodycobain/vincent_os/frontend` (or `ghcr.io/bigbodycobain/vincent_os-frontend`) |
 | `controllers.frontend.containers.main.image.tag` | Container tag | `latest` |
 
 #### Frontend Environment Variables
@@ -96,7 +96,7 @@ The frontend deployment configuration:
 ## Uninstall
 
 ```bash
-helm uninstall shadowbroker -n shadowbroker
+helm uninstall vincent_os -n vincent_os
 ```
 
 ## Development

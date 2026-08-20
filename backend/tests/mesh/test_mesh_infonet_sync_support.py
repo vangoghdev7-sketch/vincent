@@ -46,7 +46,7 @@ def test_eligible_sync_peers_prioritizes_explicit_bootstrap_seed():
         now=100,
     )
     seed = make_sync_peer_record(
-        peer_url="https://node.shadowbroker.info",
+        peer_url="https://node.vincent_os.info",
         transport="clearnet",
         role="seed",
         source="bundle",
@@ -56,7 +56,7 @@ def test_eligible_sync_peers_prioritizes_explicit_bootstrap_seed():
     candidates = eligible_sync_peers([old_runtime, seed], now=300)
 
     assert [record.peer_url for record in candidates] == [
-        "https://node.shadowbroker.info",
+        "https://node.vincent_os.info",
         "https://old-runtime.example",
     ]
 

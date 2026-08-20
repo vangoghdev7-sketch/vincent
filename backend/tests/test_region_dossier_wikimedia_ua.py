@@ -1,5 +1,5 @@
 """Issues #218 / #219 (tg12): outbound Wikipedia + Wikidata calls must
-identify ShadowBroker via the Wikimedia-recommended User-Agent /
+identify Vincent OS via the Wikimedia-recommended User-Agent /
 Api-User-Agent headers.
 
 Before this fix, ``backend/services/region_dossier.py`` called
@@ -44,7 +44,7 @@ def test_wikidata_call_passes_wikimedia_request_headers():
     assert "User-Agent" in headers
     assert "Api-User-Agent" in headers
     # Stable identifier should mention the project + a contact path.
-    assert "Shadowbroker" in headers["Api-User-Agent"] or "ShadowBroker" in headers["Api-User-Agent"]
+    assert "Vincent OS" in headers["Api-User-Agent"] or "Vincent OS" in headers["Api-User-Agent"]
     assert "github.com" in headers["Api-User-Agent"].lower()
 
 
@@ -94,7 +94,7 @@ def test_wikimedia_headers_helper_is_stable():
     aua = headers.get("Api-User-Agent", "")
     ua = headers.get("User-Agent", "")
     for h, label in ((ua, "User-Agent"), (aua, "Api-User-Agent")):
-        assert "Shadowbroker" in h or "ShadowBroker" in h, f"{label} missing project id"
+        assert "Vincent OS" in h or "Vincent OS" in h, f"{label} missing project id"
         assert "github.com" in h.lower(), f"{label} missing contact URL"
         assert "issues" in h.lower(), f"{label} missing /issues contact path"
         # Round 7a: must include the per-operator handle.

@@ -1,6 +1,6 @@
 # Tauri Skeleton
 
-Cross-platform Tauri integration for the ShadowBroker desktop boundary.
+Cross-platform Tauri integration for the Vincent OS desktop boundary.
 
 ## Scope
 

@@ -28,14 +28,14 @@ _session.mount("http://", HTTPAdapter(max_retries=_retry, pool_maxsize=10))
 #
 # Issues #289 / #290 / #291 and the retrofit of PR #284 (#218 / #219 / #220):
 # every third-party API the backend calls used to identify itself with a
-# single "Shadowbroker" aggregate User-Agent. From the upstream's
-# perspective, that meant every Shadowbroker install in the world looked
+# single "Vincent OS" aggregate User-Agent. From the upstream's
+# perspective, that meant every Vincent OS install in the world looked
 # like one giant entity hammering them. If one install misbehaved, the
-# upstream's only recourse was to block "Shadowbroker" as a whole — which
+# upstream's only recourse was to block "Vincent OS" as a whole — which
 # would take out every other install too.
 #
 # Fix: give each install a stable pseudonymous handle used as the entire
-# User-Agent product token (no shared "Shadowbroker" label). Upstreams see
+# User-Agent product token (no shared "Vincent OS" label). Upstreams see
 # ``operator-7f3a92`` (or ``OPERATOR_HANDLE``), not one monolithic app name.
 #
 # The handle:
@@ -179,7 +179,7 @@ def outbound_user_agent(purpose: str = "") -> str:
 
     Returns the per-install handle only, e.g. ``operator-7f3a92`` or
     ``operator-7f3a92 (purpose: wikipedia)``. No shared project name — so
-    upstream abuse teams cannot block every install with one ``Shadowbroker``
+    upstream abuse teams cannot block every install with one ``Vincent OS``
     rule.
 
     Set ``SHADOWBROKER_USER_AGENT`` to override the entire string if needed.

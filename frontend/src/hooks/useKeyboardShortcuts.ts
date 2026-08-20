@@ -1,5 +1,5 @@
 /**
- * useKeyboardShortcuts — global keyboard shortcut handler for ShadowBroker.
+ * useKeyboardShortcuts — global keyboard shortcut handler for Vincent.
  *
  * Registers document-level keydown listener with guards for inputs/textareas.
  * Returns nothing — side-effect only hook.

@@ -46,8 +46,8 @@ def test_baked_in_release_digests_file_loads():
     digests = _load_baked_in_release_digests()
     assert "v0.9.79" in digests
     entry = digests["v0.9.79"]
-    assert "ShadowBroker_v0.9.79.zip" in entry
-    digest = entry["ShadowBroker_v0.9.79.zip"]
+    assert "Vincent OS_v0.9.79.zip" in entry
+    digest = entry["Vincent OS_v0.9.79.zip"]
     assert len(digest) == 64
     assert all(c in "0123456789abcdef" for c in digest)
 
@@ -98,12 +98,12 @@ def test_sha256sums_matching_passes(fake_archive, monkeypatch):
     monkeypatch.delenv("MESH_UPDATE_SHA256", raising=False)
 
     def fake_sums(url):
-        return {"ShadowBroker_v9.9.9.zip": expected}
+        return {"Vincent OS_v9.9.9.zip": expected}
 
     monkeypatch.setattr(updater, "_fetch_sha256sums", fake_sums)
     note = _validate_zip_hash(
         archive,
-        asset_name="ShadowBroker_v9.9.9.zip",
+        asset_name="Vincent OS_v9.9.9.zip",
         sha256sums_url="https://example.test/SHA256SUMS.txt",
         release_tag="v9.9.9",
     )
@@ -116,13 +116,13 @@ def test_sha256sums_mismatch_fails_loudly(fake_archive, monkeypatch):
     monkeypatch.delenv("MESH_UPDATE_SHA256", raising=False)
 
     def fake_sums(url):
-        return {"ShadowBroker_v9.9.9.zip": "0" * 64}
+        return {"Vincent OS_v9.9.9.zip": "0" * 64}
 
     monkeypatch.setattr(updater, "_fetch_sha256sums", fake_sums)
     with pytest.raises(RuntimeError) as exc_info:
         _validate_zip_hash(
             archive,
-            asset_name="ShadowBroker_v9.9.9.zip",
+            asset_name="Vincent OS_v9.9.9.zip",
             sha256sums_url="https://example.test/SHA256SUMS.txt",
             release_tag="v9.9.9",
         )
@@ -143,12 +143,12 @@ def test_baked_in_matching_passes(fake_archive, monkeypatch):
     monkeypatch.setattr(
         updater,
         "_load_baked_in_release_digests",
-        lambda: {"v9.9.9": {"ShadowBroker_v9.9.9.zip": expected}},
+        lambda: {"v9.9.9": {"Vincent OS_v9.9.9.zip": expected}},
     )
 
     note = _validate_zip_hash(
         archive,
-        asset_name="ShadowBroker_v9.9.9.zip",
+        asset_name="Vincent OS_v9.9.9.zip",
         sha256sums_url="https://example.test/SHA256SUMS.txt",
         release_tag="v9.9.9",
     )
@@ -163,13 +163,13 @@ def test_baked_in_mismatch_fails_loudly(fake_archive, monkeypatch):
     monkeypatch.setattr(
         updater,
         "_load_baked_in_release_digests",
-        lambda: {"v9.9.9": {"ShadowBroker_v9.9.9.zip": "0" * 64}},
+        lambda: {"v9.9.9": {"Vincent OS_v9.9.9.zip": "0" * 64}},
     )
 
     with pytest.raises(RuntimeError) as exc_info:
         _validate_zip_hash(
             archive,
-            asset_name="ShadowBroker_v9.9.9.zip",
+            asset_name="Vincent OS_v9.9.9.zip",
             sha256sums_url="",
             release_tag="v9.9.9",
         )
@@ -199,7 +199,7 @@ def test_https_only_fallback_when_no_source_available(fake_archive, monkeypatch,
     with caplog.at_level(logging.WARNING):
         note = _validate_zip_hash(
             archive,
-            asset_name="ShadowBroker_v99.99.zip",
+            asset_name="Vincent OS_v99.99.zip",
             sha256sums_url="",
             release_tag="v99.99",
         )
@@ -225,7 +225,7 @@ def test_https_only_fallback_when_release_tag_unknown(fake_archive, monkeypatch)
 
     note = _validate_zip_hash(
         archive,
-        asset_name="ShadowBroker_v99.99.zip",
+        asset_name="Vincent OS_v99.99.zip",
         sha256sums_url="",
         release_tag="v99.99",
     )
@@ -273,8 +273,8 @@ def test_fetch_sha256sums_parses_standard_format(monkeypatch):
     """Standard ``sha256sum`` output: ``<digest>  <filename>``."""
     class _Resp:
         text = (
-            "f6877c1d66614525315ea82636ce9f7b41178332c4dbf90d27431a1ea1d9cd47  ShadowBroker_v0.9.79.zip\n"
-            "e0713c3cdda184cfbea750bfac0d62a35678fec00847e6476f2cac8e7e42046e  ShadowBroker_0.9.79_x64_en-US.msi\n"
+            "f6877c1d66614525315ea82636ce9f7b41178332c4dbf90d27431a1ea1d9cd47  Vincent OS_v0.9.79.zip\n"
+            "e0713c3cdda184cfbea750bfac0d62a35678fec00847e6476f2cac8e7e42046e  Vincent OS_0.9.79_x64_en-US.msi\n"
         )
 
         def raise_for_status(self):
@@ -286,14 +286,14 @@ def test_fetch_sha256sums_parses_standard_format(monkeypatch):
     monkeypatch.setattr(updater.requests, "get", fake_get)
     monkeypatch.setattr(updater, "_validate_update_url", lambda url, **kw: url)
     sums = _fetch_sha256sums("https://example.test/SHA256SUMS.txt")
-    assert sums["ShadowBroker_v0.9.79.zip"].startswith("f6877c1d")
-    assert sums["ShadowBroker_0.9.79_x64_en-US.msi"].startswith("e0713c3c")
+    assert sums["Vincent OS_v0.9.79.zip"].startswith("f6877c1d")
+    assert sums["Vincent OS_0.9.79_x64_en-US.msi"].startswith("e0713c3c")
 
 
 def test_fetch_sha256sums_handles_binary_marker(monkeypatch):
     """sha256sum -b output: ``<digest> *<filename>``."""
     class _Resp:
-        text = "f6877c1d66614525315ea82636ce9f7b41178332c4dbf90d27431a1ea1d9cd47 *ShadowBroker_v0.9.79.zip\n"
+        text = "f6877c1d66614525315ea82636ce9f7b41178332c4dbf90d27431a1ea1d9cd47 *Vincent OS_v0.9.79.zip\n"
 
         def raise_for_status(self):
             pass
@@ -301,7 +301,7 @@ def test_fetch_sha256sums_handles_binary_marker(monkeypatch):
     monkeypatch.setattr(updater.requests, "get", lambda url, timeout=15: _Resp())
     monkeypatch.setattr(updater, "_validate_update_url", lambda url, **kw: url)
     sums = _fetch_sha256sums("https://example.test/SHA256SUMS.txt")
-    assert "ShadowBroker_v0.9.79.zip" in sums
+    assert "Vincent OS_v0.9.79.zip" in sums
 
 
 def test_fetch_sha256sums_skips_malformed_lines(monkeypatch):

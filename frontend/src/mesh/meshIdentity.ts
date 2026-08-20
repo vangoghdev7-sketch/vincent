@@ -1,7 +1,7 @@
 /**
  * Sovereign Node Identity — Ed25519/ECDSA keypair for mesh authentication.
  *
- * Every ShadowBroker node generates a keypair locally. The public key becomes
+ * Every Vincent node generates a keypair locally. The public key becomes
  * the Node ID. The private key never leaves the device. All outbound messages
  * are signed with the private key.
  *

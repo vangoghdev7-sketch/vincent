@@ -1,5 +1,5 @@
 @echo off
-title ShadowBroker - Wormhole Local Agent
+title Vincent OS - Wormhole Local Agent
 
 echo ===================================================
 echo     W O R M H O L E   --   LOCAL AGENT

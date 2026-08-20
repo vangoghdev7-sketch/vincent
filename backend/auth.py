@@ -259,7 +259,7 @@ def _docker_bridge_local_operator_enabled() -> bool:
 # source IP matches the configured frontend container's hostname.
 #
 # Docker DNS resolves both the compose service name (``frontend``) and
-# the explicit ``container_name`` (``shadowbroker-frontend``) to the
+# the explicit ``container_name`` (``vincent_os-frontend``) to the
 # frontend container's bridge IP. We forward-resolve both, cache the
 # result for 30s, and only trust connections from those exact IPs.
 #
@@ -275,14 +275,14 @@ def _trusted_bridge_frontend_hostnames() -> list[str]:
 
     Default covers both Docker Compose service name (``frontend``) and the
     explicit ``container_name`` from the shipped docker-compose.yml
-    (``shadowbroker-frontend``). Operators with non-default names can
+    (``vincent_os-frontend``). Operators with non-default names can
     override via the ``SHADOWBROKER_TRUSTED_FRONTEND_HOSTS`` env var
     (comma-separated, no spaces).
     """
     raw = str(
         os.environ.get(
             "SHADOWBROKER_TRUSTED_FRONTEND_HOSTS",
-            "frontend,shadowbroker-frontend",
+            "frontend,vincent_os-frontend",
         )
     ).strip()
     return [h.strip() for h in raw.split(",") if h.strip()]

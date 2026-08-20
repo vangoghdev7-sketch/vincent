@@ -1461,8 +1461,8 @@ def _refresh_node_peer_store(*, now: float | None = None) -> dict[str, Any]:
                 peer_url=peer_url,
                 transport=transport,
                 role="seed",
-                label="ShadowBroker bootstrap seed",
-                signer_id="shadowbroker-bootstrap",
+                label="Vincent OS bootstrap seed",
+                signer_id="vincent_os-bootstrap",
                 now=timestamp,
             )
         )
@@ -1472,8 +1472,8 @@ def _refresh_node_peer_store(*, now: float | None = None) -> dict[str, Any]:
                 transport=transport,
                 role="seed",
                 source="bundle",
-                label="ShadowBroker bootstrap seed",
-                signer_id="shadowbroker-bootstrap",
+                label="Vincent OS bootstrap seed",
+                signer_id="vincent_os-bootstrap",
                 now=timestamp,
             )
         )
@@ -2920,7 +2920,7 @@ async def lifespan(app: FastAPI):
         pass
 
 
-app = FastAPI(title="Live Risk Dashboard API", lifespan=lifespan)
+app = FastAPI(title="VincentOS API", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 

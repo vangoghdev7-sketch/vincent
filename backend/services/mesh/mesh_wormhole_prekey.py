@@ -83,7 +83,7 @@ def _fleet_peer_lookup_user_agent() -> str:
     custom = str(os.environ.get("SHADOWBROKER_MESH_PEER_USER_AGENT") or "").strip()
     if custom:
         return custom
-    return "Mozilla/5.0 (compatible; ShadowbrokerMesh/1.0)"
+    return "Mozilla/5.0 (compatible; Vincent OSMesh/1.0)"
 
 
 _INVITE_LOOKUP_MAX_ELAPSED_S = 120

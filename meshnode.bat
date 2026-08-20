@@ -1,5 +1,5 @@
 @echo off
-title ShadowBroker - Mesh Node
+title Vincent OS - Mesh Node
 color 0B
 
 echo ===================================================

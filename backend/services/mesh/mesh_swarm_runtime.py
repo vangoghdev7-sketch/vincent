@@ -61,7 +61,7 @@ def _signer_private_key_b64() -> str:
 
 def _signer_id() -> str:
     configured = str(getattr(get_settings(), "MESH_BOOTSTRAP_SIGNER_ID", "") or "").strip()
-    return configured or "shadowbroker-seed"
+    return configured or "vincent_os-seed"
 
 
 def _private_transport_required() -> bool:
@@ -90,7 +90,7 @@ def _seed_manifest_peers() -> list[dict[str, str]]:
                 "peer_url": peer_url,
                 "transport": transport,
                 "role": "seed",
-                "label": "ShadowBroker bootstrap seed",
+                "label": "Vincent OS bootstrap seed",
             }
         )
     return peers

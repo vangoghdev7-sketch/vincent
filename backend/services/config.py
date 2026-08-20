@@ -85,7 +85,7 @@ class Settings(BaseSettings):
     # ignored for that specific URL. Single-peer installs and unmigrated
     # multi-peer installs leave this empty and behavior is unchanged.
     MESH_PEER_SECRETS: str = ""
-    MESH_RNS_APP_NAME: str = "shadowbroker"
+    MESH_RNS_APP_NAME: str = "vincent_os"
     MESH_RNS_ASPECT: str = "infonet"
     MESH_RNS_IDENTITY_PATH: str = ""
     MESH_RNS_PEERS: str = ""
@@ -334,7 +334,7 @@ class Settings(BaseSettings):
     # Optional operator-provided Meshtastic node ID (e.g. "!abcd1234") included
     # in the User-Agent when fetching from meshtastic.liamcottle.net so the
     # service operator can identify per-install traffic instead of a generic
-    # "ShadowBroker" aggregate.
+    # "Vincent OS" aggregate.
     MESHTASTIC_OPERATOR_CALLSIGN: str = ""
     # Per-install operator handle used in the User-Agent for EVERY third-party
     # API the backend calls (Wikipedia, Wikidata, Nominatim, GDELT, OpenMHz,

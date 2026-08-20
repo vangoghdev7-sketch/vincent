@@ -1,4 +1,4 @@
-# Contributing to Shadowbroker
+# Contributing to Vincent
 
 Thank you for taking the time to contribute. This document covers things specific to this project — for general open-source contribution etiquette, see the GitHub docs.
 
@@ -6,7 +6,7 @@ Thank you for taking the time to contribute. This document covers things specifi
 
 ## Code contributions
 
-1. Fork the repo on GitHub (`bigbodycobain/Shadowbroker`) or GitLab (`bigbodycobain/Shadowbroker` mirror).
+1. Fork the repo on GitHub (`bigbodycobain/Vincent`) or GitLab (`bigbodycobain/Vincent` mirror).
 2. Make your changes on a feature branch.
 3. Run the local test suite:
    - Backend: `pytest backend/tests/`
@@ -25,7 +25,7 @@ Do **not** file security issues as public GitHub issues. Email the maintainer or
 
 ## Translation contributions
 
-Shadowbroker supports UI localization (`frontend/src/i18n/`). Translation contributions are welcome but held to a stricter standard than most code changes, because translations can subtly reshape user perception in ways that are hard to spot during review. Read this section before submitting one.
+Vincent supports UI localization (`frontend/src/i18n/`). Translation contributions are welcome but held to a stricter standard than most code changes, because translations can subtly reshape user perception in ways that are hard to spot during review. Read this section before submitting one.
 
 ### The neutrality requirement
 
